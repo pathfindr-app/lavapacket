@@ -189,11 +189,16 @@
         .cred-label { font-size: 0.7rem; color: var(--text-muted); }
 
         .work-showcase { display: grid; grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 0.75rem; }
-        .work-item { position: relative; overflow: hidden; height: 120px; }
-        .work-item-large { grid-row: span 2; height: auto; }
+        .work-item { position: relative; overflow: hidden; height: 160px; }
+        .work-item-large { grid-row: span 3; height: auto; }
         .work-item img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; object-position: center center; }
         .work-item img:hover { opacity: 0.9; }
-        .work-item .photo-controls { top: auto; bottom: 30px; left: 5px; }
+        .work-item .photo-controls { top: auto; bottom: 35px; left: 5px; }
+
+        /* Change Photo Button */
+        .change-photo-btn { position: absolute; top: 5px; right: 5px; background: var(--lava-orange); color: white; border: none; padding: 4px 8px; font-size: 0.65rem; font-family: 'Outfit', sans-serif; cursor: pointer; display: none; z-index: 11; border-radius: 2px; }
+        .change-photo-btn:hover { background: var(--lava-red); }
+        .editing .change-photo-btn { display: block; }
         .work-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; font-family: 'Outfit', sans-serif; font-size: 0.65rem; font-weight: 600; padding: 1.5rem 0.5rem 0.4rem; }
 
         /* CLOSING PAGE */
@@ -368,22 +373,24 @@
 
             <div class="ss-visuals">
                 <div class="ss-visual-item" style="position:relative;">
+                    <button class="change-photo-btn" onclick="document.getElementById('ssInput1').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('ssImg1','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('ssImg1','left')">←</button><button onclick="movePhoto('ssImg1','center')">•</button><button onclick="movePhoto('ssImg1','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('ssImg1','down')">↓</button></div>
                     </div>
-                    <img src="Photos/IMG_7293.jpg" alt="Standing Seam" class="ss-visual-img repositionable" id="ssImg1" onclick="if(!editing)document.getElementById('ssInput1').click()">
+                    <img src="Photos/IMG_7293.jpg" alt="Standing Seam" class="ss-visual-img repositionable" id="ssImg1">
                     <input type="file" id="ssInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'ssImg1')">
                     <div class="ss-visual-caption editable" data-field="ssCaption1">Clean lines, concealed fasteners</div>
                 </div>
                 <div class="ss-visual-item" style="position:relative;">
+                    <button class="change-photo-btn" onclick="document.getElementById('ssInput2').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('ssImg2','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('ssImg2','left')">←</button><button onclick="movePhoto('ssImg2','center')">•</button><button onclick="movePhoto('ssImg2','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('ssImg2','down')">↓</button></div>
                     </div>
-                    <img src="Photos/IMG_7295.jpg" alt="Standing Seam Detail" class="ss-visual-img repositionable" id="ssImg2" onclick="if(!editing)document.getElementById('ssInput2').click()">
+                    <img src="Photos/IMG_7295.jpg" alt="Standing Seam Detail" class="ss-visual-img repositionable" id="ssImg2">
                     <input type="file" id="ssInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'ssImg2')">
                     <div class="ss-visual-caption editable" data-field="ssCaption2">Weather-tight panel system</div>
                 </div>
@@ -424,12 +431,13 @@
             </div>
 
             <div class="about-banner">
-                <div class="photo-controls" style="top:10px;">
+                <button class="change-photo-btn" onclick="document.getElementById('aboutInput').click()">Change</button>
+                <div class="photo-controls" style="top:10px; left: 5px;">
                     <div class="pos-row"><button onclick="movePhoto('aboutImg','up')">↑</button></div>
                     <div class="pos-row"><button onclick="movePhoto('aboutImg','left')">←</button><button onclick="movePhoto('aboutImg','center')">•</button><button onclick="movePhoto('aboutImg','right')">→</button></div>
                     <div class="pos-row"><button onclick="movePhoto('aboutImg','down')">↓</button></div>
                 </div>
-                <img src="Photos/IMG_4671.jpg" alt="Craftsmanship" class="about-banner-img repositionable" id="aboutImg" onclick="if(!editing)document.getElementById('aboutInput').click()">
+                <img src="Photos/IMG_4671.jpg" alt="Craftsmanship" class="about-banner-img repositionable" id="aboutImg">
                 <input type="file" id="aboutInput" class="photo-input" accept="image/*" onchange="changePhoto(this, 'aboutImg')">
                 <div class="about-banner-overlay">
                     <span class="about-banner-text editable" data-field="aboutBannerText">Rooted in Craftsmanship</span>
@@ -459,62 +467,68 @@
 
             <div class="work-showcase">
                 <div class="work-item work-item-large">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput1').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('workImg1','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg1','left')">←</button><button onclick="movePhoto('workImg1','center')">•</button><button onclick="movePhoto('workImg1','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg1','down')">↓</button></div>
                     </div>
-                    <img src="Photos/Crew Photo1.jpg" alt="LAVA Crew" id="workImg1" class="repositionable" onclick="if(!editing)document.getElementById('workInput1').click()">
+                    <img src="Photos/Crew Photo1.jpg" alt="LAVA Crew" id="workImg1" class="repositionable">
                     <input type="file" id="workInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg1')">
                     <span class="work-label editable" data-field="workLabel1">The LAVA Team</span>
                 </div>
                 <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput2').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('workImg2','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg2','left')">←</button><button onclick="movePhoto('workImg2','center')">•</button><button onclick="movePhoto('workImg2','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg2','down')">↓</button></div>
                     </div>
-                    <img src="Photos/FullSizeRender3.jpg" alt="Metal Roof" id="workImg2" class="repositionable" onclick="if(!editing)document.getElementById('workInput2').click()">
+                    <img src="Photos/FullSizeRender3.jpg" alt="Metal Roof" id="workImg2" class="repositionable">
                     <input type="file" id="workInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg2')">
                     <span class="work-label editable" data-field="workLabel2">Quality Craftsmanship</span>
                 </div>
                 <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput3').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('workImg3','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg3','left')">←</button><button onclick="movePhoto('workImg3','center')">•</button><button onclick="movePhoto('workImg3','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg3','down')">↓</button></div>
                     </div>
-                    <img src="Photos/IMG_7279.jpg" alt="Standing Seam" id="workImg3" class="repositionable" onclick="if(!editing)document.getElementById('workInput3').click()">
+                    <img src="Photos/IMG_7279.jpg" alt="Standing Seam" id="workImg3" class="repositionable">
                     <input type="file" id="workInput3" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg3')">
                     <span class="work-label editable" data-field="workLabel3">Standing Seam Projects</span>
                 </div>
                 <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput4').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('workImg4','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg4','left')">←</button><button onclick="movePhoto('workImg4','center')">•</button><button onclick="movePhoto('workImg4','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg4','down')">↓</button></div>
                     </div>
-                    <img src="Photos/Crew Photo 2.jpg" alt="Crew at Work" id="workImg4" class="repositionable" onclick="if(!editing)document.getElementById('workInput4').click()">
+                    <img src="Photos/Crew Photo 2.jpg" alt="Crew at Work" id="workImg4" class="repositionable">
                     <input type="file" id="workInput4" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg4')">
                     <span class="work-label editable" data-field="workLabel4">Craftsmen at Work</span>
                 </div>
                 <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput5').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('workImg5','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg5','left')">←</button><button onclick="movePhoto('workImg5','center')">•</button><button onclick="movePhoto('workImg5','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg5','down')">↓</button></div>
                     </div>
-                    <img src="Photos/IMG_0179.jpg" alt="Team" id="workImg5" class="repositionable" onclick="if(!editing)document.getElementById('workInput5').click()">
+                    <img src="Photos/IMG_0179.jpg" alt="Team" id="workImg5" class="repositionable">
                     <input type="file" id="workInput5" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg5')">
                     <span class="work-label editable" data-field="workLabel5">Our Crew</span>
                 </div>
                 <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput6').click()">Change</button>
                     <div class="photo-controls">
                         <div class="pos-row"><button onclick="movePhoto('workImg6','up')">↑</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg6','left')">←</button><button onclick="movePhoto('workImg6','center')">•</button><button onclick="movePhoto('workImg6','right')">→</button></div>
                         <div class="pos-row"><button onclick="movePhoto('workImg6','down')">↓</button></div>
                     </div>
-                    <img src="Photos/IMG_7487(1).jpg" alt="Working" id="workImg6" class="repositionable" onclick="if(!editing)document.getElementById('workInput6').click()">
+                    <img src="Photos/IMG_7487(1).jpg" alt="Working" id="workImg6" class="repositionable">
                     <input type="file" id="workInput6" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg6')">
                     <span class="work-label editable" data-field="workLabel6">On the Job</span>
                 </div>
