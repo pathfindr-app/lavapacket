@@ -188,7 +188,7 @@
         .cred-value { font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--lava-dark); }
         .cred-label { font-size: 0.7rem; color: var(--text-muted); }
 
-        .work-showcase { display: grid; grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.75rem; }
+        .work-showcase { display: grid; grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 0.75rem; }
         .work-item { position: relative; overflow: hidden; height: 120px; }
         .work-item-large { grid-row: span 2; height: auto; }
         .work-item img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; object-position: center center; }
@@ -498,6 +498,26 @@
                     <input type="file" id="workInput4" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg4')">
                     <span class="work-label editable" data-field="workLabel4">Craftsmen at Work</span>
                 </div>
+                <div class="work-item">
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg5','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg5','left')">←</button><button onclick="movePhoto('workImg5','center')">•</button><button onclick="movePhoto('workImg5','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg5','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_0179.jpg" alt="Team" id="workImg5" class="repositionable" onclick="if(!editing)document.getElementById('workInput5').click()">
+                    <input type="file" id="workInput5" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg5')">
+                    <span class="work-label editable" data-field="workLabel5">Our Crew</span>
+                </div>
+                <div class="work-item">
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg6','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg6','left')">←</button><button onclick="movePhoto('workImg6','center')">•</button><button onclick="movePhoto('workImg6','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg6','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_7487(1).jpg" alt="Working" id="workImg6" class="repositionable" onclick="if(!editing)document.getElementById('workInput6').click()">
+                    <input type="file" id="workInput6" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg6')">
+                    <span class="work-label editable" data-field="workLabel6">On the Job</span>
+                </div>
             </div>
         </div>
 
@@ -597,7 +617,7 @@
 
         // Load saved photos
         function loadSavedPhotos() {
-            const photoIds = ['aerialImg', 'propertyImg', 'ssImg1', 'ssImg2', 'aboutImg', 'workImg1', 'workImg2', 'workImg3', 'workImg4'];
+            const photoIds = ['aerialImg', 'propertyImg', 'ssImg1', 'ssImg2', 'aboutImg', 'workImg1', 'workImg2', 'workImg3', 'workImg4', 'workImg5', 'workImg6'];
             photoIds.forEach(id => {
                 const saved = localStorage.getItem('stormont_' + id);
                 if (saved) {
