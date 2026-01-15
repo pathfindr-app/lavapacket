@@ -717,12 +717,16 @@
         ======================================== */
         .estimate-page-embed {
             width: 100%;
+            overflow: hidden;
         }
 
         .estimate-page-img {
             width: 100%;
             height: auto;
             border: 1px solid var(--warm-gray);
+            /* Crop bottom 35% to hide pricing totals */
+            clip-path: inset(0 0 35% 0);
+            margin-bottom: -35%;
         }
 
         /* ========================================
@@ -1441,26 +1445,11 @@
         </div>
 
         <!-- ==========================================
-             PAGE 3: THE PROPOSAL (PDF INSERT)
-        ========================================== -->
-        <div class="page pdf-insert-page">
-            <div class="section-header">
-                <span class="section-num">02</span>
-                <h2 class="section-title">The Proposal</h2>
-            </div>
-
-            <!-- Embed first page of estimate as image -->
-            <div class="estimate-page-embed">
-                <img src="Reppun_Estimate_Page1.png" alt="Estimate Page 1" class="estimate-page-img">
-            </div>
-        </div>
-
-        <!-- ==========================================
-             PAGE 4: WHY BRAVA
+             PAGE 3: WHY BRAVA
         ========================================== -->
         <div class="page">
             <div class="section-header">
-                <span class="section-num">03</span>
+                <span class="section-num">02</span>
                 <h2 class="section-title">Why Brava</h2>
             </div>
 
@@ -1517,11 +1506,11 @@
         </div>
 
         <!-- ==========================================
-             PAGE 5: ABOUT LAVA + OUR WORK (Combined)
+             PAGE 4: ABOUT LAVA + OUR WORK (Combined)
         ========================================== -->
         <div class="page about-work-page">
             <div class="section-header">
-                <span class="section-num">04</span>
+                <span class="section-num">03</span>
                 <h2 class="section-title">About LAVA</h2>
             </div>
 
@@ -1577,11 +1566,11 @@
         </div>
 
         <!-- ==========================================
-             PAGE 6: NEXT STEPS + CONTACT
+             PAGE 5: NEXT STEPS + CONTACT
         ========================================== -->
         <div class="page closing-page">
             <div class="section-header">
-                <span class="section-num">05</span>
+                <span class="section-num">04</span>
                 <h2 class="section-title">Next Steps</h2>
             </div>
 
@@ -1627,6 +1616,21 @@
                     <div class="company-license editable" data-field="companyLicense">Licensed Contractor: CT-39063 · $1M Insured</div>
                 </div>
                 <div class="company-tagline editable" data-field="companyTagline">The right roof for the right house.</div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PAGE 6: THE PROPOSAL (PDF INSERT - Last Page)
+        ========================================== -->
+        <div class="page pdf-insert-page">
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2 class="section-title">The Proposal</h2>
+            </div>
+
+            <!-- Embed first page of estimate as image (pricing cropped) -->
+            <div class="estimate-page-embed">
+                <img src="Reppun_Estimate_Page1.png" alt="Estimate Page 1" class="estimate-page-img">
             </div>
         </div>
     </div>
