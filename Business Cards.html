@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyle Ricketts - Business Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #333;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .card {
+            width: 3.5in;
+            height: 2in;
+            background: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            padding: 0.35in 0.3in;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .name {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #20b2aa;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .teal-line {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #20b2aa, #008080);
+            margin-bottom: 15px;
+            border-radius: 2px;
+        }
+
+        .contact-list {
+            list-style: none;
+            margin-top: auto;
+        }
+
+        .contact-list li {
+            font-size: 10px;
+            color: white;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .contact-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #e85a3c;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .chevron {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 45%;
+            z-index: 1;
+        }
+
+        .chevron-orange {
+            position: absolute;
+            right: -20px;
+            top: -30px;
+            width: 120px;
+            height: 250%;
+            background: linear-gradient(180deg, #e8923c 0%, #e8713c 50%, #e85a3c 100%);
+            transform: skewX(-15deg);
+        }
+
+        .chevron-red {
+            position: absolute;
+            right: -60px;
+            top: 40%;
+            width: 100px;
+            height: 150%;
+            background: linear-gradient(180deg, #e85a3c 0%, #c41e1e 100%);
+            transform: skewX(-15deg);
+        }
+
+        .chevron-teal {
+            position: absolute;
+            right: 75px;
+            top: -30px;
+            width: 8px;
+            height: 120%;
+            background: linear-gradient(180deg, #20b2aa 0%, #008080 100%);
+            transform: skewX(-15deg);
+            opacity: 0.9;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none;
+            }
+        }
+
+        .btn-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .download-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #20b2aa, #008080);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(32, 178, 170, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(32, 178, 170, 0.5);
+        }
+
+        @media print {
+            .btn-container {
+                display: none;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="card">
+        <div class="chevron">
+            <div class="chevron-teal"></div>
+            <div class="chevron-orange"></div>
+            <div class="chevron-red"></div>
+        </div>
+        <div class="content">
+            <h1 class="name">Tyler Erickson</h1>
+            <p class="title">Roofing Pro</p>
+            <div class="teal-line"></div>
+            <ul class="contact-list">
+                <li>808-397-4742</li>
+                <li>tyler@lavaroofing.com</li>
+                <li>www.lavaroofing.com</li>
+                <li>180 E Wakea Ave Kahului, HI 96732</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button class="download-btn" onclick="download4K()">Download 4K PNG</button>
+    </div>
+
+    <script>
+        async function download4K() {
+            const card = document.querySelector('.card');
+            const btn = document.querySelector('.download-btn');
+
+            btn.textContent = 'Generating 4K...';
+            btn.disabled = true;
+
+            try {
+                const canvas = await html2canvas(card, {
+                    scale: 12,
+                    useCORS: true,
+                    backgroundColor: null,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                link.download = 'Kyle_Ricketts_Card_4K.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            } catch (error) {
+                console.error('Error generating image:', error);
+                alert('Error generating image. Please try again.');
+            }
+
+            btn.textContent = 'Download 4K PNG';
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

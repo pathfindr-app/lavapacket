@@ -1,0 +1,16 @@
+# Ignore sensitive/unnecessary files
+LEADS.md
+leads.html
+*.pdf
+*.PDF
+*.zip
+*.fxp
+*.SerumPreset
+scrape-*.js
+scrape-*.bat
+package.json
+nul
+tmpclaude-*
+WhatsApp Chat*/
+.claude/
+node_modules/
