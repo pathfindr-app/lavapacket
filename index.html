@@ -717,16 +717,15 @@
         ======================================== */
         .estimate-page-embed {
             width: 100%;
+            max-height: 8.5in;
             overflow: hidden;
+            border: 1px solid var(--warm-gray);
         }
 
         .estimate-page-img {
             width: 100%;
             height: auto;
-            border: 1px solid var(--warm-gray);
-            /* Crop bottom 10% to hide pricing totals */
-            clip-path: inset(0 0 10% 0);
-            margin-bottom: -10%;
+            display: block;
         }
 
         /* ========================================
