@@ -1,0 +1,31 @@
+/* LAVA Packet Builder - CSS Variables */
+:root {
+    /* Brand Colors */
+    --lava-orange: #e85a2c;
+    --lava-red: #c41e3a;
+    --lava-teal: #2a7b9b;
+    --lava-dark: #1a1a1a;
+    --lava-charcoal: #2d2d2d;
+
+    /* Neutrals */
+    --cream: #faf8f5;
+    --warm-gray: #e8e4df;
+
+    /* Text Colors */
+    --text-primary: #1a1a1a;
+    --text-secondary: #5a5a5a;
+    --text-muted: #8a8a8a;
+
+    /* Fonts */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'DM Sans', Georgia, serif;
+
+    /* Spacing */
+    --page-padding: 0.75in;
+    --page-padding-cover: 1in;
+    --section-gap: 1.5rem;
+
+    /* Page Dimensions */
+    --page-width: 8.5in;
+    --page-height: 11in;
+}

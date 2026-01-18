@@ -1,0 +1,71 @@
+<!-- PAGE: THE HOME -->
+<div class="page" data-page-id="home">
+    <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">The Home</h2>
+    </div>
+
+    <div class="legacy-hero">
+        <div class="legacy-eyebrow editable" data-field="legacyEyebrow">Property Overview</div>
+        <h3 class="legacy-headline editable" data-field="legacyHeadline">Your Home</h3>
+        <p class="legacy-subhead editable" data-field="legacySubhead">A beautiful home deserving of a roof built to last.</p>
+    </div>
+
+    <div class="synergy-box">
+        <div class="synergy-content editable" data-field="synergyContent">
+            <strong>Why we're the right fit:</strong> Our team comes from a background in timber framing and custom home construction. We understand what it means to work on a home built with care — because that's exactly how we approach every roof.
+        </div>
+    </div>
+
+    <div class="legacy-grid">
+        <div class="legacy-stat">
+            <div class="legacy-stat-num editable" data-field="stat1Num">0,000</div>
+            <div class="legacy-stat-label editable" data-field="stat1Label">Square feet of roofing</div>
+        </div>
+        <div class="legacy-stat">
+            <div class="legacy-stat-num editable" data-field="stat2Num">50</div>
+            <div class="legacy-stat-label editable" data-field="stat2Label">Year warranty</div>
+        </div>
+    </div>
+
+    <div class="ev-grid">
+        <div class="ev-card">
+            <div class="ev-label">Aerial View</div>
+            <div class="photo-container">
+                <img src="assets/images/portfolio/placeholder.jpg" alt="Aerial View" class="ev-img repositionable" id="aerialImg">
+                <input type="file" id="aerialInput" class="photo-input" accept="image/*" data-target="aerialImg">
+                <button class="photo-upload-btn" onclick="Photos.triggerUpload('aerialInput')">Change Photo</button>
+                <div class="photo-controls">
+                    <div class="pos-row"><button onclick="Photos.movePhoto('aerialImg','up')">↑</button></div>
+                    <div class="pos-row">
+                        <button onclick="Photos.movePhoto('aerialImg','left')">←</button>
+                        <button onclick="Photos.movePhoto('aerialImg','center')">•</button>
+                        <button onclick="Photos.movePhoto('aerialImg','right')">→</button>
+                    </div>
+                    <div class="pos-row"><button onclick="Photos.movePhoto('aerialImg','down')">↓</button></div>
+                </div>
+            </div>
+        </div>
+        <div class="ev-card">
+            <div class="ev-label">Roof Diagram</div>
+            <div class="photo-container">
+                <img src="assets/images/portfolio/placeholder.jpg" alt="Roof Diagram" class="ev-img repositionable" id="diagramImg" style="object-fit: contain; background: white;">
+                <input type="file" id="diagramInput" class="photo-input" accept="image/*" data-target="diagramImg">
+                <button class="photo-upload-btn" onclick="Photos.triggerUpload('diagramInput')">Change Photo</button>
+            </div>
+        </div>
+    </div>
+
+    <table class="measurements">
+        <thead>
+            <tr><th>Measurement</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Total Roof Area</td><td class="editable" data-field="roofArea">0,000 sq ft</td></tr>
+            <tr><td>Roof Facets</td><td class="editable" data-field="roofFacets">0 facets</td></tr>
+            <tr><td>Predominant Pitch</td><td class="editable" data-field="pitch">0/12</td></tr>
+            <tr><td>Ridges/Hips</td><td class="editable" data-field="ridgesHips">0 ft</td></tr>
+            <tr><td>Product</td><td class="editable" data-field="product">Roofing Material</td></tr>
+        </tbody>
+    </table>
+</div>

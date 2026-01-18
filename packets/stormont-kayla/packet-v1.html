@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVA Roofing - Estimate Packet | Stormont</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --lava-orange: #e85a2c;
+            --lava-red: #c41e3a;
+            --lava-teal: #2a7b9b;
+            --lava-dark: #1a1a1a;
+            --lava-charcoal: #2d2d2d;
+            --cream: #faf8f5;
+            --warm-gray: #e8e4df;
+            --text-primary: #1a1a1a;
+            --text-secondary: #5a5a5a;
+            --text-muted: #8a8a8a;
+        }
+
+        /* PASSWORD SCREEN */
+        .password-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--lava-dark) 0%, var(--lava-charcoal) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .password-screen.hidden { display: none; }
+
+        .password-box {
+            background: white;
+            padding: 3rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .password-logo { height: 50px; margin-bottom: 1.5rem; }
+        .password-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 600; color: var(--lava-dark); margin-bottom: 0.5rem; }
+        .password-subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+        .password-input { width: 100%; padding: 1rem; font-size: 1rem; font-family: 'DM Sans', sans-serif; border: 2px solid var(--warm-gray); outline: none; text-align: center; letter-spacing: 0.1em; }
+        .password-input:focus { border-color: var(--lava-orange); }
+        .password-input.error { border-color: var(--lava-red); animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+        .password-btn { width: 100%; padding: 1rem; margin-top: 1rem; background: var(--lava-orange); color: white; border: none; font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .password-btn:hover { background: var(--lava-red); }
+        .password-error { color: var(--lava-red); font-size: 0.85rem; margin-top: 1rem; opacity: 0; }
+        .password-error.visible { opacity: 1; }
+
+        .content-locked { display: none; }
+        .content-locked.unlocked { display: block; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; }
+        body { font-family: 'DM Sans', Georgia, serif; background: var(--cream); color: var(--text-primary); line-height: 1.6; }
+
+        /* TOOLBAR */
+        .toolbar { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
+        .toolbar-btn { background: var(--lava-orange); color: white; border: none; padding: 12px 20px; font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 0.85rem; cursor: pointer; }
+        .toolbar-btn:hover { background: var(--lava-red); }
+        .toolbar-btn.secondary { background: white; color: var(--lava-orange); border: 1.5px solid var(--lava-orange); }
+        .toolbar-btn.secondary:hover { background: var(--lava-orange); color: white; }
+
+        /* PAGE STRUCTURE */
+        .packet { max-width: 8.5in; margin: 0 auto; background: white; }
+        .page { min-height: 11in; padding: 0.75in; position: relative; background: white; page-break-after: always; page-break-inside: avoid; }
+        .page:last-child { page-break-after: avoid; }
+
+        /* COVER PAGE */
+        .cover { display: flex; flex-direction: column; justify-content: space-between; padding: 1in; border-left: 6px solid var(--lava-orange); }
+        .cover-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .cover-logo { height: 56px; }
+        .cover-date { font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+        .cover-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 2in 0; }
+        .cover-accent { width: 80px; height: 4px; background: linear-gradient(90deg, var(--lava-orange), var(--lava-red), var(--lava-teal)); margin-bottom: 2rem; }
+        .cover-title { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--lava-dark); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem; }
+        .cover-subtitle { font-family: 'DM Sans', serif; font-size: 1.15rem; font-weight: 400; color: var(--text-secondary); font-style: italic; max-width: 400px; }
+        .cover-footer { display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px solid var(--warm-gray); padding-top: 1.5rem; }
+        .cover-customer { color: var(--lava-dark); }
+        .cover-label { font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: 600; color: var(--lava-orange); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .cover-name { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .cover-address { font-size: 0.95rem; color: var(--text-secondary); }
+        .cover-tagline { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; text-align: right; }
+
+        /* SECTION HEADERS */
+        .section-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--lava-orange); padding-bottom: 0.75rem; }
+        .section-num { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 700; color: var(--lava-orange); letter-spacing: 0.1em; }
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 700; color: var(--lava-dark); }
+
+        /* HOME SECTION */
+        .legacy-hero { background: var(--cream); padding: 2.5rem; margin-bottom: 1.5rem; border-left: 5px solid var(--lava-orange); position: relative; }
+        .legacy-hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--lava-orange), var(--lava-red), var(--lava-teal)); }
+        .legacy-eyebrow { font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: 600; color: var(--lava-orange); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.75rem; }
+        .legacy-headline { font-family: 'Outfit', sans-serif; font-size: 2.25rem; font-weight: 800; color: var(--lava-dark); margin-bottom: 0.5rem; }
+        .legacy-subhead { font-size: 1rem; color: var(--text-secondary); font-style: italic; margin: 0; }
+
+        .synergy-box { background: white; border: 2px solid var(--lava-teal); border-left: 4px solid var(--lava-teal); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+        .synergy-content { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+        .synergy-content strong { color: var(--lava-teal); font-weight: 600; }
+
+        .legacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .legacy-stat { background: var(--cream); padding: 1.5rem; text-align: center; border-left: 3px solid var(--lava-orange); }
+        .legacy-stat-num { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--lava-dark); line-height: 1; margin-bottom: 0.5rem; }
+        .legacy-stat-label { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* EAGLEVIEW SECTION */
+        .ev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .ev-card { border: 1px solid var(--warm-gray); overflow: hidden; position: relative; }
+        .ev-label { background: var(--cream); color: var(--lava-dark); font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.6rem 1rem; border-bottom: 2px solid var(--lava-orange); }
+        .ev-img { width: 100%; height: 200px; object-fit: cover; display: block; cursor: pointer; }
+        .ev-img:hover { opacity: 0.9; }
+        .ev-placeholder { height: 200px; background: var(--cream); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.85rem; text-align: center; cursor: pointer; }
+        .ev-placeholder:hover { background: #f0ebe5; }
+
+        /* PHOTO UPLOAD OVERLAY */
+        .photo-upload-btn { position: absolute; bottom: 10px; right: 10px; background: var(--lava-orange); color: white; border: none; padding: 6px 12px; font-size: 0.7rem; font-family: 'Outfit', sans-serif; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+        .ev-card:hover .photo-upload-btn { opacity: 1; }
+        .photo-input { display: none; }
+
+        /* PHOTO POSITION CONTROLS */
+        .photo-container { position: relative; }
+        .photo-controls { position: absolute; top: 5px; left: 5px; display: none; flex-direction: column; gap: 3px; z-index: 10; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 4px; }
+        .editing .photo-controls { display: flex; }
+        .photo-controls button { width: 24px; height: 24px; border: none; background: var(--lava-orange); color: white; cursor: pointer; font-size: 12px; border-radius: 2px; }
+        .photo-controls button:hover { background: var(--lava-red); }
+        .pos-row { display: flex; gap: 3px; }
+        .repositionable { transition: object-position 0.2s; }
+
+        /* MEASUREMENTS TABLE */
+        .measurements { width: 100%; border-collapse: collapse; }
+        .measurements th { font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; text-align: left; padding: 0.75rem 0; border-bottom: 2px solid var(--lava-orange); }
+        .measurements td { padding: 0.75rem 0; border-bottom: 1px solid var(--warm-gray); font-size: 0.9rem; }
+        .measurements td:first-child { color: var(--text-secondary); }
+        .measurements td:last-child { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--lava-dark); }
+
+        /* ESTIMATE PAGE */
+        .estimate-page-embed { width: 100%; max-height: 8.5in; overflow: hidden; border: 1px solid var(--warm-gray); }
+        .estimate-page-img { width: 100%; height: auto; display: block; }
+
+        /* STANDING SEAM SECTION (replaces Brava) */
+        .ss-hero { background: white; color: var(--lava-dark); padding: 1.5rem; text-align: center; margin-bottom: 1rem; border: 2px solid var(--lava-teal); position: relative; }
+        .ss-hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--lava-teal), var(--lava-dark), var(--lava-orange)); }
+        .ss-badge { display: inline-block; font-family: 'Outfit', sans-serif; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; background: var(--cream); border: 1px solid var(--warm-gray); color: var(--lava-teal); padding: 0.3rem 0.75rem; margin-bottom: 0.75rem; }
+        .ss-title { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--lava-dark); margin-bottom: 0.25rem; }
+        .ss-tagline { font-size: 0.85rem; color: var(--text-secondary); font-style: italic; margin-bottom: 0.75rem; }
+        .ss-warranty-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: white; border: 2px solid var(--lava-teal); color: var(--lava-teal); padding: 0.5rem 1rem; }
+        .ss-warranty-num { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; line-height: 1; }
+        .ss-warranty-text { font-family: 'Outfit', sans-serif; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.1em; line-height: 1.2; text-align: left; }
+
+        .ss-visuals { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .ss-visual-item { overflow: hidden; position: relative; }
+        .ss-visual-img { width: 100%; height: 120px; object-fit: cover; border: 1px solid var(--warm-gray); cursor: pointer; }
+        .ss-visual-img:hover { opacity: 0.9; }
+        .ss-visual-caption { font-family: 'Outfit', sans-serif; font-size: 0.65rem; font-weight: 600; color: var(--text-muted); text-align: center; padding: 0.4rem; background: var(--cream); }
+
+        .ss-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+        .ss-feature { background: var(--cream); padding: 0.6rem 0.75rem; border-left: 3px solid var(--lava-teal); }
+        .ss-feature-title { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 700; color: var(--lava-dark); margin-bottom: 0.15rem; }
+        .ss-feature-text { font-size: 0.65rem; color: var(--text-muted); line-height: 1.3; }
+
+        .ss-callout { background: #f0f7fa; color: var(--lava-dark); padding: 1rem; border-left: 4px solid var(--lava-teal); }
+        .ss-callout-title { font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--lava-teal); }
+        .ss-callout-text { font-size: 0.75rem; line-height: 1.5; color: var(--text-secondary); }
+
+        /* ABOUT + WORK PAGE */
+        .about-work-page { padding: 0.5in; }
+        .about-banner { position: relative; height: 140px; overflow: hidden; margin-bottom: 1rem; }
+        .about-banner-img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; cursor: pointer; }
+        .about-banner-img:hover { opacity: 0.95; }
+        .about-banner-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); padding: 1rem; }
+        .about-banner-text { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: white; }
+
+        .about-split { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--warm-gray); }
+        .about-story { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+        .about-story p { margin-bottom: 0.75rem; }
+        .about-story strong { color: var(--lava-dark); }
+        .about-credentials { display: flex; flex-direction: column; gap: 0.5rem; }
+        .cred-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--cream); border-left: 3px solid var(--lava-orange); }
+        .cred-value { font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--lava-dark); }
+        .cred-label { font-size: 0.7rem; color: var(--text-muted); }
+
+        .work-showcase { display: grid; grid-template-columns: 1.2fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 0.75rem; }
+        .work-item { position: relative; overflow: hidden; height: 160px; }
+        .work-item-large { grid-row: span 3; height: auto; }
+        .work-item img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; object-position: center center; }
+        .work-item img:hover { opacity: 0.9; }
+        .work-item .photo-controls { top: auto; bottom: 35px; left: 5px; }
+
+        /* Change Photo Button */
+        .change-photo-btn { position: absolute; top: 5px; right: 5px; background: var(--lava-orange); color: white; border: none; padding: 4px 8px; font-size: 0.65rem; font-family: 'Outfit', sans-serif; cursor: pointer; display: none; z-index: 11; border-radius: 2px; }
+        .change-photo-btn:hover { background: var(--lava-red); }
+        .editing .change-photo-btn { display: block; }
+        .work-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; font-family: 'Outfit', sans-serif; font-size: 0.65rem; font-weight: 600; padding: 1.5rem 0.5rem 0.4rem; }
+
+        /* CLOSING PAGE */
+        .closing-page { display: flex; flex-direction: column; }
+        .closing-message { background: var(--cream); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--lava-orange); }
+        .closing-message p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.75rem; }
+        .closing-message p:last-child { margin-bottom: 0; }
+
+        .closing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: auto; }
+        .closing-contact { background: white; border: 2px solid var(--lava-orange); padding: 1.5rem; }
+        .contact-header { font-family: 'Outfit', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lava-orange); margin-bottom: 0.75rem; }
+        .contact-name { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--lava-dark); }
+        .contact-role { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .contact-details { display: flex; flex-direction: column; gap: 0.5rem; }
+        .contact-row { display: flex; align-items: center; gap: 0.75rem; }
+        .contact-icon { font-size: 1rem; }
+        .contact-row span:last-child { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600; color: var(--lava-dark); }
+
+        .closing-terms { background: var(--cream); padding: 1.5rem; }
+        .terms-header { font-family: 'Outfit', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; }
+        .terms-list { margin-bottom: 1rem; }
+        .term-item { font-size: 0.85rem; color: var(--text-secondary); padding: 0.3rem 0; }
+        .terms-footer { font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
+
+        .company-footer { margin-top: auto; padding-top: 1.5rem; border-top: 2px solid var(--lava-orange); display: flex; align-items: center; gap: 1.5rem; }
+        .closing-logo { height: 50px; }
+        .company-info { flex: 1; }
+        .company-name { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--lava-dark); }
+        .company-address { font-size: 0.85rem; color: var(--text-secondary); }
+        .company-license { font-size: 0.75rem; color: var(--text-muted); }
+        .company-tagline { font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 500; color: var(--lava-orange); font-style: italic; }
+
+        /* EDITABLE STYLES */
+        .editable[contenteditable="true"] { background: rgba(232, 90, 44, 0.08); outline: 1px dashed var(--lava-orange); outline-offset: 2px; cursor: text; min-height: 1em; }
+        .editable[contenteditable="true"]:hover { background: rgba(232, 90, 44, 0.15); }
+        .editable[contenteditable="true"]:focus { background: rgba(232, 90, 44, 0.1); outline: 2px solid var(--lava-orange); }
+
+        /* PRINT STYLES */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            html { font-size: 10pt; }
+            body { background: white; }
+            .toolbar, .no-print, .photo-upload-btn { display: none !important; }
+            .packet { max-width: 100%; }
+            .page { min-height: auto; height: 10in; padding: 0.4in 0.5in; page-break-after: always; page-break-inside: avoid; overflow: hidden; }
+            .cover { height: 10in; padding: 0.6in; }
+            .about-work-page, .closing-page { padding: 0.4in 0.5in; }
+            .about-banner { height: 120px; }
+            .work-item { height: 100px; }
+            .work-item-large { height: auto; }
+            .estimate-page-img { max-height: 9in; width: auto; margin: 0 auto; display: block; }
+        }
+        @page { margin: 0; size: letter; }
+    </style>
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="LAVA-ESTIMATION/logo.png" alt="LAVA Roofing" class="password-logo">
+            <div class="password-title">Protected Document</div>
+            <div class="password-subtitle">Enter password to view estimate packet</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter')checkPassword()">
+            <button class="password-btn" onclick="checkPassword()">Access Document</button>
+            <div class="password-error" id="passwordError">Incorrect password. Please try again.</div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar content-locked">
+        <button class="toolbar-btn secondary" onclick="toggleEdit()">Edit</button>
+        <button class="toolbar-btn" onclick="window.print()">Print / PDF</button>
+    </div>
+
+    <div class="packet content-locked">
+        <!-- PAGE 1: COVER -->
+        <div class="page cover">
+            <div class="cover-header">
+                <img src="LAVA-ESTIMATION/logo.png" alt="LAVA Roofing" class="cover-logo">
+                <div class="cover-date" id="coverDate">January 2026</div>
+            </div>
+            <div class="cover-main">
+                <div class="cover-accent"></div>
+                <h1 class="cover-title editable" data-field="coverTitle">Roofing<br>Proposal</h1>
+                <p class="cover-subtitle editable" data-field="coverSubtitle">The right roof for the right house.</p>
+            </div>
+            <div class="cover-footer">
+                <div class="cover-customer">
+                    <div class="cover-label">Prepared For</div>
+                    <div class="cover-name editable" data-field="customerName">Kayla Stormont</div>
+                    <div class="cover-address editable" data-field="customerAddress">2950 Hana Highway, Hana, HI 96713</div>
+                </div>
+                <div class="cover-tagline editable" data-field="coverTagline">Dependability · Craftsmanship · Aloha</div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: THE HOME -->
+        <div class="page">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2 class="section-title">The Home</h2>
+            </div>
+
+            <div class="legacy-hero">
+                <div class="legacy-eyebrow editable" data-field="legacyEyebrow">Hana Highway Residence</div>
+                <h3 class="legacy-headline editable" data-field="legacyHeadline">Coastal Living</h3>
+                <p class="legacy-subhead editable" data-field="legacySubhead">A beautiful home deserving of a roof built to last.</p>
+            </div>
+
+            <div class="synergy-box">
+                <div class="synergy-content editable" data-field="synergyContent">
+                    <strong>Why standing seam metal:</strong> For homes along Hana Highway, standing seam aluminum provides the perfect balance of durability and coastal resilience. The concealed fastener system means no exposed screws to corrode in the salt air, and the 30-year paint warranty ensures your roof looks great for decades.
+                </div>
+            </div>
+
+            <div class="legacy-grid">
+                <div class="legacy-stat">
+                    <div class="legacy-stat-num editable" data-field="stat1Num">3,083</div>
+                    <div class="legacy-stat-label editable" data-field="stat1Label">Square feet of roofing</div>
+                </div>
+                <div class="legacy-stat">
+                    <div class="legacy-stat-num editable" data-field="stat2Num">30</div>
+                    <div class="legacy-stat-label editable" data-field="stat2Label">Year paint coating warranty</div>
+                </div>
+            </div>
+
+            <div class="ev-grid">
+                <div class="ev-card">
+                    <div class="ev-label">Aerial View</div>
+                    <img src="Stormont_EV_Page2.png" alt="EagleView Aerial" class="ev-img" id="aerialImg" onclick="document.getElementById('aerialInput').click()">
+                    <input type="file" id="aerialInput" class="photo-input" accept="image/*" onchange="changePhoto(this, 'aerialImg')">
+                    <button class="photo-upload-btn" onclick="document.getElementById('aerialInput').click()">Change Photo</button>
+                </div>
+                <div class="ev-card">
+                    <div class="ev-label">Roof Diagram</div>
+                    <img src="Stormont_EV_Page1.png" alt="EagleView Diagram" class="ev-img" id="propertyImg" onclick="document.getElementById('propertyInput').click()" style="object-fit: contain; background: white;">
+                    <input type="file" id="propertyInput" class="photo-input" accept="image/*" onchange="changePhoto(this, 'propertyImg')">
+                    <button class="photo-upload-btn" onclick="document.getElementById('propertyInput').click()">Change Photo</button>
+                </div>
+            </div>
+
+            <table class="measurements">
+                <thead>
+                    <tr><th>Measurement</th><th>Value</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Total Roof Area</td><td class="editable" data-field="roofArea">3,083 sq ft</td></tr>
+                    <tr><td>Roof Facets</td><td class="editable" data-field="roofStyle">5 facets</td></tr>
+                    <tr><td>Predominant Pitch</td><td class="editable" data-field="pitch">6/12</td></tr>
+                    <tr><td>Ridges/Hips</td><td class="editable" data-field="currentRoof">51 ft</td></tr>
+                    <tr><td>Product</td><td class="editable" data-field="product">Standing Seam Aluminum</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGE 3: WHY STANDING SEAM -->
+        <div class="page">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2 class="section-title">Why Standing Seam</h2>
+            </div>
+
+            <div class="ss-hero">
+                <div class="ss-badge">PREMIUM METAL ROOFING</div>
+                <div class="ss-title">Standing Seam Aluminum</div>
+                <div class="ss-tagline">The gold standard in metal roofing.</div>
+                <div class="ss-warranty-badge">
+                    <span class="ss-warranty-num">30</span>
+                    <span class="ss-warranty-text">YEAR<br>PAINT WARRANTY</span>
+                </div>
+            </div>
+
+            <div class="ss-visuals">
+                <div class="ss-visual-item" style="position:relative;">
+                    <button class="change-photo-btn" onclick="document.getElementById('ssInput1').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('ssImg1','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('ssImg1','left')">←</button><button onclick="movePhoto('ssImg1','center')">•</button><button onclick="movePhoto('ssImg1','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('ssImg1','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_7293.jpg" alt="Standing Seam" class="ss-visual-img repositionable" id="ssImg1">
+                    <input type="file" id="ssInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'ssImg1')">
+                    <div class="ss-visual-caption editable" data-field="ssCaption1">Clean lines, concealed fasteners</div>
+                </div>
+                <div class="ss-visual-item" style="position:relative;">
+                    <button class="change-photo-btn" onclick="document.getElementById('ssInput2').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('ssImg2','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('ssImg2','left')">←</button><button onclick="movePhoto('ssImg2','center')">•</button><button onclick="movePhoto('ssImg2','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('ssImg2','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_7295.jpg" alt="Standing Seam Detail" class="ss-visual-img repositionable" id="ssImg2">
+                    <input type="file" id="ssInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'ssImg2')">
+                    <div class="ss-visual-caption editable" data-field="ssCaption2">Weather-tight panel system</div>
+                </div>
+            </div>
+
+            <div class="ss-features">
+                <div class="ss-feature">
+                    <div class="ss-feature-title editable" data-field="ssFeat1Title">Concealed Fasteners</div>
+                    <div class="ss-feature-text editable" data-field="ssFeat1Text">No exposed screws. Nothing to leak or corrode.</div>
+                </div>
+                <div class="ss-feature">
+                    <div class="ss-feature-title editable" data-field="ssFeat2Title">Coastal Durable</div>
+                    <div class="ss-feature-text editable" data-field="ssFeat2Text">Aluminum won't rust in salt air environments.</div>
+                </div>
+                <div class="ss-feature">
+                    <div class="ss-feature-title editable" data-field="ssFeat3Title">Energy Efficient</div>
+                    <div class="ss-feature-text editable" data-field="ssFeat3Text">Reflects heat, reduces cooling costs.</div>
+                </div>
+                <div class="ss-feature">
+                    <div class="ss-feature-title editable" data-field="ssFeat4Title">40+ Year Life</div>
+                    <div class="ss-feature-text editable" data-field="ssFeat4Text">Outlasts shingles by decades.</div>
+                </div>
+            </div>
+
+            <div class="ss-callout">
+                <div class="ss-callout-title editable" data-field="ssCalloutTitle">Why Aluminum for Hana?</div>
+                <div class="ss-callout-text editable" data-field="ssCalloutText">
+                    Hana's coastal environment is tough on roofing materials. Salt air corrodes steel and degrades asphalt. <strong>Aluminum standing seam is naturally corrosion-resistant</strong> — it forms a protective oxide layer that actually strengthens over time. Combined with a Kynar paint finish, your roof will look stunning for 30+ years.
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: ABOUT LAVA -->
+        <div class="page about-work-page">
+            <div class="section-header">
+                <span class="section-num">03</span>
+                <h2 class="section-title">About LAVA</h2>
+            </div>
+
+            <div class="about-banner">
+                <button class="change-photo-btn" onclick="document.getElementById('aboutInput').click()">Change</button>
+                <div class="photo-controls" style="top:10px; left: 5px;">
+                    <div class="pos-row"><button onclick="movePhoto('aboutImg','up')">↑</button></div>
+                    <div class="pos-row"><button onclick="movePhoto('aboutImg','left')">←</button><button onclick="movePhoto('aboutImg','center')">•</button><button onclick="movePhoto('aboutImg','right')">→</button></div>
+                    <div class="pos-row"><button onclick="movePhoto('aboutImg','down')">↓</button></div>
+                </div>
+                <img src="Photos/IMG_4671.jpg" alt="Craftsmanship" class="about-banner-img repositionable" id="aboutImg">
+                <input type="file" id="aboutInput" class="photo-input" accept="image/*" onchange="changePhoto(this, 'aboutImg')">
+                <div class="about-banner-overlay">
+                    <span class="about-banner-text editable" data-field="aboutBannerText">Rooted in Craftsmanship</span>
+                </div>
+            </div>
+
+            <div class="about-split">
+                <div class="about-story editable" data-field="aboutStory">
+                    <p><strong>We're not just roofers — we come from custom home construction.</strong> Our team's background in timber framing and high-end builds means we understand what goes into a home built with care.</p>
+                    <p>When you work with LAVA, you're getting craftsmen who treat your home with the same respect as the people who built it.</p>
+                </div>
+                <div class="about-credentials">
+                    <div class="cred-item">
+                        <span class="cred-value editable" data-field="cred1Value">7-Year</span>
+                        <span class="cred-label editable" data-field="cred1Label">Workmanship Warranty</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-value editable" data-field="cred2Value">$1M</span>
+                        <span class="cred-label editable" data-field="cred2Label">Liability Insurance</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-value editable" data-field="cred3Value">CT-39063</span>
+                        <span class="cred-label editable" data-field="cred3Label">Licensed Contractor</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="work-showcase">
+                <div class="work-item work-item-large">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput1').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg1','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg1','left')">←</button><button onclick="movePhoto('workImg1','center')">•</button><button onclick="movePhoto('workImg1','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg1','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/Crew Photo1.jpg" alt="LAVA Crew" id="workImg1" class="repositionable">
+                    <input type="file" id="workInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg1')">
+                    <span class="work-label editable" data-field="workLabel1">The LAVA Team</span>
+                </div>
+                <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput2').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg2','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg2','left')">←</button><button onclick="movePhoto('workImg2','center')">•</button><button onclick="movePhoto('workImg2','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg2','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/FullSizeRender3.jpg" alt="Metal Roof" id="workImg2" class="repositionable">
+                    <input type="file" id="workInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg2')">
+                    <span class="work-label editable" data-field="workLabel2">Quality Craftsmanship</span>
+                </div>
+                <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput3').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg3','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg3','left')">←</button><button onclick="movePhoto('workImg3','center')">•</button><button onclick="movePhoto('workImg3','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg3','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_7279.jpg" alt="Standing Seam" id="workImg3" class="repositionable">
+                    <input type="file" id="workInput3" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg3')">
+                    <span class="work-label editable" data-field="workLabel3">Standing Seam Projects</span>
+                </div>
+                <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput4').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg4','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg4','left')">←</button><button onclick="movePhoto('workImg4','center')">•</button><button onclick="movePhoto('workImg4','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg4','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/Crew Photo 2.jpg" alt="Crew at Work" id="workImg4" class="repositionable">
+                    <input type="file" id="workInput4" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg4')">
+                    <span class="work-label editable" data-field="workLabel4">Craftsmen at Work</span>
+                </div>
+                <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput5').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg5','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg5','left')">←</button><button onclick="movePhoto('workImg5','center')">•</button><button onclick="movePhoto('workImg5','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg5','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_0179.jpg" alt="Team" id="workImg5" class="repositionable">
+                    <input type="file" id="workInput5" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg5')">
+                    <span class="work-label editable" data-field="workLabel5">Our Crew</span>
+                </div>
+                <div class="work-item">
+                    <button class="change-photo-btn" onclick="document.getElementById('workInput6').click()">Change</button>
+                    <div class="photo-controls">
+                        <div class="pos-row"><button onclick="movePhoto('workImg6','up')">↑</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg6','left')">←</button><button onclick="movePhoto('workImg6','center')">•</button><button onclick="movePhoto('workImg6','right')">→</button></div>
+                        <div class="pos-row"><button onclick="movePhoto('workImg6','down')">↓</button></div>
+                    </div>
+                    <img src="Photos/IMG_7487(1).jpg" alt="Working" id="workImg6" class="repositionable">
+                    <input type="file" id="workInput6" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg6')">
+                    <span class="work-label editable" data-field="workLabel6">On the Job</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 5: NEXT STEPS -->
+        <div class="page closing-page">
+            <div class="section-header">
+                <span class="section-num">04</span>
+                <h2 class="section-title">Next Steps</h2>
+            </div>
+
+            <div class="closing-message editable" data-field="closingMessage">
+                <p>Thank you for considering LAVA Roofing for your home. We know how important this decision is — especially for a property on Hana Highway.</p>
+                <p>We're here to answer any questions and walk you through every step of the process. When you're ready, just give us a call or send a text — we'd love to get started.</p>
+            </div>
+
+            <div class="closing-grid">
+                <div class="closing-contact">
+                    <div class="contact-header editable" data-field="contactHeader">Your Point of Contact</div>
+                    <div class="contact-name editable" data-field="contactName">Tyler</div>
+                    <div class="contact-role editable" data-field="contactRole">Project Manager</div>
+                    <div class="contact-details">
+                        <div class="contact-row">
+                            <span class="contact-icon">📱</span>
+                            <span class="editable" data-field="contactPhone">(808) 657-3737</span>
+                        </div>
+                        <div class="contact-row">
+                            <span class="contact-icon">✉️</span>
+                            <span class="editable" data-field="contactEmail">tyler@lavaroofing.com</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="closing-terms">
+                    <div class="terms-header editable" data-field="termsHeader">Quick Notes</div>
+                    <div class="terms-list editable" data-field="termsList">
+                        <div class="term-item">• 25% deposit at signing</div>
+                        <div class="term-item">• 50% due at project start</div>
+                        <div class="term-item">• 25% upon completion</div>
+                        <div class="term-item">• Unforeseen repairs billed as T&M</div>
+                    </div>
+                    <div class="terms-footer editable" data-field="termsFooter">Full terms provided in formal agreement.</div>
+                </div>
+            </div>
+
+            <div class="company-footer">
+                <img src="LAVA-ESTIMATION/logo.png" alt="LAVA Roofing" class="closing-logo">
+                <div class="company-info">
+                    <div class="company-name editable" data-field="companyName">LAVA Roofing Co.</div>
+                    <div class="company-address editable" data-field="companyAddress">Maui, Hawaii</div>
+                    <div class="company-license editable" data-field="companyLicense">Licensed Contractor: CT-39063 · $1M Insured</div>
+                </div>
+                <div class="company-tagline editable" data-field="companyTagline">The right roof for the right house.</div>
+            </div>
+        </div>
+
+        <!-- PAGE 6: THE PROPOSAL -->
+        <div class="page pdf-insert-page">
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2 class="section-title">The Proposal</h2>
+            </div>
+            <div class="estimate-page-embed">
+                <img src="Stormont_Estimate_Page1.png" alt="Estimate" class="estimate-page-img">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password protection
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            const screen = document.getElementById('passwordScreen');
+            if (input.value === 'lavaroofing') {
+                screen.classList.add('hidden');
+                document.querySelectorAll('.content-locked').forEach(el => el.classList.add('unlocked'));
+                sessionStorage.setItem('lavaAuth', 'true');
+            } else {
+                input.classList.add('error');
+                error.classList.add('visible');
+                setTimeout(() => input.classList.remove('error'), 500);
+            }
+        }
+
+        // Photo change functionality
+        function changePhoto(input, imgId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(imgId).src = e.target.result;
+                    // Save to localStorage
+                    localStorage.setItem('stormont_' + imgId, e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Load saved photos
+        function loadSavedPhotos() {
+            const photoIds = ['aerialImg', 'propertyImg', 'ssImg1', 'ssImg2', 'aboutImg', 'workImg1', 'workImg2', 'workImg3', 'workImg4', 'workImg5', 'workImg6'];
+            photoIds.forEach(id => {
+                const saved = localStorage.getItem('stormont_' + id);
+                if (saved) {
+                    document.getElementById(id).src = saved;
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('lavaAuth') === 'true') {
+                document.getElementById('passwordScreen').classList.add('hidden');
+                document.querySelectorAll('.content-locked').forEach(el => el.classList.add('unlocked'));
+            }
+            const now = new Date();
+            document.getElementById('coverDate').textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            loadData();
+            loadSavedPhotos();
+            loadPhotoPositions();
+        });
+
+        // Edit mode
+        let editing = false;
+        function toggleEdit() {
+            editing = !editing;
+            document.querySelectorAll('.editable').forEach(el => el.contentEditable = editing);
+            document.querySelector('.toolbar-btn.secondary').textContent = editing ? 'Done' : 'Edit';
+            document.querySelector('.packet').classList.toggle('editing', editing);
+            if (!editing) saveData();
+        }
+
+        // Photo repositioning
+        const photoPositions = {};
+        function movePhoto(imgId, direction) {
+            const img = document.getElementById(imgId);
+            if (!photoPositions[imgId]) {
+                photoPositions[imgId] = { x: 50, y: 50 }; // center
+            }
+            const step = 10;
+            switch(direction) {
+                case 'up': photoPositions[imgId].y = Math.max(0, photoPositions[imgId].y - step); break;
+                case 'down': photoPositions[imgId].y = Math.min(100, photoPositions[imgId].y + step); break;
+                case 'left': photoPositions[imgId].x = Math.max(0, photoPositions[imgId].x - step); break;
+                case 'right': photoPositions[imgId].x = Math.min(100, photoPositions[imgId].x + step); break;
+                case 'center': photoPositions[imgId] = { x: 50, y: 50 }; break;
+            }
+            img.style.objectPosition = `${photoPositions[imgId].x}% ${photoPositions[imgId].y}%`;
+            localStorage.setItem('stormont_pos_' + imgId, JSON.stringify(photoPositions[imgId]));
+        }
+
+        function loadPhotoPositions() {
+            document.querySelectorAll('.repositionable').forEach(img => {
+                const saved = localStorage.getItem('stormont_pos_' + img.id);
+                if (saved) {
+                    const pos = JSON.parse(saved);
+                    photoPositions[img.id] = pos;
+                    img.style.objectPosition = `${pos.x}% ${pos.y}%`;
+                }
+            });
+        }
+
+        // Save/Load text data
+        function saveData() {
+            const data = {};
+            document.querySelectorAll('.editable').forEach(el => {
+                if (el.dataset.field) data[el.dataset.field] = el.innerHTML;
+            });
+            localStorage.setItem('stormontPacket', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('stormontPacket');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.keys(data).forEach(field => {
+                    const el = document.querySelector(`[data-field="${field}"]`);
+                    if (el) el.innerHTML = data[field];
+                });
+            }
+        }
+
+        document.addEventListener('input', e => {
+            if (e.target.classList.contains('editable')) {
+                clearTimeout(window.saveTimer);
+                window.saveTimer = setTimeout(saveData, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

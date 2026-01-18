@@ -1,0 +1,503 @@
+/* LAVA Packet Builder - Builder UI Styles */
+
+/* ========================================
+   BUILDER LAYOUT
+======================================== */
+.builder {
+    display: flex;
+    min-height: 100vh;
+}
+
+.builder-sidebar {
+    background: #1a1a1a;
+    color: white;
+    padding: 1.5rem;
+    position: fixed;
+    width: 280px;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    left: 0;
+    top: 0;
+}
+
+.builder-main {
+    margin-left: 280px;
+    padding: 2rem;
+    background: #faf8f5;
+    flex: 1;
+    min-width: 9in;
+    overflow-x: auto;
+}
+
+/* ========================================
+   SIDEBAR BACK LINK
+======================================== */
+.sidebar-back {
+    display: block;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    transition: color 0.2s;
+}
+
+.sidebar-back:hover {
+    color: white;
+}
+
+/* ========================================
+   SIDEBAR HEADER
+======================================== */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-logo {
+    height: 40px;
+}
+
+.sidebar-title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+}
+
+.sidebar-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+}
+
+/* ========================================
+   SIDEBAR SECTIONS
+======================================== */
+.sidebar-section {
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-section-title {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--lava-orange);
+    margin-bottom: 0.75rem;
+}
+
+/* Customer Info */
+.customer-field {
+    margin-bottom: 0.75rem;
+}
+
+.customer-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 0.25rem;
+}
+
+.customer-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+
+.customer-input:focus {
+    outline: none;
+    border-color: var(--lava-orange);
+    background: rgba(255,255,255,0.15);
+}
+
+.customer-input::placeholder {
+    color: rgba(255,255,255,0.4);
+}
+
+/* Page Toggles */
+.page-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.page-toggle:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.page-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--lava-orange);
+}
+
+.page-toggle-label {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+}
+
+/* Product Selector */
+.product-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.product-option:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.product-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--lava-orange);
+}
+
+.product-option-label {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+}
+
+.product-option.selected {
+    background: rgba(232, 90, 44, 0.2);
+}
+
+/* ========================================
+   ESTIMATE DROP ZONE
+======================================== */
+.estimate-dropzone {
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.estimate-dropzone:hover {
+    border-color: var(--lava-orange);
+    background: rgba(232, 90, 44, 0.1);
+}
+
+.estimate-dropzone.dragover {
+    border-color: var(--lava-orange);
+    background: rgba(232, 90, 44, 0.2);
+}
+
+.dropzone-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+}
+
+.dropzone-text {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 0.25rem;
+}
+
+.dropzone-hint {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.4);
+}
+
+.estimate-preview {
+    margin-top: 1rem;
+    position: relative;
+}
+
+.estimate-preview img {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.estimate-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: var(--lava-red);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ========================================
+   SIDEBAR ACTIONS
+======================================== */
+.sidebar-actions {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: none;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sidebar-btn-primary {
+    background: var(--lava-orange);
+    color: white;
+}
+
+.sidebar-btn-primary:hover {
+    background: var(--lava-red);
+}
+
+.sidebar-btn-secondary {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.sidebar-btn-secondary:hover {
+    border-color: var(--lava-orange);
+    color: var(--lava-orange);
+}
+
+/* ========================================
+   PAGE PREVIEW CONTAINER
+======================================== */
+.page-preview-container {
+    display: block;
+    width: 8.5in;
+    margin: 0 auto;
+}
+
+.page-wrapper {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-top: 1.5rem;
+    width: 8.5in;
+}
+
+.page-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #8a8a8a;
+    letter-spacing: 0.05em;
+}
+
+.page-preview {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    width: 8.5in !important;
+    min-height: 11in;
+    background: white;
+}
+
+/* Force page dimensions in builder */
+.builder-mode .page {
+    width: 8.5in !important;
+    min-height: 11in;
+    box-sizing: border-box;
+}
+
+.builder-mode .cover {
+    width: 8.5in !important;
+    min-height: 11in;
+}
+
+/* ========================================
+   RESIZE HANDLES
+======================================== */
+.resizable {
+    position: relative;
+}
+
+.resize-handle {
+    position: absolute;
+    background: var(--lava-orange);
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 20;
+}
+
+.resizable:hover .resize-handle {
+    opacity: 0.8;
+}
+
+.resize-handle-se {
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    cursor: se-resize;
+    border-radius: 4px 0 0 0;
+}
+
+.resize-handle-e {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 40px;
+    cursor: e-resize;
+    border-radius: 4px 0 0 4px;
+}
+
+.resize-handle-s {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 8px;
+    cursor: s-resize;
+    border-radius: 4px 4px 0 0;
+}
+
+/* ========================================
+   PHOTO RESIZE OVERLAY
+======================================== */
+.photo-resizable {
+    position: relative;
+}
+
+.photo-resize-controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.photo-resizable:hover .photo-resize-controls,
+.photo-resizable.active .photo-resize-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.photo-resize-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(232, 90, 44, 0.1);
+    border: 2px solid var(--lava-orange);
+}
+
+.photo-resize-corner {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--lava-orange);
+    border: 2px solid white;
+    border-radius: 2px;
+}
+
+.photo-resize-corner.nw { top: -8px; left: -8px; cursor: nw-resize; }
+.photo-resize-corner.ne { top: -8px; right: -8px; cursor: ne-resize; }
+.photo-resize-corner.sw { bottom: -8px; left: -8px; cursor: sw-resize; }
+.photo-resize-corner.se { bottom: -8px; right: -8px; cursor: se-resize; }
+
+/* ========================================
+   TOAST NOTIFICATIONS
+======================================== */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background: var(--lava-dark);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease;
+}
+
+.toast.success {
+    border-left: 4px solid #4caf50;
+}
+
+.toast.error {
+    border-left: 4px solid var(--lava-red);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+@media (max-width: 900px) {
+    .builder {
+        grid-template-columns: 1fr;
+    }
+
+    .builder-sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .builder-main {
+        margin-left: 0;
+    }
+}
+
+@media print {
+    .builder-sidebar,
+    .page-label,
+    .resize-handle,
+    .photo-resize-controls {
+        display: none !important;
+    }
+
+    .builder-main {
+        margin-left: 0;
+        padding: 0;
+    }
+}

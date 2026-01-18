@@ -1,4 +1,7 @@
 # Ignore sensitive/unnecessary files
+.env
+.env.local
+.env.*.local
 LEADS.md
 leads.html
 *.pdf

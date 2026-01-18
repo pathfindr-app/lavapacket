@@ -1,0 +1,139 @@
+<!-- PAGE: ABOUT LAVA -->
+<div class="page about-work-page" data-page-id="about">
+    <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">About LAVA</h2>
+    </div>
+
+    <div class="about-banner">
+        <button class="change-photo-btn" onclick="Photos.triggerUpload('aboutInput')">Change</button>
+        <div class="photo-controls" style="top:10px; left: 5px;">
+            <div class="pos-row"><button onclick="Photos.movePhoto('aboutImg','up')">↑</button></div>
+            <div class="pos-row">
+                <button onclick="Photos.movePhoto('aboutImg','left')">←</button>
+                <button onclick="Photos.movePhoto('aboutImg','center')">•</button>
+                <button onclick="Photos.movePhoto('aboutImg','right')">→</button>
+            </div>
+            <div class="pos-row"><button onclick="Photos.movePhoto('aboutImg','down')">↓</button></div>
+        </div>
+        <img src="assets/images/portfolio/IMG_4671.jpg" alt="Craftsmanship" class="about-banner-img repositionable" id="aboutImg">
+        <input type="file" id="aboutInput" class="photo-input" accept="image/*" data-target="aboutImg">
+        <div class="about-banner-overlay">
+            <span class="about-banner-text editable" data-field="aboutBannerText">Rooted in Craftsmanship</span>
+        </div>
+    </div>
+
+    <div class="about-split">
+        <div class="about-story editable" data-field="aboutStory">
+            <p><strong>We're not just roofers — we come from custom home construction.</strong> Our team's background in timber framing and high-end builds means we understand what goes into a home built with care.</p>
+            <p>When you work with LAVA, you're getting craftsmen who treat your home with the same respect as the people who built it.</p>
+        </div>
+        <div class="about-credentials">
+            <div class="cred-item">
+                <span class="cred-value editable" data-field="cred1Value">7-Year</span>
+                <span class="cred-label editable" data-field="cred1Label">Workmanship Warranty</span>
+            </div>
+            <div class="cred-item">
+                <span class="cred-value editable" data-field="cred2Value">$1M</span>
+                <span class="cred-label editable" data-field="cred2Label">Liability Insurance</span>
+            </div>
+            <div class="cred-item">
+                <span class="cred-value editable" data-field="cred3Value">CT-39063</span>
+                <span class="cred-label editable" data-field="cred3Label">Licensed Contractor</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="work-showcase">
+        <div class="work-item work-item-large">
+            <button class="change-photo-btn" onclick="Photos.triggerUpload('workInput1')">Change</button>
+            <div class="photo-controls">
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg1','up')">↑</button></div>
+                <div class="pos-row">
+                    <button onclick="Photos.movePhoto('workImg1','left')">←</button>
+                    <button onclick="Photos.movePhoto('workImg1','center')">•</button>
+                    <button onclick="Photos.movePhoto('workImg1','right')">→</button>
+                </div>
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg1','down')">↓</button></div>
+            </div>
+            <img src="assets/images/portfolio/Crew Photo1.jpg" alt="LAVA Crew" id="workImg1" class="repositionable">
+            <input type="file" id="workInput1" class="photo-input" accept="image/*" data-target="workImg1">
+            <span class="work-label editable" data-field="workLabel1">The LAVA Team</span>
+        </div>
+        <div class="work-item">
+            <button class="change-photo-btn" onclick="Photos.triggerUpload('workInput2')">Change</button>
+            <div class="photo-controls">
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg2','up')">↑</button></div>
+                <div class="pos-row">
+                    <button onclick="Photos.movePhoto('workImg2','left')">←</button>
+                    <button onclick="Photos.movePhoto('workImg2','center')">•</button>
+                    <button onclick="Photos.movePhoto('workImg2','right')">→</button>
+                </div>
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg2','down')">↓</button></div>
+            </div>
+            <img src="assets/images/portfolio/FullSizeRender3.jpg" alt="Metal Roof" id="workImg2" class="repositionable">
+            <input type="file" id="workInput2" class="photo-input" accept="image/*" data-target="workImg2">
+            <span class="work-label editable" data-field="workLabel2">Quality Craftsmanship</span>
+        </div>
+        <div class="work-item">
+            <button class="change-photo-btn" onclick="Photos.triggerUpload('workInput3')">Change</button>
+            <div class="photo-controls">
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg3','up')">↑</button></div>
+                <div class="pos-row">
+                    <button onclick="Photos.movePhoto('workImg3','left')">←</button>
+                    <button onclick="Photos.movePhoto('workImg3','center')">•</button>
+                    <button onclick="Photos.movePhoto('workImg3','right')">→</button>
+                </div>
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg3','down')">↓</button></div>
+            </div>
+            <img src="assets/images/portfolio/IMG_7279.jpg" alt="Standing Seam" id="workImg3" class="repositionable">
+            <input type="file" id="workInput3" class="photo-input" accept="image/*" data-target="workImg3">
+            <span class="work-label editable" data-field="workLabel3">Standing Seam Projects</span>
+        </div>
+        <div class="work-item">
+            <button class="change-photo-btn" onclick="Photos.triggerUpload('workInput4')">Change</button>
+            <div class="photo-controls">
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg4','up')">↑</button></div>
+                <div class="pos-row">
+                    <button onclick="Photos.movePhoto('workImg4','left')">←</button>
+                    <button onclick="Photos.movePhoto('workImg4','center')">•</button>
+                    <button onclick="Photos.movePhoto('workImg4','right')">→</button>
+                </div>
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg4','down')">↓</button></div>
+            </div>
+            <img src="assets/images/portfolio/Crew Photo 2.jpg" alt="Crew at Work" id="workImg4" class="repositionable">
+            <input type="file" id="workInput4" class="photo-input" accept="image/*" data-target="workImg4">
+            <span class="work-label editable" data-field="workLabel4">Craftsmen at Work</span>
+        </div>
+        <div class="work-item">
+            <button class="change-photo-btn" onclick="Photos.triggerUpload('workInput5')">Change</button>
+            <div class="photo-controls">
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg5','up')">↑</button></div>
+                <div class="pos-row">
+                    <button onclick="Photos.movePhoto('workImg5','left')">←</button>
+                    <button onclick="Photos.movePhoto('workImg5','center')">•</button>
+                    <button onclick="Photos.movePhoto('workImg5','right')">→</button>
+                </div>
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg5','down')">↓</button></div>
+            </div>
+            <img src="assets/images/portfolio/IMG_0179.jpg" alt="Team" id="workImg5" class="repositionable">
+            <input type="file" id="workInput5" class="photo-input" accept="image/*" data-target="workImg5">
+            <span class="work-label editable" data-field="workLabel5">Our Crew</span>
+        </div>
+        <div class="work-item">
+            <button class="change-photo-btn" onclick="Photos.triggerUpload('workInput6')">Change</button>
+            <div class="photo-controls">
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg6','up')">↑</button></div>
+                <div class="pos-row">
+                    <button onclick="Photos.movePhoto('workImg6','left')">←</button>
+                    <button onclick="Photos.movePhoto('workImg6','center')">•</button>
+                    <button onclick="Photos.movePhoto('workImg6','right')">→</button>
+                </div>
+                <div class="pos-row"><button onclick="Photos.movePhoto('workImg6','down')">↓</button></div>
+            </div>
+            <img src="assets/images/portfolio/IMG_7487(1).jpg" alt="Working" id="workImg6" class="repositionable">
+            <input type="file" id="workInput6" class="photo-input" accept="image/*" data-target="workImg6">
+            <span class="work-label editable" data-field="workLabel6">On the Job</span>
+        </div>
+    </div>
+</div>

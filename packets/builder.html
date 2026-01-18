@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVA Packet Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase config -->
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/packet.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/builder.css">
+    <link rel="stylesheet" href="../css/print.css">
+</head>
+<body class="builder-mode">
+    <!-- Builder Layout -->
+    <div class="builder">
+        <!-- Sidebar -->
+        <aside class="builder-sidebar">
+            <a href="../index.html" class="sidebar-back">← Back to Portal</a>
+            <div class="sidebar-header">
+                <img src="../assets/images/logo.png" alt="LAVA" class="sidebar-logo">
+                <div>
+                    <div class="sidebar-title">Packet Builder</div>
+                    <div class="sidebar-subtitle">Create customer proposals</div>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Customer</div>
+                <div class="customer-field">
+                    <div class="customer-label">Name</div>
+                    <input type="text" class="customer-input" id="customerNameInput" data-field="customerName" placeholder="Customer Name">
+                </div>
+                <div class="customer-field">
+                    <div class="customer-label">Address</div>
+                    <input type="text" class="customer-input" id="customerAddressInput" data-field="customerAddress" placeholder="Property Address">
+                </div>
+            </div>
+
+            <!-- Page Toggles -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Pages</div>
+                <label class="page-toggle">
+                    <input type="checkbox" data-page="cover" checked>
+                    <span class="page-toggle-label">Cover</span>
+                </label>
+                <label class="page-toggle">
+                    <input type="checkbox" data-page="home" checked>
+                    <span class="page-toggle-label">The Home</span>
+                </label>
+                <label class="page-toggle">
+                    <input type="checkbox" data-page="product" checked>
+                    <span class="page-toggle-label">Product Page</span>
+                </label>
+                <label class="page-toggle">
+                    <input type="checkbox" data-page="about" checked>
+                    <span class="page-toggle-label">About LAVA</span>
+                </label>
+                <label class="page-toggle">
+                    <input type="checkbox" data-page="closing" checked>
+                    <span class="page-toggle-label">Next Steps</span>
+                </label>
+                <label class="page-toggle">
+                    <input type="checkbox" data-page="proposal" checked>
+                    <span class="page-toggle-label">The Proposal</span>
+                </label>
+            </div>
+
+            <!-- Product Selector -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Product</div>
+                <label class="product-option">
+                    <input type="radio" name="product" value="standing-seam" checked>
+                    <span class="product-option-label">Standing Seam (Snap-Lock)</span>
+                </label>
+                <label class="product-option">
+                    <input type="radio" name="product" value="mechanical-lock">
+                    <span class="product-option-label">Mechanical Lock</span>
+                </label>
+                <label class="product-option">
+                    <input type="radio" name="product" value="brava">
+                    <span class="product-option-label">Brava Tile</span>
+                </label>
+                <label class="product-option">
+                    <input type="radio" name="product" value="shingles">
+                    <span class="product-option-label">Premium Shingles</span>
+                </label>
+            </div>
+
+            <!-- EagleView Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">EagleView Report</div>
+                <div class="estimate-dropzone" id="eagleviewDropzone" onclick="document.getElementById('eagleviewInput').click()">
+                    <div class="dropzone-icon">🛰️</div>
+                    <div class="dropzone-text">Drop EagleView report</div>
+                    <div class="dropzone-hint">AI extracts measurements</div>
+                </div>
+                <input type="file" id="eagleviewInput" class="photo-input" accept="image/*,.pdf" onchange="if(typeof EagleView!=='undefined')EagleView.handleReportUpload(this.files[0])">
+            </div>
+
+            <!-- Estimate Drop Zone -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Estimate</div>
+                <div class="estimate-dropzone" id="estimateDropzone" onclick="document.getElementById('estimateInput').click()">
+                    <div class="dropzone-icon">📄</div>
+                    <div class="dropzone-text">Drop estimate here</div>
+                    <div class="dropzone-hint">PNG, JPG, or PDF</div>
+                </div>
+                <input type="file" id="estimateInput" class="photo-input" accept="image/*,.pdf" onchange="if(typeof Estimate!=='undefined')Estimate.handleFileSelect(event)">
+                <div class="estimate-preview" id="estimatePreview" style="display:none;"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="sidebar-actions">
+                <button class="sidebar-btn sidebar-btn-primary" id="printPacketBtn">Print / PDF</button>
+                <button class="sidebar-btn sidebar-btn-secondary" id="savePacketBtn">Save Packet</button>
+            </div>
+        </aside>
+
+        <!-- Main Preview Area -->
+        <main class="builder-main">
+            <div class="packet page-preview-container">
+                <!-- PAGE 1: COVER -->
+                <div class="page-wrapper">
+                    <div class="page-label">Page 1: Cover</div>
+                    <div class="page cover page-preview" data-page-id="cover" style="width: 8.5in; min-height: 11in;">
+                        <div class="cover-header">
+                            <img src="../assets/images/logo.png" alt="LAVA Roofing" class="cover-logo">
+                            <div class="cover-date" id="coverDate">January 2026</div>
+                        </div>
+                        <div class="cover-main">
+                            <div class="cover-accent"></div>
+                            <h1 class="cover-title editable" data-field="coverTitle">Roofing<br>Proposal</h1>
+                            <p class="cover-subtitle editable" data-field="coverSubtitle">The right roof for the right house.</p>
+                        </div>
+                        <div class="cover-footer">
+                            <div class="cover-customer">
+                                <div class="cover-label">Prepared For</div>
+                                <div class="cover-name editable" data-field="customerName">Customer Name</div>
+                                <div class="cover-address editable" data-field="customerAddress">Property Address</div>
+                            </div>
+                            <div class="cover-tagline editable" data-field="coverTagline">Dependability · Craftsmanship · Aloha</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE 2: THE HOME -->
+                <div class="page-wrapper">
+                    <div class="page-label">Page 2: The Home</div>
+                    <div class="page page-preview" style="width: 8.5in; min-height: 11in;" data-page-id="home">
+                        <div class="section-header">
+                            <span class="section-num">01</span>
+                            <h2 class="section-title">The Home</h2>
+                        </div>
+
+                        <div class="legacy-hero">
+                            <div class="legacy-eyebrow editable" data-field="legacyEyebrow">Property Overview</div>
+                            <h3 class="legacy-headline editable" data-field="legacyHeadline">Your Home</h3>
+                            <p class="legacy-subhead editable" data-field="legacySubhead">A beautiful home deserving of a roof built to last.</p>
+                        </div>
+
+                        <div class="synergy-box">
+                            <div class="synergy-content editable" data-field="synergyContent">
+                                <strong>Why we're the right fit:</strong> Our team comes from a background in timber framing and custom home construction. We understand what it means to work on a home built with care — because that's exactly how we approach every roof.
+                            </div>
+                        </div>
+
+                        <div class="legacy-grid">
+                            <div class="legacy-stat">
+                                <div class="legacy-stat-num editable" data-field="stat1Num">0,000</div>
+                                <div class="legacy-stat-label editable" data-field="stat1Label">Square feet of roofing</div>
+                            </div>
+                            <div class="legacy-stat">
+                                <div class="legacy-stat-num editable" data-field="stat2Num">50</div>
+                                <div class="legacy-stat-label editable" data-field="stat2Label">Year warranty</div>
+                            </div>
+                        </div>
+
+                        <div class="ev-grid">
+                            <div class="ev-card ev-dropzone" onclick="document.getElementById('aerialInput').click()">
+                                <div class="ev-label">Aerial View (from EagleView)</div>
+                                <div class="ev-placeholder" id="aerialPlaceholder">
+                                    <span class="ev-placeholder-icon">🛰️</span>
+                                    <span class="ev-placeholder-text">Drop aerial image</span>
+                                </div>
+                                <img src="" alt="Aerial View" class="ev-img repositionable" id="aerialImg" style="display:none;">
+                                <input type="file" id="aerialInput" class="photo-input" accept="image/*" onchange="if(this.files[0] && typeof EagleView!=='undefined')EagleView.handleAerialUpload(this.files[0])">
+                            </div>
+                            <div class="ev-card ev-dropzone" onclick="document.getElementById('diagramInput').click()">
+                                <div class="ev-label">Roof Diagram (from EagleView)</div>
+                                <div class="ev-placeholder" id="diagramPlaceholder">
+                                    <span class="ev-placeholder-icon">📐</span>
+                                    <span class="ev-placeholder-text">Drop roof diagram</span>
+                                </div>
+                                <img src="" alt="Roof Diagram" class="ev-img repositionable" id="diagramImg" style="display:none; object-fit: contain; background: white;">
+                                <input type="file" id="diagramInput" class="photo-input" accept="image/*" onchange="if(this.files[0] && typeof EagleView!=='undefined')EagleView.handleDiagramUpload(this.files[0])">
+                            </div>
+                        </div>
+
+                        <table class="measurements">
+                            <thead>
+                                <tr><th>Measurement</th><th>Value</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Total Roof Area</td><td class="editable" data-field="roofArea">0,000 sq ft</td></tr>
+                                <tr><td>Roof Facets</td><td class="editable" data-field="roofFacets">0 facets</td></tr>
+                                <tr><td>Predominant Pitch</td><td class="editable" data-field="pitch">0/12</td></tr>
+                                <tr><td>Ridges/Hips</td><td class="editable" data-field="ridgesHips">0 ft</td></tr>
+                                <tr><td>Product</td><td class="editable" data-field="productField">Roofing Material</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PAGE 3: PRODUCT - STANDING SEAM -->
+                <div class="page-wrapper">
+                    <div class="page-label">Page 3: Product</div>
+                    <div class="page product-page page-preview" style="width: 8.5in; min-height: 11in;" data-page-id="product" data-product="standing-seam">
+                        <div class="section-header">
+                            <span class="section-num">02</span>
+                            <h2 class="section-title">Why Standing Seam</h2>
+                        </div>
+
+                        <div class="ss-hero">
+                            <div class="ss-badge">PREMIUM METAL ROOFING</div>
+                            <div class="ss-title">Standing Seam Aluminum</div>
+                            <div class="ss-tagline">The gold standard in metal roofing.</div>
+                            <div class="ss-warranty-badge">
+                                <span class="ss-warranty-num">30</span>
+                                <span class="ss-warranty-text">YEAR<br>PAINT WARRANTY</span>
+                            </div>
+                        </div>
+
+                        <div class="ss-visuals">
+                            <div class="ss-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('ssInput1').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('ssImg1','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('ssImg1','left')">←</button><button onclick="movePhoto('ssImg1','center')">•</button><button onclick="movePhoto('ssImg1','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('ssImg1','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('ssImg1','out')">−</button><button onclick="zoomPhoto('ssImg1','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_7293.jpg" alt="Standing Seam" class="ss-visual-img repositionable" id="ssImg1">
+                                <input type="file" id="ssInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'ssImg1')">
+                                <div class="ss-visual-caption editable" data-field="ssCaption1">Clean lines, concealed fasteners</div>
+                            </div>
+                            <div class="ss-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('ssInput2').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('ssImg2','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('ssImg2','left')">←</button><button onclick="movePhoto('ssImg2','center')">•</button><button onclick="movePhoto('ssImg2','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('ssImg2','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('ssImg2','out')">−</button><button onclick="zoomPhoto('ssImg2','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_7295.jpg" alt="Standing Seam Detail" class="ss-visual-img repositionable" id="ssImg2">
+                                <input type="file" id="ssInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'ssImg2')">
+                                <div class="ss-visual-caption editable" data-field="ssCaption2">Weather-tight panel system</div>
+                            </div>
+                        </div>
+
+                        <div class="ss-features">
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="ssFeat1Title">Concealed Fasteners</div>
+                                <div class="ss-feature-text editable" data-field="ssFeat1Text">No exposed screws. Nothing to leak or corrode.</div>
+                            </div>
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="ssFeat2Title">Coastal Durable</div>
+                                <div class="ss-feature-text editable" data-field="ssFeat2Text">Aluminum won't rust in salt air environments.</div>
+                            </div>
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="ssFeat3Title">Energy Efficient</div>
+                                <div class="ss-feature-text editable" data-field="ssFeat3Text">Reflects heat, reduces cooling costs.</div>
+                            </div>
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="ssFeat4Title">40+ Year Life</div>
+                                <div class="ss-feature-text editable" data-field="ssFeat4Text">Outlasts shingles by decades.</div>
+                            </div>
+                        </div>
+
+                        <div class="ss-callout">
+                            <div class="ss-callout-title editable" data-field="ssCalloutTitle">Why Aluminum for Hawaii?</div>
+                            <div class="ss-callout-text editable" data-field="ssCalloutText">
+                                Hawaii's coastal environment is tough on roofing materials. Salt air corrodes steel and degrades asphalt. <strong>Aluminum standing seam is naturally corrosion-resistant</strong> — it forms a protective oxide layer that actually strengthens over time.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BRAVA PRODUCT PAGE (hidden by default) -->
+                    <div class="page product-page page-preview" style="width: 8.5in; min-height: 11in; display:none;" data-page-id="product" data-product="brava">
+                        <div class="section-header">
+                            <span class="section-num">02</span>
+                            <h2 class="section-title">Why Brava</h2>
+                        </div>
+
+                        <div class="brava-hero">
+                            <div class="brava-badge editable" data-field="bravaBadge">CERTIFIED INSTALLER</div>
+                            <div class="brava-logo-container">
+                                <img src="../assets/images/BravaIcon.png" alt="Brava Roof Tile" class="brava-logo-img">
+                            </div>
+                            <div class="brava-tagline editable" data-field="bravaTagline">Authentic Look. Unrivaled Performance.</div>
+                            <div class="brava-warranty-badge">
+                                <span class="brava-warranty-num editable" data-field="bravaWarrantyNum">50</span>
+                                <span class="brava-warranty-text">YEAR<br>WARRANTY</span>
+                            </div>
+                        </div>
+
+                        <div class="brava-visuals">
+                            <div class="brava-visual-item">
+                                <img src="../assets/images/portfolio/Brava2.png" alt="Brava Authentic Look" class="brava-visual-img">
+                                <div class="brava-visual-caption editable" data-field="bravaCaption1">Authentic wood shake & slate appearance</div>
+                            </div>
+                            <div class="brava-visual-item">
+                                <img src="../assets/images/portfolio/Brava1.png" alt="Brava Recycled Materials" class="brava-visual-img">
+                                <div class="brava-visual-caption editable" data-field="bravaCaption2">100% recycled materials process</div>
+                            </div>
+                        </div>
+
+                        <div class="brava-features">
+                            <div class="brava-feature brava-feature-fire">
+                                <div class="brava-feature-title editable" data-field="bravaFeat1Title">Class A Fire Rating</div>
+                                <div class="brava-feature-text editable" data-field="bravaFeat1Text"><strong>Highest fire protection.</strong> Critical for Hawaii.</div>
+                            </div>
+                            <div class="brava-feature">
+                                <div class="brava-feature-title editable" data-field="bravaFeat2Title">Class 4 Impact</div>
+                                <div class="brava-feature-text editable" data-field="bravaFeat2Text">Highest rating. Extreme weather ready.</div>
+                            </div>
+                            <div class="brava-feature">
+                                <div class="brava-feature-title editable" data-field="bravaFeat3Title">100% Recycled</div>
+                                <div class="brava-feature-text editable" data-field="bravaFeat3Text">Made from recycled plastics.</div>
+                            </div>
+                            <div class="brava-feature">
+                                <div class="brava-feature-title editable" data-field="bravaFeat4Title">3–4x Longer Life</div>
+                                <div class="brava-feature-text editable" data-field="bravaFeat4Text">Outlasts traditional materials.</div>
+                            </div>
+                        </div>
+
+                        <div class="brava-callout">
+                            <div class="brava-callout-title editable" data-field="bravaCalloutTitle">Why It Won't Fade: Mineral Colorants</div>
+                            <div class="brava-callout-text editable" data-field="bravaCalloutText">
+                                Brava uses <strong>mineral pigments mined from mountains</strong> — not chemical dyes. The same reason mountains don't change color after millennia in the sun.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SHINGLES PRODUCT PAGE (hidden by default) -->
+                    <div class="page product-page page-preview" style="width: 8.5in; min-height: 11in; display:none;" data-page-id="product" data-product="shingles">
+                        <div class="section-header">
+                            <span class="section-num">02</span>
+                            <h2 class="section-title">Why Premium Shingles</h2>
+                        </div>
+
+                        <div class="ss-hero" style="border-color: var(--lava-orange);">
+                            <div class="ss-badge" style="color: var(--lava-orange);">PREMIUM ASPHALT ROOFING</div>
+                            <div class="ss-title">Architectural Shingles</div>
+                            <div class="ss-tagline">Classic style with modern protection.</div>
+                            <div class="ss-warranty-badge" style="border-color: var(--lava-orange); color: var(--lava-orange);">
+                                <span class="ss-warranty-num" style="color: var(--lava-orange);">30</span>
+                                <span class="ss-warranty-text" style="color: var(--lava-orange);">YEAR<br>WARRANTY</span>
+                            </div>
+                        </div>
+
+                        <div class="ss-visuals">
+                            <div class="ss-visual-item" style="position:relative;">
+                                <img src="../assets/images/portfolio/IMG_7279.jpg" alt="Shingles" class="ss-visual-img repositionable" id="shingleImg1">
+                                <div class="ss-visual-caption editable" data-field="shingleCaption1">Dimensional appearance</div>
+                            </div>
+                            <div class="ss-visual-item" style="position:relative;">
+                                <img src="../assets/images/portfolio/FullSizeRender3.jpg" alt="Shingles Detail" class="ss-visual-img repositionable" id="shingleImg2">
+                                <div class="ss-visual-caption editable" data-field="shingleCaption2">Wind-resistant design</div>
+                            </div>
+                        </div>
+
+                        <div class="ss-features">
+                            <div class="ss-feature" style="border-color: var(--lava-orange);">
+                                <div class="ss-feature-title">Wind Resistant</div>
+                                <div class="ss-feature-text">Rated for winds up to 130 mph.</div>
+                            </div>
+                            <div class="ss-feature" style="border-color: var(--lava-orange);">
+                                <div class="ss-feature-title">Algae Resistant</div>
+                                <div class="ss-feature-text">Copper granules prevent algae growth.</div>
+                            </div>
+                            <div class="ss-feature" style="border-color: var(--lava-orange);">
+                                <div class="ss-feature-title">Cost Effective</div>
+                                <div class="ss-feature-text">Great value for quality protection.</div>
+                            </div>
+                            <div class="ss-feature" style="border-color: var(--lava-orange);">
+                                <div class="ss-feature-title">Color Options</div>
+                                <div class="ss-feature-text">Wide variety of colors available.</div>
+                            </div>
+                        </div>
+
+                        <div class="ss-callout" style="background: #fff5f2; border-color: var(--lava-orange);">
+                            <div class="ss-callout-title" style="color: var(--lava-red);">Premium Protection at a Value Price</div>
+                            <div class="ss-callout-text">
+                                Our architectural shingles offer a <strong>multi-dimensional appearance</strong> that adds depth and character to your roof. With a lifetime limited warranty and excellent wind resistance, they're perfect for Hawaii's tropical climate.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MECHANICAL LOCK PRODUCT PAGE (hidden by default) -->
+                    <div class="page product-page page-preview" style="width: 8.5in; min-height: 11in; display:none;" data-page-id="product" data-product="mechanical-lock">
+                        <div class="section-header">
+                            <span class="section-num">02</span>
+                            <h2 class="section-title">Why Mechanical Lock</h2>
+                        </div>
+
+                        <div class="ss-hero">
+                            <div class="ss-badge">PREMIUM METAL ROOFING</div>
+                            <div class="ss-title">Mechanical Lock Standing Seam</div>
+                            <div class="ss-tagline">Maximum weather protection. Commercial-grade performance.</div>
+                            <div class="ss-warranty-badge">
+                                <span class="ss-warranty-num">30</span>
+                                <span class="ss-warranty-text">YEAR<br>PAINT WARRANTY</span>
+                            </div>
+                        </div>
+
+                        <div class="ss-visuals">
+                            <div class="ss-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('mlInput1').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('mlImg1','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('mlImg1','left')">←</button><button onclick="movePhoto('mlImg1','center')">•</button><button onclick="movePhoto('mlImg1','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('mlImg1','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('mlImg1','out')">−</button><button onclick="zoomPhoto('mlImg1','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_7293.jpg" alt="Mechanical Lock" class="ss-visual-img repositionable" id="mlImg1">
+                                <input type="file" id="mlInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'mlImg1')">
+                                <div class="ss-visual-caption editable" data-field="mlCaption1">Double-lock seam for maximum weathertightness</div>
+                            </div>
+                            <div class="ss-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('mlInput2').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('mlImg2','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('mlImg2','left')">←</button><button onclick="movePhoto('mlImg2','center')">•</button><button onclick="movePhoto('mlImg2','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('mlImg2','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('mlImg2','out')">−</button><button onclick="zoomPhoto('mlImg2','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_7295.jpg" alt="Mechanical Lock Detail" class="ss-visual-img repositionable" id="mlImg2">
+                                <input type="file" id="mlInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'mlImg2')">
+                                <div class="ss-visual-caption editable" data-field="mlCaption2">Mechanically seamed for superior strength</div>
+                            </div>
+                        </div>
+
+                        <div class="ss-features">
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="mlFeat1Title">Double-Lock Seam</div>
+                                <div class="ss-feature-text editable" data-field="mlFeat1Text">180° folded seam creates the tightest seal possible.</div>
+                            </div>
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="mlFeat2Title">Low Slope Ready</div>
+                                <div class="ss-feature-text editable" data-field="mlFeat2Text">Works on pitches as low as 0.5/12 with sealant.</div>
+                            </div>
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="mlFeat3Title">Extreme Weather</div>
+                                <div class="ss-feature-text editable" data-field="mlFeat3Text">Best wind/rain resistance of any metal roof.</div>
+                            </div>
+                            <div class="ss-feature">
+                                <div class="ss-feature-title editable" data-field="mlFeat4Title">50+ Year Life</div>
+                                <div class="ss-feature-text editable" data-field="mlFeat4Text">Commercial-grade longevity and performance.</div>
+                            </div>
+                        </div>
+
+                        <div class="ss-callout">
+                            <div class="ss-callout-title editable" data-field="mlCalloutTitle">Why Mechanical Lock for Hawaii?</div>
+                            <div class="ss-callout-text editable" data-field="mlCalloutText">
+                                Hawaii's extreme weather demands the most robust roofing solution. <strong>Mechanical lock standing seam</strong> uses specialized seaming equipment to create a 180° double-lock fold — the most watertight connection in metal roofing. Unlike snap-lock systems, mechanical seams won't pull apart in high winds or allow water intrusion during horizontal rain. Perfect for coastal exposure and low-slope sections.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE 4: ABOUT LAVA -->
+                <div class="page-wrapper">
+                    <div class="page-label">Page 4: About LAVA</div>
+                    <div class="page about-work-page page-preview" style="width: 8.5in; min-height: 11in;" data-page-id="about">
+                        <div class="section-header">
+                            <span class="section-num">03</span>
+                            <h2 class="section-title">About LAVA</h2>
+                        </div>
+
+                        <div class="about-banner">
+                            <button class="change-photo-btn" onclick="document.getElementById('aboutInput').click()">Change</button>
+                            <div class="photo-controls" style="top:10px; left: 5px;">
+                                <div class="pos-row"><button onclick="movePhoto('aboutImg','up')">↑</button></div>
+                                <div class="pos-row"><button onclick="movePhoto('aboutImg','left')">←</button><button onclick="movePhoto('aboutImg','center')">•</button><button onclick="movePhoto('aboutImg','right')">→</button></div>
+                                <div class="pos-row"><button onclick="movePhoto('aboutImg','down')">↓</button></div>
+                                <div class="zoom-row"><button onclick="zoomPhoto('aboutImg','out')">−</button><button onclick="zoomPhoto('aboutImg','in')">+</button></div>
+                            </div>
+                            <img src="../assets/images/portfolio/IMG_4671.jpg" alt="Craftsmanship" class="about-banner-img repositionable" id="aboutImg">
+                            <input type="file" id="aboutInput" class="photo-input" accept="image/*" onchange="changePhoto(this, 'aboutImg')">
+                            <div class="about-banner-overlay">
+                                <span class="about-banner-text editable" data-field="aboutBannerText">Rooted in Craftsmanship</span>
+                            </div>
+                        </div>
+
+                        <div class="about-split">
+                            <div class="about-story editable" data-field="aboutStory">
+                                <p><strong>We're not just roofers — we come from custom home construction.</strong> Our team's background in timber framing and high-end builds means we understand what goes into a home built with care.</p>
+                                <p>When you work with LAVA, you're getting craftsmen who treat your home with the same respect as the people who built it.</p>
+                            </div>
+                            <div class="about-credentials">
+                                <div class="cred-item">
+                                    <span class="cred-value editable" data-field="cred1Value">7-Year</span>
+                                    <span class="cred-label editable" data-field="cred1Label">Workmanship Warranty</span>
+                                </div>
+                                <div class="cred-item">
+                                    <span class="cred-value editable" data-field="cred2Value">$1M</span>
+                                    <span class="cred-label editable" data-field="cred2Label">Liability Insurance</span>
+                                </div>
+                                <div class="cred-item">
+                                    <span class="cred-value editable" data-field="cred3Value">CT-39063</span>
+                                    <span class="cred-label editable" data-field="cred3Label">Licensed Contractor</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="work-showcase">
+                            <div class="work-item work-item-large">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput1').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg1','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg1','left')">←</button><button onclick="movePhoto('workImg1','center')">•</button><button onclick="movePhoto('workImg1','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg1','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg1','out')">−</button><button onclick="zoomPhoto('workImg1','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/Crew Photo1.jpg" alt="LAVA Crew" id="workImg1" class="repositionable">
+                                <input type="file" id="workInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg1')">
+                                <span class="work-label editable" data-field="workLabel1">The LAVA Team</span>
+                            </div>
+                            <div class="work-item">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput2').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg2','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg2','left')">←</button><button onclick="movePhoto('workImg2','center')">•</button><button onclick="movePhoto('workImg2','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg2','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg2','out')">−</button><button onclick="zoomPhoto('workImg2','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/FullSizeRender3.jpg" alt="Metal Roof" id="workImg2" class="repositionable">
+                                <input type="file" id="workInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg2')">
+                                <span class="work-label editable" data-field="workLabel2">Quality Craftsmanship</span>
+                            </div>
+                            <div class="work-item">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput3').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg3','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg3','left')">←</button><button onclick="movePhoto('workImg3','center')">•</button><button onclick="movePhoto('workImg3','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg3','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg3','out')">−</button><button onclick="zoomPhoto('workImg3','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_7279.jpg" alt="Standing Seam" id="workImg3" class="repositionable">
+                                <input type="file" id="workInput3" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg3')">
+                                <span class="work-label editable" data-field="workLabel3">Standing Seam Projects</span>
+                            </div>
+                            <div class="work-item">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput4').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg4','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg4','left')">←</button><button onclick="movePhoto('workImg4','center')">•</button><button onclick="movePhoto('workImg4','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg4','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg4','out')">−</button><button onclick="zoomPhoto('workImg4','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/Crew Photo 2.jpg" alt="Crew at Work" id="workImg4" class="repositionable">
+                                <input type="file" id="workInput4" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg4')">
+                                <span class="work-label editable" data-field="workLabel4">Craftsmen at Work</span>
+                            </div>
+                            <div class="work-item">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput5').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg5','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg5','left')">←</button><button onclick="movePhoto('workImg5','center')">•</button><button onclick="movePhoto('workImg5','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg5','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg5','out')">−</button><button onclick="zoomPhoto('workImg5','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_0179.jpg" alt="Team" id="workImg5" class="repositionable">
+                                <input type="file" id="workInput5" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg5')">
+                                <span class="work-label editable" data-field="workLabel5">Our Crew</span>
+                            </div>
+                            <div class="work-item">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput6').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg6','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg6','left')">←</button><button onclick="movePhoto('workImg6','center')">•</button><button onclick="movePhoto('workImg6','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg6','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg6','out')">−</button><button onclick="zoomPhoto('workImg6','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_7487(1).jpg" alt="Working" id="workImg6" class="repositionable">
+                                <input type="file" id="workInput6" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg6')">
+                                <span class="work-label editable" data-field="workLabel6">On the Job</span>
+                            </div>
+                            <div class="work-item">
+                                <button class="change-photo-btn" onclick="document.getElementById('workInput7').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('workImg7','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg7','left')">←</button><button onclick="movePhoto('workImg7','center')">•</button><button onclick="movePhoto('workImg7','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('workImg7','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('workImg7','out')">−</button><button onclick="zoomPhoto('workImg7','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/IMG_0662.jpg" alt="Finished Project" id="workImg7" class="repositionable">
+                                <input type="file" id="workInput7" class="photo-input" accept="image/*" onchange="changePhoto(this, 'workImg7')">
+                                <span class="work-label editable" data-field="workLabel7">Finished Project</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE 5: NEXT STEPS -->
+                <div class="page-wrapper">
+                    <div class="page-label">Page 5: Next Steps</div>
+                    <div class="page closing-page page-preview" style="width: 8.5in; min-height: 11in;" data-page-id="closing">
+                        <div class="section-header">
+                            <span class="section-num">04</span>
+                            <h2 class="section-title">Next Steps</h2>
+                        </div>
+
+                        <div class="closing-message editable" data-field="closingMessage">
+                            <p>Thank you for considering LAVA Roofing for your home. We know how important this decision is — especially for a home with this kind of history and craftsmanship.</p>
+                            <p>We're here to answer any questions and walk you through every step of the process. When you're ready, just give us a call or send a text — we'd love to get started.</p>
+                        </div>
+
+                        <div class="closing-grid">
+                            <div class="closing-contact">
+                                <div class="contact-header editable" data-field="contactHeader">Your Point of Contact</div>
+                                <div class="contact-name editable" data-field="contactName">Tyler</div>
+                                <div class="contact-role editable" data-field="contactRole">Project Manager</div>
+                                <div class="contact-details">
+                                    <div class="contact-row">
+                                        <span class="contact-icon">📱</span>
+                                        <span class="editable" data-field="contactPhone">(808) 657-3737</span>
+                                    </div>
+                                    <div class="contact-row">
+                                        <span class="contact-icon">✉️</span>
+                                        <span class="editable" data-field="contactEmail">tyler@lavaroofing.com</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="closing-terms">
+                                <div class="terms-header editable" data-field="termsHeader">Quick Notes</div>
+                                <div class="terms-list editable" data-field="termsList">
+                                    <div class="term-item">• 25% deposit at signing</div>
+                                    <div class="term-item">• 50% due at project start</div>
+                                    <div class="term-item">• 25% upon completion</div>
+                                    <div class="term-item">• Unforeseen repairs billed as T&M</div>
+                                </div>
+                                <div class="terms-footer editable" data-field="termsFooter">Full terms provided in formal agreement.</div>
+                            </div>
+                        </div>
+
+                        <div class="company-footer">
+                            <img src="../assets/images/logo.png" alt="LAVA Roofing" class="closing-logo">
+                            <div class="company-info">
+                                <div class="company-name editable" data-field="companyName">LAVA Roofing Co.</div>
+                                <div class="company-address editable" data-field="companyAddress">Maui, Hawaii</div>
+                                <div class="company-license editable" data-field="companyLicense">Licensed Contractor: CT-39063 · $1M Insured</div>
+                            </div>
+                            <div class="company-tagline editable" data-field="companyTagline">The right roof for the right house.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE 6: THE PROPOSAL -->
+                <div class="page-wrapper">
+                    <div class="page-label">Page 6: The Proposal</div>
+                    <div class="page pdf-insert-page page-preview" style="width: 8.5in; min-height: 11in;" data-page-id="proposal">
+                        <div class="section-header">
+                            <span class="section-num">05</span>
+                            <h2 class="section-title">The Proposal</h2>
+                        </div>
+                        <div class="estimate-page-embed">
+                            <div class="ev-placeholder" id="estimatePlaceholder" onclick="document.getElementById('estimateInput').click()">
+                                <div>
+                                    <div class="dropzone-icon" style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                                    <div>Drop estimate image here</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">or click to upload</div>
+                                </div>
+                            </div>
+                            <img src="" alt="Estimate" class="estimate-page-img" id="estimatePageImg" style="display:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Load all modules -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/editor.js"></script>
+    <script src="../js/modules/storage.js"></script>
+    <script src="../js/modules/photos.js"></script>
+    <script src="../js/modules/resize.js"></script>
+    <script src="../js/modules/estimate.js"></script>
+    <script src="../js/modules/eagleview.js"></script>
+    <script src="../js/app.js"></script>
+
+    <script>
+        // Sync customer inputs with editable fields
+        document.getElementById('customerNameInput').addEventListener('input', function(e) {
+            document.querySelectorAll('[data-field="customerName"]').forEach(el => {
+                el.textContent = e.target.value || 'Customer Name';
+            });
+        });
+
+        document.getElementById('customerAddressInput').addEventListener('input', function(e) {
+            document.querySelectorAll('[data-field="customerAddress"]').forEach(el => {
+                el.textContent = e.target.value || 'Property Address';
+            });
+        });
+
+        // Product switcher
+        document.querySelectorAll('input[name="product"]').forEach(radio => {
+            radio.addEventListener('change', function(e) {
+                const product = e.target.value;
+
+                // Hide all product pages
+                document.querySelectorAll('.product-page').forEach(page => {
+                    page.style.display = 'none';
+                });
+
+                // Show selected product page
+                const selectedPage = document.querySelector(`.product-page[data-product="${product}"]`);
+                if (selectedPage) {
+                    selectedPage.style.display = 'block';
+                }
+            });
+        });
+
+        // Page visibility toggles
+        document.querySelectorAll('.page-toggle input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function(e) {
+                const pageId = e.target.dataset.page;
+                const wrapper = document.querySelector(`.page-wrapper:has([data-page-id="${pageId}"])`);
+
+                if (wrapper) {
+                    wrapper.style.display = e.target.checked ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Cover date
+        document.getElementById('coverDate').textContent = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+        // Enable editing by default in builder mode
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.editable').forEach(el => {
+                el.contentEditable = true;
+            });
+            document.querySelectorAll('.page-preview').forEach(page => {
+                page.classList.add('editing');
+            });
+        });
+    </script>
+</body>
+</html>

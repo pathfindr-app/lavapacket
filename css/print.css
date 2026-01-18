@@ -1,0 +1,81 @@
+/* LAVA Packet Builder - Print Styles */
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    html { font-size: 12pt; }
+    body { background: white; }
+
+    .toolbar,
+    .no-print,
+    .photo-upload-btn,
+    .builder-sidebar,
+    .builder-controls,
+    .photo-controls,
+    .change-photo-btn,
+    .toast-container,
+    .toast {
+        display: none !important;
+    }
+
+    .packet { max-width: 100%; }
+
+    .page {
+        min-height: auto;
+        height: 10in;
+        padding: 0.4in 0.5in;
+        page-break-after: always;
+        page-break-inside: avoid;
+        overflow: hidden;
+    }
+
+    .cover {
+        height: 10in;
+        padding: 0.6in;
+    }
+
+    /* Keep sections together */
+    .legacy-hero,
+    .legacy-grid,
+    .synergy-box,
+    .ev-grid,
+    .measurements,
+    .ss-hero,
+    .ss-visuals,
+    .ss-features,
+    .ss-callout,
+    .brava-hero,
+    .brava-visuals,
+    .brava-features,
+    .brava-callout,
+    .about-banner,
+    .about-split,
+    .work-showcase,
+    .closing-message,
+    .closing-grid,
+    .company-footer {
+        page-break-inside: avoid;
+    }
+
+    .about-work-page,
+    .closing-page {
+        padding: 0.4in 0.5in;
+    }
+
+    .section-header { page-break-after: avoid; }
+
+    .estimate-page-img {
+        max-height: 9in;
+        width: auto;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+@page {
+    margin: 0;
+    size: letter;
+}

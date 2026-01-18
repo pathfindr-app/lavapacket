@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packets - LAVA Roofing Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase config -->
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="index.html" class="portal-nav-btn active">Packets</a>
+                <a href="../inspections/index.html" class="portal-nav-btn">Inspections</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <h1 class="page-title">Estimate Packets</h1>
+        <p class="page-subtitle">Manage customer estimate packets</p>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by name or address...">
+            </div>
+            <a href="builder.html" class="btn btn-primary">+ New Packet</a>
+        </div>
+
+        <!-- Packet List -->
+        <div class="item-list" id="packetList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                Loading packets...
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+
+    <script>
+        let allPackets = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize Supabase
+            SupabaseClient.init();
+
+            // Initialize auth
+            Auth.init();
+
+            // Load data after auth
+            document.addEventListener('auth:unlocked', loadPackets);
+
+            // If already authenticated, load immediately
+            if (Auth.isAuthenticated()) {
+                loadPackets();
+            }
+
+            // Search handler
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        });
+
+        async function loadPackets() {
+            const container = document.getElementById('packetList');
+
+            // Try Supabase first
+            if (SupabaseClient.isAvailable()) {
+                allPackets = await SupabaseClient.listPackets();
+                allPackets = allPackets.map(p => ({
+                    id: p.id,
+                    customer_name: p.customer_name || 'Unnamed',
+                    customer_address: p.customer_address || '',
+                    product_type: p.product_type || 'standing-seam',
+                    updated_at: p.updated_at,
+                    source: 'supabase'
+                }));
+            } else {
+                // Load from localStorage
+                allPackets = loadLocalPackets();
+            }
+
+            renderPackets(allPackets);
+        }
+
+        function loadLocalPackets() {
+            const packets = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('lavaPacketBuilder_')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        packets.push({
+                            id: key.replace('lavaPacketBuilder_', ''),
+                            customer_name: data.customer_name || data.fields?.customerName || 'Unnamed',
+                            customer_address: data.customer_address || data.fields?.customerAddress || '',
+                            product_type: data.product_type || data.config?.productType || 'standing-seam',
+                            updated_at: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString(),
+                            source: 'local'
+                        });
+                    } catch (e) {}
+                }
+            }
+            return packets.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        }
+
+        function renderPackets(packets) {
+            const container = document.getElementById('packetList');
+
+            if (packets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <div class="empty-title">No packets yet</div>
+                        <div class="empty-text">Create your first estimate packet</div>
+                        <a href="builder.html" class="btn btn-primary">Create Packet</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = packets.map(packet => `
+                <div class="item-card" onclick="openPacket('${packet.id}')">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(packet.customer_name)}</div>
+                        <div class="item-meta">
+                            <span>${escapeHtml(packet.customer_address) || 'No address'}</span>
+                            <span>${formatProductType(packet.product_type)}</span>
+                            <span>${formatDate(packet.updated_at)}</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon" onclick="event.stopPropagation(); duplicatePacket('${packet.id}')" title="Duplicate">📋</button>
+                        <button class="btn-icon" onclick="event.stopPropagation(); deletePacket('${packet.id}', '${packet.source}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = allPackets.filter(p =>
+                p.customer_name.toLowerCase().includes(query) ||
+                p.customer_address.toLowerCase().includes(query)
+            );
+            renderPackets(filtered);
+        }
+
+        function openPacket(id) {
+            window.location.href = `builder.html?id=${id}`;
+        }
+
+        async function duplicatePacket(id) {
+            // Find packet data and create a new one with "(Copy)" appended
+            if (SupabaseClient.isAvailable()) {
+                const packet = await SupabaseClient.getPacket(id);
+                if (packet) {
+                    const newPacket = {
+                        ...packet,
+                        id: null, // Let Supabase generate new ID
+                        customer_name: (packet.customer_name || 'Unnamed') + ' (Copy)'
+                    };
+                    const result = await SupabaseClient.savePacket(newPacket);
+                    if (result) {
+                        showToast('Packet duplicated', 'success');
+                        loadPackets();
+                    }
+                }
+            } else {
+                // localStorage duplicate
+                const key = `lavaPacketBuilder_${id}`;
+                const data = localStorage.getItem(key);
+                if (data) {
+                    const packet = JSON.parse(data);
+                    const newId = 'copy_' + Date.now();
+                    packet.customer_name = (packet.customer_name || 'Unnamed') + ' (Copy)';
+                    packet.timestamp = Date.now();
+                    localStorage.setItem(`lavaPacketBuilder_${newId}`, JSON.stringify(packet));
+                    showToast('Packet duplicated', 'success');
+                    loadPackets();
+                }
+            }
+        }
+
+        async function deletePacket(id, source) {
+            if (!confirm('Are you sure you want to delete this packet? This cannot be undone.')) {
+                return;
+            }
+
+            if (source === 'supabase') {
+                const success = await SupabaseClient.deletePacket(id);
+                if (success) {
+                    showToast('Packet deleted', 'success');
+                    loadPackets();
+                } else {
+                    showToast('Failed to delete packet', 'error');
+                }
+            } else {
+                localStorage.removeItem(`lavaPacketBuilder_${id}`);
+                showToast('Packet deleted', 'success');
+                loadPackets();
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} hr ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function formatProductType(type) {
+            const types = {
+                'standing-seam': 'Standing Seam',
+                'mechanical-lock': 'Mechanical Lock',
+                'brava': 'Brava Tile',
+                'shingles': 'Shingles'
+            };
+            return types[type] || type;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

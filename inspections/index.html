@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspections - LAVA Roofing Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase config -->
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="index.html" class="portal-nav-btn active">Inspections</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <h1 class="page-title">Roof Inspections</h1>
+        <p class="page-subtitle">Manage roof inspection reports</p>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by name or address...">
+            </div>
+            <a href="form.html" class="btn btn-primary">+ New Inspection</a>
+        </div>
+
+        <!-- Inspection List -->
+        <div class="item-list" id="inspectionList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                Loading inspections...
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+
+    <script>
+        let allInspections = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize Supabase
+            SupabaseClient.init();
+
+            // Initialize auth
+            Auth.init();
+
+            // Load data after auth
+            document.addEventListener('auth:unlocked', loadInspections);
+
+            // If already authenticated, load immediately
+            if (Auth.isAuthenticated()) {
+                loadInspections();
+            }
+
+            // Search handler
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        });
+
+        async function loadInspections() {
+            const container = document.getElementById('inspectionList');
+
+            // Try Supabase first
+            if (SupabaseClient.isAvailable()) {
+                allInspections = await SupabaseClient.listInspections();
+                allInspections = allInspections.map(i => ({
+                    id: i.id,
+                    customer_name: i.customer_name || 'Unnamed',
+                    customer_address: i.customer_address || '',
+                    inspection_date: i.inspection_date,
+                    status: i.status || 'draft',
+                    updated_at: i.updated_at,
+                    source: 'supabase'
+                }));
+            } else {
+                // Load from localStorage
+                allInspections = loadLocalInspections();
+            }
+
+            renderInspections(allInspections);
+        }
+
+        function loadLocalInspections() {
+            const inspections = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('lavaInspection_')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        inspections.push({
+                            id: key.replace('lavaInspection_', ''),
+                            customer_name: data.customer_name || 'Unnamed',
+                            customer_address: data.customer_address || '',
+                            inspection_date: data.inspection_date,
+                            status: data.status || 'draft',
+                            updated_at: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString(),
+                            source: 'local'
+                        });
+                    } catch (e) {}
+                }
+            }
+            return inspections.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        }
+
+        function renderInspections(inspections) {
+            const container = document.getElementById('inspectionList');
+
+            if (inspections.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div class="empty-title">No inspections yet</div>
+                        <div class="empty-text">Create your first roof inspection report</div>
+                        <a href="form.html" class="btn btn-primary">Create Inspection</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = inspections.map(inspection => `
+                <div class="item-card" onclick="openInspection('${inspection.id}')">
+                    <div class="item-info">
+                        <div class="item-name">${escapeHtml(inspection.customer_name)}</div>
+                        <div class="item-meta">
+                            <span>${escapeHtml(inspection.customer_address) || 'No address'}</span>
+                            ${inspection.inspection_date ? `<span>${formatInspectionDate(inspection.inspection_date)}</span>` : ''}
+                            <span>${formatDate(inspection.updated_at)}</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <span class="item-badge ${inspection.status}">${inspection.status}</span>
+                        <button class="btn-icon" onclick="event.stopPropagation(); deleteInspection('${inspection.id}', '${inspection.source}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = allInspections.filter(i =>
+                i.customer_name.toLowerCase().includes(query) ||
+                i.customer_address.toLowerCase().includes(query)
+            );
+            renderInspections(filtered);
+        }
+
+        function openInspection(id) {
+            window.location.href = `form.html?id=${id}`;
+        }
+
+        async function deleteInspection(id, source) {
+            if (!confirm('Are you sure you want to delete this inspection? This cannot be undone.')) {
+                return;
+            }
+
+            if (source === 'supabase') {
+                const success = await SupabaseClient.deleteInspection(id);
+                if (success) {
+                    showToast('Inspection deleted', 'success');
+                    loadInspections();
+                } else {
+                    showToast('Failed to delete inspection', 'error');
+                }
+            } else {
+                localStorage.removeItem(`lavaInspection_${id}`);
+                showToast('Inspection deleted', 'success');
+                loadInspections();
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} hr ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function formatInspectionDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

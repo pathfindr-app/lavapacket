@@ -1,0 +1,161 @@
+/* LAVA Packet Builder - Page Layout */
+
+/* Page Structure */
+.packet {
+    max-width: 8.5in;
+    margin: 0 auto;
+    background: white;
+}
+
+.page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.75in;
+    position: relative;
+    background: white;
+    page-break-after: always;
+    page-break-inside: avoid;
+    box-sizing: border-box;
+}
+
+.page:last-child {
+    page-break-after: avoid;
+}
+
+/* Cover Page */
+.cover {
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1in;
+    border-left: 6px solid #e85a2c;
+}
+
+.cover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.cover-logo { height: 56px; }
+
+.cover-date {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #8a8a8a;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.cover-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2in 0;
+}
+
+.cover-accent {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #e85a2c, #c41e3a, #2a7b9b);
+    margin-bottom: 2rem;
+}
+
+.cover-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+}
+
+.cover-subtitle {
+    font-family: 'DM Sans', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: #5a5a5a;
+    font-style: italic;
+    max-width: 400px;
+}
+
+.cover-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 2px solid #e8e4df;
+    padding-top: 1.5rem;
+}
+
+.cover-customer { color: #1a1a1a; }
+
+.cover-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #e85a2c;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.cover-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.cover-address {
+    font-size: 0.95rem;
+    color: #5a5a5a;
+}
+
+.cover-tagline {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #8a8a8a;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: right;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e85a2c;
+    padding-bottom: 0.75rem;
+}
+
+.section-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #e85a2c;
+    letter-spacing: 0.1em;
+}
+
+.section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.01em;
+}
+
+/* About + Work Page */
+.about-work-page { padding: 0.5in; }
+
+/* Closing Page */
+.closing-page {
+    display: flex;
+    flex-direction: column;
+}

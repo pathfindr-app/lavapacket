@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LAVA Roofing - Inspection Form</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase config -->
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --lava-orange: #e85a2c;
+            --lava-red: #c41e3a;
+            --lava-teal: #2a7b9b;
+            --lava-dark: #1a1a1a;
+            --lava-gray: #2d2d2d;
+            --lava-light: #f7f8fa;
+            --lava-cream: #fefefe;
+            --success: #28a745;
+            --warning: #f0ad4e;
+            --danger: #dc3545;
+            --info: #17a2b8;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--lava-light);
+            color: var(--lava-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--lava-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-screen.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 90%;
+            max-width: 340px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border-bottom: 4px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, var(--lava-orange) 0%, var(--lava-orange) 33%, #e07a5f 33%, #e07a5f 66%, var(--lava-teal) 66%, var(--lava-teal) 100%);
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .login-box img {
+            height: 70px;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-box h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--lava-dark);
+            margin-bottom: 1.5rem;
+        }
+
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .login-box input[type="password"]:focus {
+            outline: none;
+            border-color: var(--lava-orange);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--lava-orange);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-box button:hover {
+            background: #d14e22;
+        }
+
+        .login-error {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+        }
+
+        /* Hide app when not logged in */
+        .app-wrapper {
+            display: none;
+        }
+
+        .app-wrapper.visible {
+            display: block;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            color: var(--lava-dark);
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border-bottom: 3px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, var(--lava-orange) 0%, var(--lava-orange) 33%, #e07a5f 33%, #e07a5f 66%, var(--lava-teal) 66%, var(--lava-teal) 100%);
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lava-red);
+            letter-spacing: 2px;
+        }
+
+        .logo span {
+            color: var(--lava-dark);
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1.5px solid #ddd;
+            color: var(--lava-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--lava-orange);
+            color: var(--lava-orange);
+        }
+
+        .nav-btn.active {
+            background: var(--lava-orange);
+            border-color: var(--lava-orange);
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* View Toggle */
+        .view-form { display: block; }
+        .view-list { display: none; }
+        .view-recap { display: none; }
+
+        body.show-list .view-form { display: none; }
+        body.show-list .view-list { display: block; }
+        body.show-recap .view-form { display: none; }
+        body.show-recap .view-recap { display: block; }
+
+        /* Accordion Sections */
+        .section {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: var(--lava-gray);
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .section-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-header .status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            background: #555;
+        }
+
+        .section-header .status.complete {
+            background: var(--success);
+        }
+
+        .section-header .chevron {
+            transition: transform 0.3s;
+        }
+
+        .section.open .section-header .chevron {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            display: none;
+            padding: 1rem;
+        }
+
+        .section.open .section-content {
+            display: block;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        label .required {
+            color: var(--lava-red);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--lava-red);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select {
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Radio/Checkbox Groups */
+        .option-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .option-btn {
+            flex: 1;
+            min-width: calc(50% - 0.25rem);
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--lava-red);
+        }
+
+        .option-btn.selected {
+            border-color: var(--lava-red);
+            background: var(--lava-red);
+            color: white;
+        }
+
+        .option-btn.good.selected { background: var(--success); border-color: var(--success); }
+        .option-btn.fair.selected { background: var(--warning); border-color: var(--warning); color: var(--lava-dark); }
+        .option-btn.poor.selected { background: var(--danger); border-color: var(--danger); }
+        .option-btn.critical.selected { background: #721c24; border-color: #721c24; }
+        .option-btn.na.selected { background: #6c757d; border-color: #6c757d; }
+
+        /* Checkbox Items */
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--lava-light);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .checkbox-item.checked {
+            background: #d4edda;
+        }
+
+        /* Photo Section */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .photo-upload {
+            aspect-ratio: 4/3;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--lava-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--lava-red);
+            background: #fff;
+        }
+
+        .photo-upload.has-photo {
+            border-style: solid;
+            border-color: var(--success);
+        }
+
+        .photo-upload img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload .placeholder {
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .photo-upload .placeholder svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 0.5rem;
+            fill: #888;
+        }
+
+        .photo-upload input[type="file"] {
+            display: none;
+        }
+
+        .photo-upload .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 28px;
+            height: 28px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .photo-caption {
+            margin-top: 0.5rem;
+        }
+
+        .photo-caption input {
+            font-size: 0.85rem;
+            padding: 0.5rem;
+        }
+
+        /* Inline photo capture for checklist items */
+        .checklist-item {
+            background: var(--lava-light);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .checklist-item label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .checklist-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            margin-top: 0.5rem;
+        }
+
+        .checklist-row .option-group {
+            flex: 1;
+        }
+
+        .checklist-row .mini-photo {
+            width: 60px;
+            height: 60px;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: white;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .checklist-row .mini-photo:hover {
+            border-color: var(--lava-orange);
+        }
+
+        .checklist-row .mini-photo.has-photo {
+            border-style: solid;
+            border-color: var(--success);
+        }
+
+        .checklist-row .mini-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+        }
+
+        .checklist-row .mini-photo svg {
+            width: 24px;
+            height: 24px;
+            fill: #999;
+        }
+
+        .checklist-row .mini-photo input {
+            display: none;
+        }
+
+        /* Conditional field (shows based on selection) */
+        .conditional-field {
+            display: none;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed #ddd;
+        }
+
+        .conditional-field.visible {
+            display: block;
+        }
+
+        /* Additional Photos */
+        .add-photo-btn {
+            width: 100%;
+            padding: 1rem;
+            border: 2px dashed var(--lava-red);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--lava-red);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .add-photo-btn:hover {
+            background: var(--lava-red);
+            color: white;
+        }
+
+        /* Action Buttons */
+        .actions {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 1rem;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem -1rem -1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--lava-red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #a01830;
+        }
+
+        .btn-secondary {
+            background: var(--lava-gray);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1a1a1a;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Saved Inspections List */
+        .inspection-list {
+            list-style: none;
+        }
+
+        .inspection-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .inspection-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .inspection-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .inspection-item .meta {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .inspection-item .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.draft { background: var(--warning); color: var(--lava-dark); }
+        .status-badge.complete { background: var(--success); color: white; }
+        .status-badge.sent { background: var(--info); color: white; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #888;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            fill: #ccc;
+        }
+
+        /* Recap View */
+        .recap-container {
+            background: var(--lava-cream);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .recap-header {
+            background: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(90deg, var(--lava-orange) 0%, var(--lava-orange) 33%, #e07a5f 33%, #e07a5f 66%, var(--lava-teal) 66%, var(--lava-teal) 100%);
+            background-origin: padding-box, border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .recap-header .logo-img {
+            height: 80px;
+            margin-bottom: 1.25rem;
+        }
+
+        .recap-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--lava-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .recap-header .license {
+            font-size: 0.8rem;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+
+        .recap-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .recap-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid #e8eaed;
+        }
+
+        .recap-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .recap-section h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--lava-orange);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .recap-section p {
+            color: #3a3a3a;
+            font-size: 0.95rem;
+        }
+
+        .recap-section strong {
+            color: var(--lava-dark);
+        }
+
+        .recap-meta {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.5rem 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .recap-meta dt {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .recap-meta dd {
+            font-weight: 500;
+            color: var(--lava-dark);
+        }
+
+        .recap-photos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .recap-photo {
+            aspect-ratio: 4/3;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .recap-photo:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .recap-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .recap-footer {
+            background: linear-gradient(135deg, #f8f9fa 0%, #eef0f2 100%);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-top: 1px solid #e8eaed;
+        }
+
+        .recap-footer .footer-logo {
+            height: 45px;
+            margin-bottom: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .recap-footer .tagline {
+            font-family: 'Outfit', sans-serif;
+            font-style: italic;
+            font-weight: 300;
+            color: #555;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .recap-footer .contact {
+            font-size: 0.8rem;
+            color: #888;
+            letter-spacing: 0.3px;
+        }
+
+        .recap-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--lava-light);
+        }
+
+        .recap-callout {
+            background: linear-gradient(135deg, #fff8f6 0%, #fef4f2 100%);
+            border-radius: 10px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            border-left: 4px solid var(--lava-orange);
+        }
+
+        .recap-callout strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--lava-dark);
+            font-size: 0.9rem;
+        }
+
+        .recap-callout p {
+            margin: 0;
+            white-space: pre-line;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .recap-diagnosis {
+            margin-top: 1.25rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .recap-diagnosis strong {
+            font-size: 0.85rem;
+            color: var(--lava-teal);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .recap-cta {
+            background: linear-gradient(135deg, var(--lava-teal) 0%, #1e6a86 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .recap-cta p {
+            color: white;
+            margin: 0;
+        }
+
+        .recap-cta a {
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Photo Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal img {
+            max-width: 95%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        .modal .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--lava-dark);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+        .toast.error {
+            background: #dc3545;
+        }
+
+        /* Print Styles */
+        @media print {
+            @page {
+                margin: 0.4in 0.5in;
+                size: letter;
+            }
+
+            /* Force colors to print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            /* Hide UI elements only */
+            .header, .recap-actions, .nav-btn,
+            .login-screen, #formView, #listView,
+            .toast, .modal {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            .app-wrapper {
+                display: block !important;
+            }
+
+            .container {
+                max-width: none;
+                padding: 0;
+            }
+
+            /* Keep design, just remove shadow */
+            .recap-container {
+                box-shadow: none;
+            }
+
+            /* Photos */
+            .recap-photos {
+                gap: 0.5rem;
+            }
+
+            .recap-photo {
+                break-inside: avoid;
+            }
+
+            .recap-photo img {
+                max-height: 2.5in;
+            }
+
+            /* Prevent awkward breaks */
+            .recap-section {
+                break-inside: avoid;
+            }
+
+            .recap-footer {
+                break-inside: avoid;
+            }
+
+            /* Clean up links for print */
+            a {
+                text-decoration: none !important;
+            }
+
+            a[href^="tel:"], a[href^="mailto:"] {
+                color: inherit !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <img src="../assets/images/logo.png" alt="LAVA Roofing Hawaii">
+            <h2>Inspection Tool Login</h2>
+            <form onsubmit="handleLogin(event)">
+                <input type="password" id="loginPassword" placeholder="Enter password" autocomplete="off">
+                <button type="submit">Sign In</button>
+            </form>
+            <p class="login-error" id="loginError">Incorrect password</p>
+        </div>
+    </div>
+
+    <!-- Main App (hidden until login) -->
+    <div class="app-wrapper" id="appWrapper">
+    <header class="header">
+        <div class="header-content">
+            <div class="logo"><img src="../assets/images/logo.png" alt="LAVA Roofing" style="height: 40px;"></div>
+            <nav class="header-nav">
+                <a href="../index.html" class="nav-btn" style="text-decoration: none;">Portal</a>
+                <button class="nav-btn active" onclick="showView('form')">New</button>
+                <button class="nav-btn" onclick="showView('list')">Saved</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- FORM VIEW -->
+        <div class="view-form">
+            <form id="inspectionForm">
+                <!-- Section 1: Customer Info -->
+                <div class="section open" data-section="customer">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>1</span> Customer Info
+                        </h2>
+                        <span class="status">Required</span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>Customer Name <span class="required">*</span></label>
+                            <input type="text" name="customerName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Property Address <span class="required">*</span></label>
+                            <input type="text" name="address" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone <span class="required">*</span></label>
+                            <input type="tel" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Inspection Date</label>
+                            <input type="date" name="inspectionDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Inspector Name</label>
+                            <input type="text" name="inspectorName" placeholder="Your name">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Customer's Concerns -->
+                <div class="section" data-section="concerns">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>2</span> Customer's Concerns
+                        </h2>
+                        <span class="status"></span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>What brought us out today?</label>
+                            <textarea name="mainConcern" placeholder="Describe what the customer is experiencing..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>How long has this been happening?</label>
+                            <input type="text" name="issueDuration" placeholder="e.g., 2 weeks, since last storm">
+                        </div>
+                        <div class="form-group">
+                            <label>Any previous roof work?</label>
+                            <div class="option-group" data-field="previousWork">
+                                <button type="button" class="option-btn" data-value="yes">Yes</button>
+                                <button type="button" class="option-btn" data-value="no">No</button>
+                                <button type="button" class="option-btn" data-value="unknown">Unknown</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Previous work details</label>
+                            <input type="text" name="previousWorkDetails" placeholder="What was done and when?">
+                        </div>
+                        <div class="form-group">
+                            <label>Customer's urgency</label>
+                            <div class="option-group" data-field="customerUrgency">
+                                <button type="button" class="option-btn" data-value="urgent">Urgent</button>
+                                <button type="button" class="option-btn" data-value="soon">Soon</button>
+                                <button type="button" class="option-btn" data-value="planning">Planning Ahead</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Roof Overview -->
+                <div class="section" data-section="roof">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>3</span> Roof Overview
+                        </h2>
+                        <span class="status"></span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>Roof Type</label>
+                            <select name="roofType" onchange="toggleShingleLayers(this)">
+                                <option value="">Select...</option>
+                                <option value="asphalt-shingle">Asphalt Shingle</option>
+                                <option value="tile">Tile</option>
+                                <option value="metal-standing-seam">Metal - Standing Seam</option>
+                                <option value="metal-corrugated">Metal - Corrugated</option>
+                                <option value="flat-lowslope">Flat / Low-Slope</option>
+                                <option value="wood-shake">Wood Shake</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="conditional-field" id="shingleLayersField">
+                                <label>Shingle Layers</label>
+                                <div class="option-group" data-field="shingleLayers">
+                                    <button type="button" class="option-btn" data-value="single">Single Layer</button>
+                                    <button type="button" class="option-btn" data-value="double">Double Layer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Roof Age</label>
+                            <select name="roofAge">
+                                <option value="">Select...</option>
+                                <option value="0-5">0-5 years</option>
+                                <option value="5-10">5-10 years</option>
+                                <option value="10-15">10-15 years</option>
+                                <option value="15-20">15-20 years</option>
+                                <option value="20-25">20-25 years</option>
+                                <option value="25-30">25-30 years</option>
+                                <option value="30+">30+ years</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+
+                        <div class="checklist-item">
+                            <label>Stories</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="stories">
+                                    <button type="button" class="option-btn" data-value="1">1</button>
+                                    <button type="button" class="option-btn" data-value="2">2</button>
+                                    <button type="button" class="option-btn" data-value="3+">3+</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="storiesPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'storiesPhoto')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <label>Pitch</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="pitch">
+                                    <button type="button" class="option-btn" data-value="flat">Flat</button>
+                                    <button type="button" class="option-btn" data-value="low">Low</button>
+                                    <button type="button" class="option-btn" data-value="medium">Medium</button>
+                                    <button type="button" class="option-btn" data-value="steep">Steep</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="pitchPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'pitchPhoto')">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <label>Access</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="access">
+                                    <button type="button" class="option-btn" data-value="easy">Easy</button>
+                                    <button type="button" class="option-btn" data-value="moderate">Moderate</button>
+                                    <button type="button" class="option-btn" data-value="difficult">Difficult</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="accessPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'accessPhoto')">
+                                </div>
+                            </div>
+                            <input type="text" name="accessNotes" placeholder="Access notes (e.g., ladder placement, obstacles)" style="margin-top: 0.5rem;">
+                        </div>
+
+                        <div class="checklist-item">
+                            <label>Overall Condition</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="overallCondition">
+                                    <button type="button" class="option-btn good" data-value="good">Good</button>
+                                    <button type="button" class="option-btn fair" data-value="fair">Fair</button>
+                                    <button type="button" class="option-btn poor" data-value="poor">Poor</button>
+                                    <button type="button" class="option-btn critical" data-value="critical">Critical</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="conditionPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'conditionPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Inspection Findings -->
+                <div class="section" data-section="findings">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>4</span> Inspection Findings
+                        </h2>
+                        <span class="status"></span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="checklist-item">
+                            <label>Problem Areas Identified</label>
+                            <div class="checklist-row">
+                                <textarea name="problemAreas" placeholder="Describe location and nature of issues found..." style="flex: 1;"></textarea>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="problemAreasPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'problemAreasPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checklist-item">
+                            <label>Diagnosis - What's causing the issue?</label>
+                            <div class="checklist-row">
+                                <textarea name="diagnosis" placeholder="Root cause analysis..." style="flex: 1;"></textarea>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="diagnosisPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'diagnosisPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checklist-item">
+                            <label>Gutters / Drainage</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="gutters">
+                                    <button type="button" class="option-btn good" data-value="good">Good</button>
+                                    <button type="button" class="option-btn fair" data-value="fair">Fair</button>
+                                    <button type="button" class="option-btn poor" data-value="poor">Poor</button>
+                                    <button type="button" class="option-btn na" data-value="na">N/A</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="guttersPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'guttersPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checklist-item">
+                            <label>Flashing Condition</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="flashing">
+                                    <button type="button" class="option-btn good" data-value="good">Good</button>
+                                    <button type="button" class="option-btn fair" data-value="fair">Fair</button>
+                                    <button type="button" class="option-btn poor" data-value="poor">Poor</button>
+                                    <button type="button" class="option-btn na" data-value="na">N/A</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="flashingPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'flashingPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checklist-item">
+                            <label>Vents / Penetrations</label>
+                            <div class="checklist-row">
+                                <div class="option-group" data-field="vents">
+                                    <button type="button" class="option-btn good" data-value="good">Good</button>
+                                    <button type="button" class="option-btn fair" data-value="fair">Fair</button>
+                                    <button type="button" class="option-btn poor" data-value="poor">Poor</button>
+                                    <button type="button" class="option-btn na" data-value="na">N/A</button>
+                                </div>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="ventsPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'ventsPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="checklist-item">
+                            <label>Additional Issues Found</label>
+                            <div class="checklist-row">
+                                <textarea name="additionalIssues" placeholder="Any other observations..." style="flex: 1;"></textarea>
+                                <div class="mini-photo" onclick="this.querySelector('input').click()" data-field="additionalIssuesPhoto">
+                                    <svg viewBox="0 0 24 24"><path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+                                    <input type="file" accept="image/*" onchange="handleMiniPhoto(this, 'additionalIssuesPhoto')">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Photos -->
+                <div class="section" data-section="photos">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>5</span> Photos
+                        </h2>
+                        <span class="status" id="photoCount">0 photos</span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Tap to capture photos. They'll be included in the customer recap.</p>
+
+                        <div class="photo-grid" id="photoGrid">
+                            <div class="photo-upload" data-category="photo1" onclick="this.querySelector('input').click()">
+                                <div class="placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                                </div>
+                                <input type="file" accept="image/*" onchange="handlePhoto(this, 'photo1')">
+                            </div>
+                            <div class="photo-upload" data-category="photo2" onclick="this.querySelector('input').click()">
+                                <div class="placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                                </div>
+                                <input type="file" accept="image/*" onchange="handlePhoto(this, 'photo2')">
+                            </div>
+                            <div class="photo-upload" data-category="photo3" onclick="this.querySelector('input').click()">
+                                <div class="placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                                </div>
+                                <input type="file" accept="image/*" onchange="handlePhoto(this, 'photo3')">
+                            </div>
+                            <div class="photo-upload" data-category="photo4" onclick="this.querySelector('input').click()">
+                                <div class="placeholder">
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                                </div>
+                                <input type="file" accept="image/*" onchange="handlePhoto(this, 'photo4')">
+                            </div>
+                        </div>
+
+                        <div id="additionalPhotos"></div>
+
+                        <button type="button" class="add-photo-btn" onclick="addPhotoSlot()">+ Add Another Photo</button>
+                    </div>
+                </div>
+
+                <!-- Section 6: Recommendation -->
+                <div class="section" data-section="recommendation">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>6</span> Recommendation
+                        </h2>
+                        <span class="status"></span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label>Recommendation</label>
+                            <div class="option-group" data-field="recommendation">
+                                <button type="button" class="option-btn" data-value="repair">Repair</button>
+                                <button type="button" class="option-btn" data-value="partial">Partial Replace</button>
+                                <button type="button" class="option-btn" data-value="full">Full Replace</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Urgency</label>
+                            <div class="option-group" data-field="urgency">
+                                <button type="button" class="option-btn" data-value="immediate">Immediate</button>
+                                <button type="button" class="option-btn" data-value="30days">Within 30 Days</button>
+                                <button type="button" class="option-btn" data-value="plan">Can Plan Ahead</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Summary for Customer</label>
+                            <textarea name="customerSummary" placeholder="What you want to tell the customer (this goes on the recap)..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Internal Notes (not shared)</label>
+                            <textarea name="internalNotes" placeholder="Notes for yourself/team only..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 7: Wrap-up -->
+                <div class="section" data-section="wrapup">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>
+                            <span>7</span> Wrap-up Checklist
+                        </h2>
+                        <span class="status" id="wrapupStatus">0/4</span>
+                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="section-content">
+                        <div class="checkbox-item" onclick="toggleCheckbox(event, this)">
+                            <input type="checkbox" name="wrapup_walked">
+                            <span>Walked customer through findings</span>
+                        </div>
+                        <div class="checkbox-item" onclick="toggleCheckbox(event, this)">
+                            <input type="checkbox" name="wrapup_explained">
+                            <span>Explained next steps</span>
+                        </div>
+                        <div class="checkbox-item" onclick="toggleCheckbox(event, this)">
+                            <input type="checkbox" name="wrapup_timeline">
+                            <span>Gave quote timeline</span>
+                        </div>
+                        <div class="checkbox-item" onclick="toggleCheckbox(event, this)">
+                            <input type="checkbox" name="wrapup_thanked">
+                            <span>Thanked customer</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" onclick="saveInspection()">Save</button>
+                    <button type="button" class="btn btn-primary" onclick="generateRecap()">Generate Recap</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- LIST VIEW -->
+        <div class="view-list">
+            <h2 style="margin-bottom: 1rem;">Saved Inspections</h2>
+            <ul class="inspection-list" id="inspectionList">
+                <!-- Populated by JS -->
+            </ul>
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                <p>No saved inspections yet.<br>Start a new inspection to get going!</p>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="startNewInspection()">Start New Inspection</button>
+            </div>
+        </div>
+
+        <!-- RECAP VIEW -->
+        <div class="view-recap">
+            <div class="recap-actions">
+                <button class="btn btn-secondary" onclick="showView('form')">Back to Edit</button>
+                <button class="btn btn-primary" onclick="shareRecap('email')">Email to Customer</button>
+            </div>
+            <div class="recap-container" id="recapContent">
+                <!-- Populated by JS -->
+            </div>
+            <div class="recap-actions" style="flex-direction: column; align-items: stretch;">
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="shareRecap('print')">Print / Save PDF</button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="shareRecap('copy')">Copy Link</button>
+                </div>
+                <p style="font-size: 0.75rem; color: #888; text-align: center; margin: 0.5rem 0 0 0;">Tip: In print settings, uncheck "Headers and footers" for a cleaner PDF</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Photo Modal -->
+    <div class="modal" id="photoModal" onclick="closeModal()">
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+        <img id="modalImage" src="" alt="Full size photo">
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    </div><!-- End app-wrapper -->
+
+    <!-- Supabase Client -->
+    <script src="../js/lib/supabase.js"></script>
+
+    <script>
+        // ==================== IndexedDB Storage (50MB+) ====================
+        const PhotoDB = {
+            db: null,
+            dbName: 'LavaPhotos',
+            storeName: 'photos',
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName);
+                        }
+                    };
+                });
+            },
+
+            async save(key, dataUrl) {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(this.storeName, 'readwrite');
+                    const store = tx.objectStore(this.storeName);
+                    const request = store.put(dataUrl, key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+
+            async get(key) {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(this.storeName, 'readonly');
+                    const store = tx.objectStore(this.storeName);
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+
+            async delete(key) {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(this.storeName, 'readwrite');
+                    const store = tx.objectStore(this.storeName);
+                    const request = store.delete(key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+
+            async getAllKeys() {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(this.storeName, 'readonly');
+                    const store = tx.objectStore(this.storeName);
+                    const request = store.getAllKeys();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        };
+
+        // Initialize IndexedDB on load
+        PhotoDB.init().catch(err => console.error('IndexedDB init failed:', err));
+
+        // Initialize Supabase if available
+        if (typeof SupabaseClient !== 'undefined') {
+            SupabaseClient.init();
+        }
+
+        // ==================== Login handling ====================
+        const CORRECT_PASSWORD = 'lavaroofing';
+        const AUTH_KEY = 'lavaAuth'; // Shared with portal
+
+        function checkAuth() {
+            // Check shared portal auth
+            if (sessionStorage.getItem(AUTH_KEY) === 'true' || sessionStorage.getItem('lava_authenticated') === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appWrapper').classList.add('visible');
+                return true;
+            }
+            return false;
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById('loginPassword').value;
+            const btn = event.target.querySelector('button');
+            if (btn) btn.textContent = 'Checking...';
+
+            let isValid = false;
+
+            // Try Supabase first if available
+            if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                isValid = await SupabaseClient.checkPassword(password);
+            } else {
+                isValid = password === CORRECT_PASSWORD;
+            }
+
+            if (isValid) {
+                sessionStorage.setItem(AUTH_KEY, 'true');
+                sessionStorage.setItem('lava_authenticated', 'true');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appWrapper').classList.add('visible');
+                document.getElementById('loginError').classList.remove('show');
+            } else {
+                document.getElementById('loginError').classList.add('show');
+                document.getElementById('loginPassword').value = '';
+            }
+            if (btn) btn.textContent = 'Sign In';
+        }
+
+        // Check auth on page load
+        checkAuth();
+
+        // State
+        let currentInspection = null;
+        let photos = [];
+        let miniPhotos = {}; // For checklist item photos
+        let additionalPhotoCount = 0;
+
+        // Toggle shingle layers field
+        function toggleShingleLayers(select) {
+            const field = document.getElementById('shingleLayersField');
+            if (select.value === 'asphalt-shingle') {
+                field.classList.add('visible');
+            } else {
+                field.classList.remove('visible');
+            }
+        }
+
+        // Handle mini photo capture for checklist items
+        function handleMiniPhoto(input, fieldName) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                compressImage(e.target.result, async function(compressedData) {
+                    const photoBox = input.parentElement;
+                    const photoKey = `${currentInspection?.id || 'new'}_mini_${fieldName}`;
+
+                    // Save to IndexedDB (50MB+ storage)
+                    try {
+                        await PhotoDB.save(photoKey, compressedData);
+                        miniPhotos[fieldName] = photoKey; // Store key, not data
+                    } catch (err) {
+                        console.error('Failed to save photo:', err);
+                        showToast('Failed to save photo', true);
+                        return;
+                    }
+
+                    // Update UI
+                    photoBox.classList.add('has-photo');
+
+                    let img = photoBox.querySelector('img');
+                    if (!img) {
+                        img = document.createElement('img');
+                        photoBox.appendChild(img);
+                    }
+                    img.src = compressedData;
+
+                    // Hide the SVG icon
+                    const svg = photoBox.querySelector('svg');
+                    if (svg) svg.style.display = 'none';
+
+                    autoSave();
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default date
+            document.querySelector('input[name="inspectionDate"]').valueAsDate = new Date();
+
+            // Load saved inspector name
+            const settings = JSON.parse(localStorage.getItem('lava_settings') || '{}');
+            if (settings.inspectorName) {
+                document.querySelector('input[name="inspectorName"]').value = settings.inspectorName;
+            }
+
+            // Setup option buttons
+            document.querySelectorAll('.option-group').forEach(group => {
+                group.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        group.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
+                });
+            });
+
+            // Auto-save on input change
+            document.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('change', autoSave);
+            });
+
+            // Load inspections list
+            loadInspectionList();
+        });
+
+        // View switching
+        function showView(view) {
+            document.body.classList.remove('show-list', 'show-recap');
+            if (view === 'list') {
+                document.body.classList.add('show-list');
+                loadInspectionList();
+            } else if (view === 'recap') {
+                document.body.classList.add('show-recap');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if (view === 'form') document.querySelectorAll('.nav-btn')[0].classList.add('active');
+            if (view === 'list') document.querySelectorAll('.nav-btn')[1].classList.add('active');
+        }
+
+        // Section toggle
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('open');
+        }
+
+        // Checkbox toggle
+        function toggleCheckbox(event, label) {
+            event.preventDefault();
+            const checkbox = label.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+            label.classList.toggle('checked', checkbox.checked);
+            updateWrapupStatus();
+        }
+
+        function updateWrapupStatus() {
+            const checked = document.querySelectorAll('.section[data-section="wrapup"] input:checked').length;
+            document.getElementById('wrapupStatus').textContent = `${checked}/4`;
+            if (checked === 4) {
+                document.getElementById('wrapupStatus').classList.add('complete');
+            } else {
+                document.getElementById('wrapupStatus').classList.remove('complete');
+            }
+        }
+
+        // Photo handling
+        function handlePhoto(input, category) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Compress image
+                compressImage(e.target.result, async function(compressedData) {
+                    const photoBox = input.parentElement;
+                    const photoId = Date.now().toString();
+                    const photoKey = `${currentInspection?.id || 'new'}_photo_${photoId}`;
+
+                    // Save to IndexedDB (50MB+ storage)
+                    try {
+                        await PhotoDB.save(photoKey, compressedData);
+                    } catch (err) {
+                        console.error('Failed to save photo:', err);
+                        showToast('Failed to save photo', true);
+                        return;
+                    }
+
+                    // Check if we're updating existing or adding new
+                    const existingIndex = photos.findIndex(p => p.element === photoBox);
+                    if (existingIndex >= 0) {
+                        // Delete old photo from IndexedDB
+                        if (photos[existingIndex].photoKey) {
+                            PhotoDB.delete(photos[existingIndex].photoKey).catch(() => {});
+                        }
+                        photos[existingIndex].photoKey = photoKey;
+                        photos[existingIndex].dataUrl = compressedData; // Keep in memory for display
+                    } else {
+                        photos.push({
+                            id: photoId,
+                            category: category,
+                            photoKey: photoKey,
+                            dataUrl: compressedData, // Keep in memory for display
+                            caption: '',
+                            element: photoBox
+                        });
+                    }
+
+                    // Update UI
+                    photoBox.classList.add('has-photo');
+
+                    // Remove placeholder, add image
+                    const placeholder = photoBox.querySelector('.placeholder');
+                    if (placeholder) placeholder.style.display = 'none';
+
+                    let img = photoBox.querySelector('img');
+                    if (!img) {
+                        img = document.createElement('img');
+                        img.onclick = function(e) {
+                            e.stopPropagation();
+                            openModal(compressedData);
+                        };
+                        photoBox.insertBefore(img, photoBox.firstChild);
+                    }
+                    img.src = compressedData;
+
+                    // Add remove button
+                    if (!photoBox.querySelector('.remove-btn')) {
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-btn';
+                        removeBtn.innerHTML = '&times;';
+                        removeBtn.onclick = function(e) {
+                            e.stopPropagation();
+                            removePhoto(photoBox);
+                        };
+                        photoBox.appendChild(removeBtn);
+                    }
+
+                    updatePhotoCount();
+                    autoSave();
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function compressImage(dataUrl, callback) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const maxSize = 1600; // Increased - IndexedDB has 50MB+ storage
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height && width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                } else if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                // Use WebP for much smaller files (~30% smaller than JPEG)
+                const webp = canvas.toDataURL('image/webp', 0.75);
+                // Fallback to JPEG if browser doesn't support WebP
+                if (webp.startsWith('data:image/webp')) {
+                    callback(webp);
+                } else {
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                }
+            };
+            img.src = dataUrl;
+        }
+
+        function removePhoto(photoBox) {
+            const index = photos.findIndex(p => p.element === photoBox);
+            if (index >= 0) {
+                // Delete from IndexedDB
+                if (photos[index].photoKey) {
+                    PhotoDB.delete(photos[index].photoKey).catch(() => {});
+                }
+                photos.splice(index, 1);
+            }
+
+            // If it's an additional photo, remove the whole element
+            if (photoBox.closest('#additionalPhotos')) {
+                photoBox.closest('.photo-item')?.remove() || photoBox.remove();
+            } else {
+                // Reset to placeholder
+                photoBox.classList.remove('has-photo');
+                const img = photoBox.querySelector('img');
+                if (img) img.remove();
+                const removeBtn = photoBox.querySelector('.remove-btn');
+                if (removeBtn) removeBtn.remove();
+                const placeholder = photoBox.querySelector('.placeholder');
+                if (placeholder) placeholder.style.display = '';
+                photoBox.querySelector('input').value = '';
+            }
+
+            updatePhotoCount();
+            autoSave();
+        }
+
+        function addPhotoSlot() {
+            additionalPhotoCount++;
+            const container = document.getElementById('additionalPhotos');
+            const div = document.createElement('div');
+            div.className = 'photo-item';
+            div.style.marginTop = '1rem';
+            div.innerHTML = `
+                <div class="photo-upload" data-category="extra${additionalPhotoCount}" onclick="this.querySelector('input').click()">
+                    <div class="placeholder">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                    </div>
+                    <input type="file" accept="image/*" onchange="handlePhoto(this, 'extra${additionalPhotoCount}')">
+                </div>
+            `;
+            container.appendChild(div);
+
+            // Trigger the file input
+            div.querySelector('input').click();
+        }
+
+        function updatePhotoCount() {
+            const count = photos.length;
+            document.getElementById('photoCount').textContent = `${count} photo${count !== 1 ? 's' : ''}`;
+        }
+
+        // Modal
+        function openModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('photoModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('photoModal').classList.remove('open');
+        }
+
+        // Form data collection
+        function getFormData() {
+            const form = document.getElementById('inspectionForm');
+            const data = {
+                id: currentInspection?.id || Date.now().toString(),
+                created: currentInspection?.created || new Date().toISOString(),
+                updated: new Date().toISOString(),
+                status: 'draft',
+                customer: {
+                    name: form.customerName.value,
+                    address: form.address.value,
+                    phone: form.phone.value,
+                    email: form.email.value
+                },
+                inspectionDate: form.inspectionDate.value,
+                inspectorName: form.inspectorName.value,
+                concerns: {
+                    mainConcern: form.mainConcern.value,
+                    duration: form.issueDuration.value,
+                    previousWork: getSelectedOption('previousWork'),
+                    previousWorkDetails: form.previousWorkDetails.value,
+                    customerUrgency: getSelectedOption('customerUrgency')
+                },
+                roof: {
+                    type: form.roofType.value,
+                    shingleLayers: getSelectedOption('shingleLayers'),
+                    age: form.roofAge.value,
+                    stories: getSelectedOption('stories'),
+                    pitch: getSelectedOption('pitch'),
+                    access: getSelectedOption('access'),
+                    accessNotes: form.accessNotes?.value || '',
+                    condition: getSelectedOption('overallCondition')
+                },
+                miniPhotos: { ...miniPhotos },
+                findings: {
+                    problemAreas: form.problemAreas.value,
+                    diagnosis: form.diagnosis.value,
+                    gutters: getSelectedOption('gutters'),
+                    flashing: getSelectedOption('flashing'),
+                    vents: getSelectedOption('vents'),
+                    additionalIssues: form.additionalIssues.value
+                },
+                // Store only photo keys, not data (data is in IndexedDB)
+                photos: photos.map(p => ({
+                    id: p.id,
+                    category: p.category,
+                    photoKey: p.photoKey,
+                    caption: p.caption
+                })),
+                recommendation: {
+                    type: getSelectedOption('recommendation'),
+                    urgency: getSelectedOption('urgency'),
+                    customerSummary: form.customerSummary.value,
+                    internalNotes: form.internalNotes.value
+                },
+                wrapup: {
+                    walked: form.wrapup_walked.checked,
+                    explained: form.wrapup_explained.checked,
+                    timeline: form.wrapup_timeline.checked,
+                    thanked: form.wrapup_thanked.checked
+                }
+            };
+            return data;
+        }
+
+        function getSelectedOption(field) {
+            const selected = document.querySelector(`.option-group[data-field="${field}"] .option-btn.selected`);
+            return selected ? selected.dataset.value : '';
+        }
+
+        // Save
+        function saveInspection() {
+            const data = getFormData();
+
+            // Save inspector name preference
+            if (data.inspectorName) {
+                try {
+                    localStorage.setItem('lava_settings', JSON.stringify({ inspectorName: data.inspectorName }));
+                } catch (e) {
+                    // Non-critical, continue
+                }
+            }
+
+            // Get existing inspections
+            const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+
+            // Update or add
+            const existingIndex = inspections.findIndex(i => i.id === data.id);
+            if (existingIndex >= 0) {
+                inspections[existingIndex] = data;
+            } else {
+                inspections.unshift(data);
+            }
+
+            try {
+                localStorage.setItem('lava_inspections', JSON.stringify(inspections));
+                currentInspection = data;
+                showToast('Inspection saved!');
+            } catch (e) {
+                // Storage quota exceeded - but data is still in memory
+                currentInspection = data;
+                const storageMB = (JSON.stringify(inspections).length / 1024 / 1024).toFixed(1);
+                showToast(`Storage full (${storageMB}MB) - Print to PDF to save!`, true);
+                console.error('localStorage quota exceeded:', e);
+            }
+        }
+
+        function autoSave() {
+            // Debounced auto-save
+            clearTimeout(window.autoSaveTimeout);
+            window.autoSaveTimeout = setTimeout(() => {
+                if (document.querySelector('input[name="customerName"]').value) {
+                    saveInspection();
+                }
+            }, 2000);
+        }
+
+        // Load inspections list
+        function loadInspectionList() {
+            const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+            const list = document.getElementById('inspectionList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (inspections.length === 0) {
+                list.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            list.innerHTML = inspections.map(i => `
+                <li class="inspection-item" onclick="loadInspection('${i.id}')">
+                    <h3>${i.customer.name || 'Unnamed'}</h3>
+                    <div class="meta">${i.customer.address || 'No address'}</div>
+                    <div class="meta">${formatDate(i.inspectionDate || i.created)}</div>
+                    <span class="status-badge ${i.status}">${i.status}</span>
+                </li>
+            `).join('');
+        }
+
+        async function loadInspection(id) {
+            const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+            const inspection = inspections.find(i => i.id === id);
+            if (!inspection) return;
+
+            currentInspection = inspection;
+
+            // Populate form
+            const form = document.getElementById('inspectionForm');
+            form.customerName.value = inspection.customer.name || '';
+            form.address.value = inspection.customer.address || '';
+            form.phone.value = inspection.customer.phone || '';
+            form.email.value = inspection.customer.email || '';
+            form.inspectionDate.value = inspection.inspectionDate || '';
+            form.inspectorName.value = inspection.inspectorName || '';
+
+            form.mainConcern.value = inspection.concerns?.mainConcern || '';
+            form.issueDuration.value = inspection.concerns?.duration || '';
+            setSelectedOption('previousWork', inspection.concerns?.previousWork);
+            form.previousWorkDetails.value = inspection.concerns?.previousWorkDetails || '';
+            setSelectedOption('customerUrgency', inspection.concerns?.customerUrgency);
+
+            form.roofType.value = inspection.roof?.type || '';
+            toggleShingleLayers(form.roofType);
+            setSelectedOption('shingleLayers', inspection.roof?.shingleLayers);
+            form.roofAge.value = inspection.roof?.age || '';
+            setSelectedOption('stories', inspection.roof?.stories);
+            setSelectedOption('pitch', inspection.roof?.pitch);
+            setSelectedOption('access', inspection.roof?.access);
+            form.accessNotes.value = inspection.roof?.accessNotes || '';
+            setSelectedOption('overallCondition', inspection.roof?.condition);
+
+            // Load mini photos from IndexedDB
+            miniPhotos = inspection.miniPhotos || {};
+            Object.keys(miniPhotos).forEach(async fieldName => {
+                const photoKey = miniPhotos[fieldName];
+                const photoBox = document.querySelector(`.mini-photo[data-field="${fieldName}"]`);
+                if (photoBox && photoKey) {
+                    try {
+                        // Check if it's a key (new format) or dataUrl (old format)
+                        const dataUrl = photoKey.startsWith('data:') ? photoKey : await PhotoDB.get(photoKey);
+                        if (dataUrl) {
+                            photoBox.classList.add('has-photo');
+                            let img = photoBox.querySelector('img');
+                            if (!img) {
+                                img = document.createElement('img');
+                                photoBox.appendChild(img);
+                            }
+                            img.src = dataUrl;
+                            const svg = photoBox.querySelector('svg');
+                            if (svg) svg.style.display = 'none';
+                        }
+                    } catch (err) {
+                        console.error('Failed to load mini photo:', err);
+                    }
+                }
+            });
+
+            form.problemAreas.value = inspection.findings?.problemAreas || '';
+            form.diagnosis.value = inspection.findings?.diagnosis || '';
+            setSelectedOption('gutters', inspection.findings?.gutters);
+            setSelectedOption('flashing', inspection.findings?.flashing);
+            setSelectedOption('vents', inspection.findings?.vents);
+            form.additionalIssues.value = inspection.findings?.additionalIssues || '';
+
+            setSelectedOption('recommendation', inspection.recommendation?.type);
+            setSelectedOption('urgency', inspection.recommendation?.urgency);
+            form.customerSummary.value = inspection.recommendation?.customerSummary || '';
+            form.internalNotes.value = inspection.recommendation?.internalNotes || '';
+
+            form.wrapup_walked.checked = inspection.wrapup?.walked || false;
+            form.wrapup_explained.checked = inspection.wrapup?.explained || false;
+            form.wrapup_timeline.checked = inspection.wrapup?.timeline || false;
+            form.wrapup_thanked.checked = inspection.wrapup?.thanked || false;
+
+            // Update checkbox styling
+            document.querySelectorAll('.checkbox-item').forEach(item => {
+                const checkbox = item.querySelector('input');
+                item.classList.toggle('checked', checkbox.checked);
+            });
+            updateWrapupStatus();
+
+            // Load photos from IndexedDB
+            photos = [];
+            if (inspection.photos && inspection.photos.length > 0) {
+                for (const photo of inspection.photos) {
+                    const photoBox = document.querySelector(`.photo-upload[data-category="${photo.category}"]`);
+                    if (photoBox) {
+                        try {
+                            // Check if it's a key (new format) or dataUrl (old format)
+                            const dataUrl = photo.dataUrl ? photo.dataUrl :
+                                (photo.photoKey ? await PhotoDB.get(photo.photoKey) : null);
+
+                            if (dataUrl) {
+                                photoBox.classList.add('has-photo');
+                                const placeholder = photoBox.querySelector('.placeholder');
+                                if (placeholder) placeholder.style.display = 'none';
+
+                                let img = photoBox.querySelector('img');
+                                if (!img) {
+                                    img = document.createElement('img');
+                                    img.onclick = function(e) {
+                                        e.stopPropagation();
+                                        openModal(dataUrl);
+                                    };
+                                    photoBox.insertBefore(img, photoBox.firstChild);
+                                }
+                                img.src = dataUrl;
+
+                                if (!photoBox.querySelector('.remove-btn')) {
+                                    const removeBtn = document.createElement('button');
+                                    removeBtn.className = 'remove-btn';
+                                    removeBtn.innerHTML = '&times;';
+                                    removeBtn.onclick = function(e) {
+                                        e.stopPropagation();
+                                        removePhoto(photoBox);
+                                    };
+                                    photoBox.appendChild(removeBtn);
+                                }
+
+                                photos.push({
+                                    ...photo,
+                                    dataUrl: dataUrl,
+                                    element: photoBox
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Failed to load photo:', err);
+                        }
+                    }
+                }
+            }
+            updatePhotoCount();
+
+            showView('form');
+        }
+
+        function setSelectedOption(field, value) {
+            if (!value) return;
+            const group = document.querySelector(`.option-group[data-field="${field}"]`);
+            if (group) {
+                group.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.value === value);
+                });
+            }
+        }
+
+        function startNewInspection() {
+            currentInspection = null;
+            document.getElementById('inspectionForm').reset();
+            document.querySelector('input[name="inspectionDate"]').valueAsDate = new Date();
+
+            // Load saved inspector name
+            const settings = JSON.parse(localStorage.getItem('lava_settings') || '{}');
+            if (settings.inspectorName) {
+                document.querySelector('input[name="inspectorName"]').value = settings.inspectorName;
+            }
+
+            // Clear option selections
+            document.querySelectorAll('.option-btn.selected').forEach(btn => btn.classList.remove('selected'));
+
+            // Clear checkboxes
+            document.querySelectorAll('.checkbox-item').forEach(item => {
+                item.classList.remove('checked');
+                item.querySelector('input').checked = false;
+            });
+            updateWrapupStatus();
+
+            // Clear photos
+            photos = [];
+            document.querySelectorAll('.photo-upload').forEach(box => {
+                box.classList.remove('has-photo');
+                const img = box.querySelector('img');
+                if (img) img.remove();
+                const removeBtn = box.querySelector('.remove-btn');
+                if (removeBtn) removeBtn.remove();
+                const placeholder = box.querySelector('.placeholder');
+                if (placeholder) placeholder.style.display = '';
+                const input = box.querySelector('input');
+                if (input) input.value = '';
+            });
+            document.getElementById('additionalPhotos').innerHTML = '';
+            additionalPhotoCount = 0;
+            updatePhotoCount();
+
+            // Clear mini photos
+            miniPhotos = {};
+            document.querySelectorAll('.mini-photo').forEach(box => {
+                box.classList.remove('has-photo');
+                const img = box.querySelector('img');
+                if (img) img.remove();
+                const svg = box.querySelector('svg');
+                if (svg) svg.style.display = '';
+                const input = box.querySelector('input');
+                if (input) input.value = '';
+            });
+
+            // Hide conditional fields
+            document.getElementById('shingleLayersField').classList.remove('visible');
+
+            showView('form');
+        }
+
+        // Generate Recap
+        async function generateRecap() {
+            // Try to save but don't block recap if storage is full
+            try { saveInspection(); } catch(e) { console.log('Could not save, continuing with recap'); }
+
+            // Use in-memory photos array which has dataUrl loaded
+            const mainPhotosWithData = photos.filter(p => p.dataUrl);
+
+            // Load mini photos from IndexedDB
+            const miniPhotoLabels = {
+                storiesPhoto: 'Stories',
+                pitchPhoto: 'Pitch',
+                accessPhoto: 'Access',
+                conditionPhoto: 'Condition',
+                problemAreasPhoto: 'Problem Areas',
+                diagnosisPhoto: 'Diagnosis',
+                guttersPhoto: 'Gutters',
+                flashingPhoto: 'Flashing',
+                ventsPhoto: 'Vents',
+                additionalIssuesPhoto: 'Additional Issues'
+            };
+
+            const miniPhotosWithData = [];
+            for (const [fieldName, photoKey] of Object.entries(miniPhotos)) {
+                if (photoKey) {
+                    try {
+                        // Check if it's a key or already a dataUrl
+                        const dataUrl = photoKey.startsWith('data:') ? photoKey : await PhotoDB.get(photoKey);
+                        if (dataUrl) {
+                            miniPhotosWithData.push({ fieldName, dataUrl, label: miniPhotoLabels[fieldName] || fieldName });
+                        }
+                    } catch (err) {
+                        console.error('Failed to load mini photo for recap:', err);
+                    }
+                }
+            }
+
+            const data = getFormData();
+            const hasAnyPhotos = mainPhotosWithData.length > 0 || miniPhotosWithData.length > 0;
+
+            const roofTypeLabels = {
+                'asphalt-shingle': 'Asphalt Shingle',
+                'tile': 'Tile',
+                'metal-standing-seam': 'Metal Standing Seam',
+                'metal-corrugated': 'Metal Corrugated',
+                'flat-lowslope': 'Flat/Low-Slope',
+                'wood-shake': 'Wood Shake',
+                'other': 'Other'
+            };
+
+            const recommendationLabels = {
+                'repair': 'Repair',
+                'partial': 'Partial Replacement',
+                'full': 'Full Replacement'
+            };
+
+            const urgencyLabels = {
+                'immediate': 'Immediate attention recommended',
+                '30days': 'Within 30 days recommended',
+                'plan': 'Can plan ahead'
+            };
+
+            const photosHtml = hasAnyPhotos ? `
+                <div class="recap-section">
+                    <h2>Photos</h2>
+                    <div class="recap-photos">
+                        ${mainPhotosWithData.map(p => `
+                            <div class="recap-photo" onclick="openModal('${p.dataUrl}')">
+                                <img src="${p.dataUrl}" alt="Photo">
+                            </div>
+                        `).join('')}
+                        ${miniPhotosWithData.map(p => `
+                            <div class="recap-photo" onclick="openModal('${p.dataUrl}')">
+                                <img src="${p.dataUrl}" alt="Photo">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            const recapHtml = `
+                <div class="recap-header">
+                    <img src="../assets/images/logo.png" alt="LAVA Roofing Hawaii" class="logo-img">
+                    <h1>Inspection Summary</h1>
+                    <p class="license">Contractor License: CT-39063</p>
+                </div>
+                <div class="recap-body">
+                    <div class="recap-section">
+                        <dl class="recap-meta">
+                            <dt>Prepared for</dt>
+                            <dd>${data.customer.name}</dd>
+                            <dt>Property</dt>
+                            <dd>${data.customer.address}</dd>
+                            <dt>Date</dt>
+                            <dd>${formatDate(data.inspectionDate)}</dd>
+                            <dt>Inspector</dt>
+                            <dd>${data.inspectorName || 'LAVA Roofing'}</dd>
+                        </dl>
+                    </div>
+
+                    ${data.concerns.mainConcern ? `
+                    <div class="recap-section">
+                        <h2>What You Told Us</h2>
+                        <p>${data.concerns.mainConcern}</p>
+                    </div>
+                    ` : ''}
+
+                    <div class="recap-section">
+                        <h2>What We Found</h2>
+                        <p><strong>${roofTypeLabels[data.roof.type] || data.roof.type || 'Roof'}</strong>, approximately <strong>${data.roof.age || 'unknown'} years old</strong></p>
+                        <p>Overall condition: <strong>${capitalize(data.roof.condition) || 'Not assessed'}</strong></p>
+                        ${data.findings.problemAreas ? `
+                        <div class="recap-callout">
+                            <strong>Problem Areas Identified</strong>
+                            <p>${data.findings.problemAreas}</p>
+                        </div>
+                        ` : ''}
+                        ${data.findings.diagnosis ? `
+                        <div class="recap-diagnosis">
+                            <strong>Diagnosis</strong>
+                            <p style="margin: 0;">${data.findings.diagnosis}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    ${data.recommendation.type ? `
+                    <div class="recap-section">
+                        <h2>Our Recommendation</h2>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;"><strong>${recommendationLabels[data.recommendation.type] || data.recommendation.type}</strong></p>
+                        ${data.recommendation.urgency ? `<p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.75rem;">${urgencyLabels[data.recommendation.urgency]}</p>` : ''}
+                        ${data.recommendation.customerSummary ? `<p style="margin-top: 0.5rem; line-height: 1.7;">${data.recommendation.customerSummary}</p>` : ''}
+                    </div>
+                    ` : ''}
+
+                    ${photosHtml}
+
+                    <div class="recap-section">
+                        <h2>What's Next</h2>
+                        <p style="margin-bottom: 0.75rem;">We are preparing your quote now and will be in touch shortly!</p>
+                        <div class="recap-cta">
+                            <p><strong>Questions?</strong> We're here to help.</p>
+                            <p style="margin-top: 0.5rem;">Call <a href="tel:8082507337">(808) 250-7337</a> or email <a href="mailto:kyle@lavaroofing.com">kyle@lavaroofing.com</a></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="recap-footer">
+                    <img src="../assets/images/logo.png" alt="LAVA Roofing" class="footer-logo">
+                    <p class="tagline">Dependability. Craftsmanship. Aloha.</p>
+                    <p class="contact">www.lavaroofing.com &bull; License: CT-39063</p>
+                </div>
+            `;
+
+            document.getElementById('recapContent').innerHTML = recapHtml;
+            showView('recap');
+        }
+
+        // Share
+        function shareRecap(method) {
+            const data = getFormData();
+
+            if (method === 'email') {
+                const subject = encodeURIComponent(`LAVA Roofing - Inspection Summary for ${data.customer.address}`);
+                const body = encodeURIComponent(`Hi ${data.customer.name},
+
+Thank you for having LAVA Roofing out to inspect your property at ${data.customer.address}.
+
+Please find your inspection summary attached, or view it online.
+
+We are preparing your quote now and will be in touch shortly!
+
+Questions? Just reply to this email or call us at (808) 280-4090.
+
+Mahalo,
+${data.inspectorName || 'LAVA Roofing Team'}
+
+--
+LAVA Roofing
+Dependability. Craftsmanship. Aloha.
+www.lavaroofing.com`);
+
+                window.location.href = `mailto:${data.customer.email}?subject=${subject}&body=${body}`;
+            } else if (method === 'print') {
+                // Set clean title for print header
+                const originalTitle = document.title;
+                document.title = `${data.customer.address} - Inspection`;
+
+                // Tip: In Chrome's print dialog, go to "More settings" and uncheck "Headers and footers"
+                window.print();
+
+                // Restore title after print dialog closes
+                setTimeout(() => { document.title = originalTitle; }, 1000);
+            } else if (method === 'copy') {
+                showToast('Share link feature coming soon!');
+            }
+        }
+
+        // Utilities
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function capitalize(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.remove('error');
+            }, isError ? 4000 : 2000);
+        }
+    </script>
+</body>
+</html>
+<!-- deployed Fri, Jan  9, 2026  6:24:50 PM -->
+

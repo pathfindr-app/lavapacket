@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVA Roofing - Estimate Packet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --lava-orange: #e85a2c;
+            --lava-red: #c41e3a;
+            --lava-teal: #2a7b9b;
+            --lava-dark: #1a1a1a;
+            --lava-charcoal: #2d2d2d;
+            --cream: #faf8f5;
+            --warm-gray: #e8e4df;
+            --text-primary: #1a1a1a;
+            --text-secondary: #5a5a5a;
+            --text-muted: #8a8a8a;
+        }
+
+        /* ========================================
+           PASSWORD SCREEN
+        ======================================== */
+        .password-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--lava-dark) 0%, var(--lava-charcoal) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .password-screen.hidden {
+            display: none;
+        }
+
+        .password-box {
+            background: white;
+            padding: 3rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .password-logo {
+            height: 50px;
+            margin-bottom: 1.5rem;
+        }
+
+        .password-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--lava-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .password-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            border: 2px solid var(--warm-gray);
+            outline: none;
+            transition: border-color 0.2s;
+            text-align: center;
+            letter-spacing: 0.1em;
+        }
+
+        .password-input:focus {
+            border-color: var(--lava-orange);
+        }
+
+        .password-input.error {
+            border-color: var(--lava-red);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .password-btn {
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: var(--lava-orange);
+            color: white;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .password-btn:hover {
+            background: var(--lava-red);
+        }
+
+        .password-error {
+            color: var(--lava-red);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .password-error.visible {
+            opacity: 1;
+        }
+
+        .content-locked {
+            display: none;
+        }
+
+        .content-locked.unlocked {
+            display: block;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'DM Sans', Georgia, serif;
+            background: var(--cream);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========================================
+           NAVIGATION (Web Only)
+        ======================================== */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .toolbar-btn {
+            background: var(--lava-orange);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--lava-red);
+        }
+
+        .toolbar-btn.secondary {
+            background: white;
+            color: var(--lava-orange);
+            border: 1.5px solid var(--lava-orange);
+        }
+
+        .toolbar-btn.secondary:hover {
+            background: var(--lava-orange);
+            color: white;
+        }
+
+        /* ========================================
+           PAGE STRUCTURE
+        ======================================== */
+        .packet {
+            max-width: 8.5in;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .page {
+            min-height: 11in;
+            padding: 0.75in;
+            position: relative;
+            background: white;
+            page-break-after: always;
+            page-break-inside: avoid;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* Subtle paper texture overlay */
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.02;
+            pointer-events: none;
+        }
+
+        /* ========================================
+           COVER PAGE
+        ======================================== */
+        .cover {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1in;
+            border-left: 6px solid var(--lava-orange);
+        }
+
+        .cover-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .cover-logo {
+            height: 56px;
+        }
+
+        .cover-date {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .cover-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2in 0;
+        }
+
+        .cover-accent {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--lava-orange), var(--lava-red), var(--lava-teal));
+            margin-bottom: 2rem;
+        }
+
+        .cover-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--lava-dark);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .cover-subtitle {
+            font-family: 'DM Sans', serif;
+            font-size: 1.15rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 400px;
+        }
+
+        .cover-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 2px solid var(--warm-gray);
+            padding-top: 1.5rem;
+        }
+
+        .cover-customer {
+            color: var(--lava-dark);
+        }
+
+        .cover-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--lava-orange);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .cover-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .cover-address {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .cover-tagline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            text-align: right;
+        }
+
+        /* ========================================
+           SECTION HEADERS
+        ======================================== */
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--lava-orange);
+            padding-bottom: 0.75rem;
+        }
+
+        .section-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--lava-orange);
+            letter-spacing: 0.1em;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+            letter-spacing: -0.01em;
+        }
+
+        /* ========================================
+           LEGACY HOME SECTION
+        ======================================== */
+        .legacy-hero {
+            background: var(--cream);
+            padding: 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            border-left: 5px solid var(--lava-orange);
+        }
+
+        .legacy-hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--lava-orange), var(--lava-red), var(--lava-teal));
+        }
+
+        .legacy-hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .legacy-eyebrow {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--lava-orange);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .legacy-headline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--lava-dark);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .legacy-subhead {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin: 0;
+        }
+
+        .synergy-box {
+            background: white;
+            border: 2px solid var(--lava-teal);
+            border-left: 4px solid var(--lava-teal);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .synergy-content {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .synergy-content strong {
+            color: var(--lava-teal);
+            font-weight: 600;
+        }
+
+        .legacy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .legacy-stat {
+            background: var(--cream);
+            padding: 1.5rem;
+            text-align: center;
+            border-left: 3px solid var(--lava-orange);
+        }
+
+        .legacy-stat-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--lava-dark);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .legacy-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .legacy-quote {
+            background: white;
+            border: 1px solid var(--warm-gray);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .legacy-quote-mark {
+            font-family: Georgia, serif;
+            font-size: 4rem;
+            color: var(--lava-orange);
+            opacity: 0.3;
+            position: absolute;
+            top: 0.5rem;
+            left: 1rem;
+            line-height: 1;
+        }
+
+        .legacy-quote-text {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-style: italic;
+            margin: 0;
+            padding-left: 2rem;
+        }
+
+        /* ========================================
+           EAGLEVIEW SECTION
+        ======================================== */
+        .ev-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .ev-card {
+            border: 1px solid var(--warm-gray);
+            overflow: hidden;
+        }
+
+        .ev-label {
+            background: var(--cream);
+            color: var(--lava-dark);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.6rem 1rem;
+            border-bottom: 2px solid var(--lava-orange);
+        }
+
+        .ev-placeholder {
+            height: 200px;
+            background: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .ev-placeholder-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* ========================================
+           MEASUREMENTS TABLE
+        ======================================== */
+        .measurements {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .measurements th {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 0.75rem 0;
+            border-bottom: 2px solid var(--lava-orange);
+        }
+
+        .measurements td {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--warm-gray);
+            font-size: 0.9rem;
+        }
+
+        .measurements td:first-child {
+            color: var(--text-secondary);
+        }
+
+        .measurements td:last-child {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--lava-dark);
+        }
+
+        /* ========================================
+           ESTIMATE SECTION
+        ======================================== */
+        .estimate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--warm-gray);
+        }
+
+        .estimate-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .estimate-logo {
+            height: 36px;
+        }
+
+        .estimate-info {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .estimate-info strong {
+            color: var(--lava-dark);
+            font-weight: 600;
+        }
+
+        .estimate-meta {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .estimate-meta strong {
+            display: block;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            color: var(--lava-dark);
+        }
+
+        /* Scope Sections */
+        .scope {
+            margin-bottom: 2rem;
+        }
+
+        .scope-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--lava-teal);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--lava-teal);
+            margin-bottom: 1rem;
+        }
+
+        .scope-item {
+            display: grid;
+            grid-template-columns: 24px 1fr;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--warm-gray);
+        }
+
+        .scope-item:last-child {
+            border-bottom: none;
+        }
+
+        .scope-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--cream);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+        }
+
+        .scope-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .scope-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 0.25rem;
+        }
+
+        /* Pricing Box */
+        .pricing {
+            background: var(--cream);
+            padding: 1.5rem 2rem;
+            margin-top: 2rem;
+            border: 2px solid var(--lava-orange);
+        }
+
+        .pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--warm-gray);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .pricing-row:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-total {
+            border-top: 2px solid var(--lava-orange);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            color: var(--lava-dark);
+        }
+
+        .pricing-total .pricing-label {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .pricing-total .pricing-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--lava-orange);
+        }
+
+        /* ========================================
+           ESTIMATE PAGE EMBED
+        ======================================== */
+        .estimate-page-embed {
+            width: 100%;
+            max-height: 8.5in;
+            overflow: hidden;
+            border: 1px solid var(--warm-gray);
+        }
+
+        .estimate-page-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ========================================
+           BRAVA SECTION
+        ======================================== */
+        .brava-hero {
+            background: white;
+            color: var(--lava-dark);
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            position: relative;
+            border: 2px solid #091F2C;
+        }
+
+        .brava-hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e85a2c, #091F2C, #2a7b9b);
+        }
+
+        .brava-badge {
+            display: inline-block;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            background: var(--cream);
+            border: 1px solid var(--warm-gray);
+            color: var(--lava-orange);
+            padding: 0.3rem 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .brava-logo-container {
+            margin-bottom: 0.5rem;
+        }
+
+        .brava-logo-img {
+            height: 60px;
+        }
+
+        .brava-tagline {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 0.75rem;
+        }
+
+        .brava-warranty-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: white;
+            border: 2px solid #c9a227;
+            color: #8b7722;
+            padding: 0.5rem 1rem;
+            border-radius: 2px;
+        }
+
+        .brava-warranty-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #8b7722;
+        }
+
+        .brava-warranty-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            line-height: 1.2;
+            text-align: left;
+            color: #8b7722;
+        }
+
+        .brava-visuals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .brava-visual-item {
+            overflow: hidden;
+        }
+
+        .brava-visual-img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border: 1px solid var(--warm-gray);
+        }
+
+        .brava-visual-caption {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 0.4rem;
+            background: var(--cream);
+        }
+
+        .brava-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .brava-feature {
+            background: var(--cream);
+            padding: 0.6rem 0.75rem;
+            border-left: 3px solid var(--lava-teal);
+        }
+
+        .brava-feature-fire {
+            background: linear-gradient(135deg, #fff5f2 0%, #ffe8e0 100%);
+            border-left: 3px solid var(--lava-orange);
+        }
+
+        .brava-feature-fire .brava-feature-title {
+            color: var(--lava-red);
+        }
+
+        .brava-feature-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+            margin-bottom: 0.15rem;
+        }
+
+        .brava-feature-text {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .brava-callout {
+            background: #fff5f2;
+            color: var(--lava-dark);
+            padding: 1rem;
+            border-left: 4px solid var(--lava-orange);
+        }
+
+        .brava-callout-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: var(--lava-red);
+        }
+
+        .brava-callout-text {
+            font-size: 0.75rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        /* ========================================
+           ABOUT + WORK COMBINED PAGE
+        ======================================== */
+        .about-work-page {
+            padding: 0.5in;
+        }
+
+        .about-banner {
+            position: relative;
+            height: 140px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .about-banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 40%;
+        }
+
+        .about-banner-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            padding: 1rem;
+        }
+
+        .about-banner-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.05em;
+        }
+
+        .about-split {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--warm-gray);
+        }
+
+        .about-story {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .about-story p {
+            margin-bottom: 0.75rem;
+        }
+
+        .about-story strong {
+            color: var(--lava-dark);
+        }
+
+        .about-credentials {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .cred-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background: var(--cream);
+            border-left: 3px solid var(--lava-orange);
+        }
+
+        .cred-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+        }
+
+        .cred-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .work-showcase {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .work-item {
+            position: relative;
+            overflow: hidden;
+            height: 120px;
+        }
+
+        .work-item-large {
+            grid-row: span 2;
+            height: auto;
+        }
+
+        .work-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .work-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 1.5rem 0.5rem 0.4rem;
+            letter-spacing: 0.02em;
+        }
+
+        /* ========================================
+           CLOSING PAGE
+        ======================================== */
+        .closing-page {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .closing-message {
+            background: var(--cream);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--lava-orange);
+        }
+
+        .closing-message p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 0.75rem;
+        }
+
+        .closing-message p:last-child {
+            margin-bottom: 0;
+        }
+
+        .closing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: auto;
+        }
+
+        .closing-contact {
+            background: white;
+            border: 2px solid var(--lava-orange);
+            padding: 1.5rem;
+        }
+
+        .contact-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--lava-orange);
+            margin-bottom: 0.75rem;
+        }
+
+        .contact-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+        }
+
+        .contact-role {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .contact-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .contact-icon {
+            font-size: 1rem;
+        }
+
+        .contact-row a {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--lava-dark);
+            text-decoration: none;
+        }
+
+        .closing-terms {
+            background: var(--cream);
+            padding: 1.5rem;
+        }
+
+        .terms-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .terms-list {
+            margin-bottom: 1rem;
+        }
+
+        .term-item {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 0.3rem 0;
+        }
+
+        .terms-footer {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .company-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--lava-orange);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .closing-logo {
+            height: 50px;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+        }
+
+        .company-address {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .company-license {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .company-tagline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--lava-orange);
+            font-style: italic;
+        }
+
+        /* ========================================
+           EDITABLE STYLES (Web only)
+        ======================================== */
+        .editable[contenteditable="true"] {
+            background: rgba(232, 90, 44, 0.08);
+            outline: 1px dashed var(--lava-orange);
+            outline-offset: 2px;
+            cursor: text;
+            min-height: 1em;
+        }
+
+        .editable[contenteditable="true"]:hover {
+            background: rgba(232, 90, 44, 0.15);
+        }
+
+        .editable[contenteditable="true"]:focus {
+            background: rgba(232, 90, 44, 0.1);
+            outline: 2px solid var(--lava-orange);
+        }
+
+        /* ========================================
+           PRINT STYLES
+        ======================================== */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            html {
+                font-size: 10pt;
+            }
+
+            body {
+                background: white;
+            }
+
+            .toolbar,
+            .no-print {
+                display: none !important;
+            }
+
+            .packet {
+                max-width: 100%;
+            }
+
+            .page {
+                min-height: auto;
+                height: 10in;
+                padding: 0.4in 0.5in;
+                page-break-after: always;
+                page-break-inside: avoid;
+                overflow: hidden;
+            }
+
+            .page::before {
+                display: none;
+            }
+
+            .cover {
+                height: 10in;
+                padding: 0.6in;
+            }
+
+            /* Keep ALL sections together */
+            .legacy-hero,
+            .legacy-grid,
+            .synergy-box,
+            .ev-grid,
+            .measurements,
+            .brava-hero,
+            .brava-visuals,
+            .brava-features,
+            .brava-callout,
+            .about-banner,
+            .about-split,
+            .work-showcase,
+            .closing-message,
+            .closing-grid,
+            .company-footer {
+                page-break-inside: avoid;
+            }
+
+            .about-work-page {
+                padding: 0.4in 0.5in;
+            }
+
+            .about-banner {
+                height: 120px;
+            }
+
+            .work-item {
+                height: 100px;
+            }
+
+            .work-item-large {
+                height: auto;
+            }
+
+            .closing-page {
+                padding: 0.4in 0.5in;
+            }
+
+            .section-header {
+                page-break-after: avoid;
+            }
+
+            .ev-placeholder {
+                height: 150px;
+            }
+
+            .portfolio-img {
+                height: 140px;
+            }
+
+            .crew-grid {
+                gap: 0.5rem;
+            }
+
+            .crew-photo {
+                max-height: 120px;
+            }
+
+            .packet-footer {
+                min-height: auto;
+                padding: 1rem;
+                height: auto;
+            }
+
+            .estimate-page-img {
+                max-height: 9in;
+                width: auto;
+                margin: 0 auto;
+                display: block;
+            }
+        }
+
+        @page {
+            margin: 0;
+            size: letter;
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="LAVA-ESTIMATION/logo.png" alt="LAVA Roofing" class="password-logo">
+            <div class="password-title">Protected Document</div>
+            <div class="password-subtitle">Enter password to view estimate packet</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter')checkPassword()">
+            <button class="password-btn" onclick="checkPassword()">Access Document</button>
+            <div class="password-error" id="passwordError">Incorrect password. Please try again.</div>
+        </div>
+    </div>
+
+    <!-- Toolbar (Web Only) -->
+    <div class="toolbar content-locked">
+        <button class="toolbar-btn secondary" onclick="toggleEdit()">Edit</button>
+        <button class="toolbar-btn" onclick="window.print()">Print / PDF</button>
+    </div>
+
+    <div class="packet content-locked">
+        <!-- ==========================================
+             PAGE 1: COVER
+        ========================================== -->
+        <div class="page cover">
+            <div class="cover-header">
+                <img src="LAVA-ESTIMATION/logo.png" alt="LAVA Roofing" class="cover-logo">
+                <div class="cover-date" id="coverDate">January 2026</div>
+            </div>
+
+            <div class="cover-main">
+                <div class="cover-accent"></div>
+                <h1 class="cover-title editable" data-field="coverTitle">Roofing<br>Proposal</h1>
+                <p class="cover-subtitle editable" data-field="coverSubtitle">The right roof for the right house.</p>
+            </div>
+
+            <div class="cover-footer">
+                <div class="cover-customer">
+                    <div class="cover-label">Prepared For</div>
+                    <div class="cover-name editable" data-field="customerName">Seyth Reppun</div>
+                    <div class="cover-address editable" data-field="customerAddress">1088 Upper Kimo Drive, Kula, HI 96790</div>
+                </div>
+                <div class="cover-tagline editable" data-field="coverTagline">Dependability · Craftsmanship · Aloha</div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PAGE 2: THE HOME
+        ========================================== -->
+        <div class="page">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2 class="section-title">The Home</h2>
+            </div>
+
+            <div class="legacy-hero">
+                <div class="legacy-hero-content">
+                    <div class="legacy-eyebrow editable" data-field="legacyEyebrow">Why This Home Is Different</div>
+                    <h3 class="legacy-headline editable" data-field="legacyHeadline">A Legacy Home</h3>
+                    <p class="legacy-subhead editable" data-field="legacySubhead">Built by a craftsman. Meant to last generations.</p>
+                </div>
+            </div>
+
+            <div class="synergy-box">
+                <div class="synergy-content editable" data-field="synergyContent">
+                    <strong>Why we're the right fit:</strong> Our team comes from a background in timber framing and custom home construction. We understand what it means to work on a home built with this level of care — because that's exactly how we approach every roof. The craftsmanship your father put into this house is the same standard we hold ourselves to.
+                </div>
+            </div>
+
+            <div class="legacy-grid">
+                <div class="legacy-stat">
+                    <div class="legacy-stat-num editable" data-field="stat1Num">10–15</div>
+                    <div class="legacy-stat-label editable" data-field="stat1Label">Homes inspected weekly across Maui</div>
+                </div>
+                <div class="legacy-stat">
+                    <div class="legacy-stat-num editable" data-field="stat2Num">3–4</div>
+                    <div class="legacy-stat-label editable" data-field="stat2Label">Legacy homes like this per year</div>
+                </div>
+            </div>
+
+            <div class="ev-grid">
+                <div class="ev-card">
+                    <div class="ev-label">Aerial View</div>
+                    <img src="Seyth Eagle View/Seyth_EV_Aerial.png" alt="EagleView Aerial Photo" style="width: 100%; height: 200px; object-fit: cover;">
+                </div>
+                <div class="ev-card">
+                    <div class="ev-label">Roof Diagram</div>
+                    <img src="Seyth Eagle View/Seyth_EV_Diagram.png" alt="EagleView Roof Diagram" style="width: 100%; height: 200px; object-fit: contain; background: white;">
+                </div>
+            </div>
+
+            <table class="measurements">
+                <thead>
+                    <tr>
+                        <th>Measurement</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Roof Area</td>
+                        <td class="editable" data-field="roofArea">3,229 sq ft</td>
+                    </tr>
+                    <tr>
+                        <td>Predominant Pitch</td>
+                        <td class="editable" data-field="pitch">5/12</td>
+                    </tr>
+                    <tr>
+                        <td>Stories</td>
+                        <td class="editable" data-field="stories">>1</td>
+                    </tr>
+                    <tr>
+                        <td>Current Roofing</td>
+                        <td class="editable" data-field="currentRoof">Wood Shake</td>
+                    </tr>
+                    <tr>
+                        <td>Complexity</td>
+                        <td class="editable" data-field="complexity">Normal</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ==========================================
+             PAGE 3: WHY BRAVA
+        ========================================== -->
+        <div class="page">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2 class="section-title">Why Brava</h2>
+            </div>
+
+            <div class="brava-hero">
+                <div class="brava-badge editable" data-field="bravaBadge">CERTIFIED INSTALLER</div>
+                <div class="brava-logo-container">
+                    <img src="BravaIcon.png" alt="Brava Roof Tile" class="brava-logo-img">
+                </div>
+                <div class="brava-tagline editable" data-field="bravaTagline">Authentic Look. Unrivaled Performance.</div>
+                <div class="brava-warranty-badge">
+                    <span class="brava-warranty-num editable" data-field="bravaWarrantyNum">50</span>
+                    <span class="brava-warranty-text">YEAR<br>WARRANTY</span>
+                </div>
+            </div>
+
+            <!-- Visual product showcase -->
+            <div class="brava-visuals">
+                <div class="brava-visual-item">
+                    <img src="Photos/Brava2.png" alt="Brava Authentic Look" class="brava-visual-img">
+                    <div class="brava-visual-caption editable" data-field="bravaCaption1">Authentic wood shake & slate appearance</div>
+                </div>
+                <div class="brava-visual-item">
+                    <img src="Photos/Brava1.png" alt="Brava Recycled Materials" class="brava-visual-img">
+                    <div class="brava-visual-caption editable" data-field="bravaCaption2">100% recycled materials process</div>
+                </div>
+            </div>
+
+            <!-- Feature grid -->
+            <div class="brava-features">
+                <div class="brava-feature brava-feature-fire">
+                    <div class="brava-feature-title editable" data-field="bravaFeat1Title">Class A Fire Rating</div>
+                    <div class="brava-feature-text editable" data-field="bravaFeat1Text"><strong>Highest fire protection.</strong> Critical for Hawaii.</div>
+                </div>
+                <div class="brava-feature">
+                    <div class="brava-feature-title editable" data-field="bravaFeat2Title">Class 4 Impact</div>
+                    <div class="brava-feature-text editable" data-field="bravaFeat2Text">Highest rating. Extreme weather ready.</div>
+                </div>
+                <div class="brava-feature">
+                    <div class="brava-feature-title editable" data-field="bravaFeat3Title">100% Recycled</div>
+                    <div class="brava-feature-text editable" data-field="bravaFeat3Text">Made from recycled plastics.</div>
+                </div>
+                <div class="brava-feature">
+                    <div class="brava-feature-title editable" data-field="bravaFeat4Title">3–4x Longer Life</div>
+                    <div class="brava-feature-text editable" data-field="bravaFeat4Text">Outlasts traditional materials.</div>
+                </div>
+            </div>
+
+            <div class="brava-callout">
+                <div class="brava-callout-title editable" data-field="bravaCalloutTitle">Why It Won't Fade: Mineral Colorants</div>
+                <div class="brava-callout-text editable" data-field="bravaCalloutText">
+                    Brava uses <strong>mineral pigments mined from mountains</strong> — not chemical dyes. The same reason mountains don't change color after millennia in the sun.
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PAGE 4: ABOUT LAVA + OUR WORK (Combined)
+        ========================================== -->
+        <div class="page about-work-page">
+            <div class="section-header">
+                <span class="section-num">03</span>
+                <h2 class="section-title">About LAVA</h2>
+            </div>
+
+            <!-- Hero image banner -->
+            <div class="about-banner">
+                <img src="Photos/IMG_4671.jpg" alt="Timber Frame Craftsmanship" class="about-banner-img">
+                <div class="about-banner-overlay">
+                    <span class="about-banner-text editable" data-field="aboutBannerText">Rooted in Craftsmanship</span>
+                </div>
+            </div>
+
+            <!-- Two-column layout: story + stats -->
+            <div class="about-split">
+                <div class="about-story editable" data-field="aboutStory">
+                    <p><strong>We're not just roofers — we come from custom home construction.</strong> Our team's background in timber framing and high-end builds means we understand what goes into a home built with care.</p>
+                    <p>When you work with LAVA, you're getting craftsmen who treat your home with the same respect as the people who built it.</p>
+                </div>
+                <div class="about-credentials">
+                    <div class="cred-item">
+                        <span class="cred-value editable" data-field="cred1Value">7-Year</span>
+                        <span class="cred-label editable" data-field="cred1Label">Workmanship Warranty</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-value editable" data-field="cred2Value">$1M</span>
+                        <span class="cred-label editable" data-field="cred2Label">Liability Insurance</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-value editable" data-field="cred3Value">CT-39063</span>
+                        <span class="cred-label editable" data-field="cred3Label">Licensed Contractor</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work showcase grid -->
+            <div class="work-showcase">
+                <div class="work-item work-item-large">
+                    <img src="Photos/IMG_7293.jpg" alt="Maui Luxury Home">
+                    <span class="work-label editable" data-field="workLabel1">Upcountry Maui — Standing Seam</span>
+                </div>
+                <div class="work-item">
+                    <img src="Photos/FullSizeRender3.jpg" alt="Brava Installation">
+                    <span class="work-label editable" data-field="workLabel2">Brava Shake</span>
+                </div>
+                <div class="work-item">
+                    <img src="Photos/IMG_7279.jpg" alt="Custom Home">
+                    <span class="work-label editable" data-field="workLabel3">Large-Scale Projects</span>
+                </div>
+                <div class="work-item">
+                    <img src="Photos/IMG_0179.jpg" alt="LAVA Crew">
+                    <span class="work-label editable" data-field="workLabel4">Our Team</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PAGE 5: NEXT STEPS + CONTACT
+        ========================================== -->
+        <div class="page closing-page">
+            <div class="section-header">
+                <span class="section-num">04</span>
+                <h2 class="section-title">Next Steps</h2>
+            </div>
+
+            <div class="closing-message editable" data-field="closingMessage">
+                <p>Thank you for considering LAVA Roofing for your home. We know how important this decision is — especially for a home with this kind of history and craftsmanship.</p>
+                <p>We're here to answer any questions and walk you through every step of the process. When you're ready, just give us a call or send a text — we'd love to get started.</p>
+            </div>
+
+            <div class="closing-grid">
+                <div class="closing-contact">
+                    <div class="contact-header editable" data-field="contactHeader">Your Point of Contact</div>
+                    <div class="contact-name editable" data-field="contactName">Tyler</div>
+                    <div class="contact-role editable" data-field="contactRole">Project Manager</div>
+                    <div class="contact-details">
+                        <div class="contact-row">
+                            <span class="contact-icon">📱</span>
+                            <span class="editable" data-field="contactPhone">(808) 657-3737</span>
+                        </div>
+                        <div class="contact-row">
+                            <span class="contact-icon">✉️</span>
+                            <span class="editable" data-field="contactEmail">tyler@lavaroofing.com</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="closing-terms">
+                    <div class="terms-header editable" data-field="termsHeader">Quick Notes</div>
+                    <div class="terms-list editable" data-field="termsList">
+                        <div class="term-item">• 25% deposit at signing</div>
+                        <div class="term-item">• 50% due at project start</div>
+                        <div class="term-item">• 25% upon completion</div>
+                        <div class="term-item">• Unforeseen repairs billed as T&M</div>
+                    </div>
+                    <div class="terms-footer editable" data-field="termsFooter">Full terms provided in formal agreement.</div>
+                </div>
+            </div>
+
+            <div class="company-footer">
+                <img src="LAVA-ESTIMATION/logo.png" alt="LAVA Roofing" class="closing-logo">
+                <div class="company-info">
+                    <div class="company-name editable" data-field="companyName">LAVA Roofing Co.</div>
+                    <div class="company-address editable" data-field="companyAddress">Maui, Hawaii</div>
+                    <div class="company-license editable" data-field="companyLicense">Licensed Contractor: CT-39063 · $1M Insured</div>
+                </div>
+                <div class="company-tagline editable" data-field="companyTagline">The right roof for the right house.</div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PAGE 6: THE PROPOSAL (PDF INSERT - Last Page)
+        ========================================== -->
+        <div class="page pdf-insert-page">
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2 class="section-title">The Proposal</h2>
+            </div>
+
+            <!-- Embed first page of estimate as image (pricing cropped) -->
+            <div class="estimate-page-embed">
+                <img src="Reppun_Estimate_Page1_cropped.png" alt="Estimate Page 1" class="estimate-page-img">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password protection
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            const screen = document.getElementById('passwordScreen');
+
+            if (input.value === 'lavaroofing') {
+                screen.classList.add('hidden');
+                document.querySelectorAll('.content-locked').forEach(el => {
+                    el.classList.add('unlocked');
+                });
+                sessionStorage.setItem('lavaAuth', 'true');
+            } else {
+                input.classList.add('error');
+                error.classList.add('visible');
+                setTimeout(() => {
+                    input.classList.remove('error');
+                }, 500);
+            }
+        }
+
+        // Set dates
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already authenticated this session
+            if (sessionStorage.getItem('lavaAuth') === 'true') {
+                document.getElementById('passwordScreen').classList.add('hidden');
+                document.querySelectorAll('.content-locked').forEach(el => {
+                    el.classList.add('unlocked');
+                });
+            }
+
+            const now = new Date();
+            const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            document.getElementById('coverDate').textContent = monthYear;
+
+            loadData();
+        });
+
+        // Edit mode
+        let editing = false;
+        function toggleEdit() {
+            editing = !editing;
+            document.querySelectorAll('.editable').forEach(el => {
+                el.contentEditable = editing;
+            });
+            document.querySelector('.toolbar-btn.secondary').textContent = editing ? 'Done' : 'Edit';
+            if (!editing) saveData();
+        }
+
+        // Save/Load
+        function saveData() {
+            const data = {};
+            document.querySelectorAll('.editable').forEach(el => {
+                if (el.dataset.field) data[el.dataset.field] = el.innerHTML;
+            });
+            localStorage.setItem('lavaPacket', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('lavaPacket');
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.keys(data).forEach(field => {
+                    const el = document.querySelector(`[data-field="${field}"]`);
+                    if (el) el.innerHTML = data[field];
+                });
+            }
+        }
+
+        document.addEventListener('input', e => {
+            if (e.target.classList.contains('editable')) {
+                clearTimeout(window.saveTimer);
+                window.saveTimer = setTimeout(saveData, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
