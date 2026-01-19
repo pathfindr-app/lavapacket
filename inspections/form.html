@@ -1676,7 +1676,7 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Set default date
             document.querySelector('input[name="inspectionDate"]').valueAsDate = new Date();
 
@@ -1700,6 +1700,14 @@
             document.querySelectorAll('input, textarea, select').forEach(el => {
                 el.addEventListener('change', autoSave);
             });
+
+            // Check for inspection ID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const inspectionId = urlParams.get('id');
+            if (inspectionId) {
+                // Load the inspection (try Supabase first)
+                await loadInspection(inspectionId, 'supabase');
+            }
 
             // Load inspections list
             loadInspectionList();
@@ -1991,7 +1999,7 @@
         }
 
         // Save
-        function saveInspection() {
+        async function saveInspection() {
             const data = getFormData();
 
             // Save inspector name preference
@@ -2003,7 +2011,47 @@
                 }
             }
 
-            // Get existing inspections
+            // Try Supabase first
+            if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                try {
+                    // Convert form data to Supabase schema
+                    const supabaseData = {
+                        id: data.id && data.id.length > 10 ? data.id : null, // Only use if it's a UUID
+                        customer_name: data.customer.name,
+                        customer_address: data.customer.address,
+                        customer_phone: data.customer.phone,
+                        customer_email: data.customer.email,
+                        inspection_date: data.inspectionDate || null,
+                        inspector_name: data.inspectorName,
+                        concerns: data.concerns,
+                        roof: data.roof,
+                        findings: data.findings,
+                        recommendation: data.recommendation,
+                        wrapup: data.wrapup,
+                        status: data.status || 'draft'
+                    };
+
+                    const result = await SupabaseClient.saveInspection(supabaseData);
+
+                    if (result) {
+                        // Update current inspection with new ID if created
+                        if (!data.id || data.id.length <= 10) {
+                            data.id = result.id;
+                            // Update URL without reloading
+                            const newUrl = new URL(window.location);
+                            newUrl.searchParams.set('id', result.id);
+                            window.history.replaceState({}, '', newUrl);
+                        }
+                        currentInspection = data;
+                        showToast('Inspection saved!');
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Supabase save failed, falling back to localStorage:', e);
+                }
+            }
+
+            // Fallback to localStorage
             const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
 
             // Update or add
@@ -2038,10 +2086,38 @@
         }
 
         // Load inspections list
-        function loadInspectionList() {
-            const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+        async function loadInspectionList() {
             const list = document.getElementById('inspectionList');
             const emptyState = document.getElementById('emptyState');
+            let inspections = [];
+
+            // Try Supabase first
+            if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                try {
+                    inspections = await SupabaseClient.listInspections();
+                    // Map Supabase format to display format
+                    inspections = inspections.map(i => ({
+                        id: i.id,
+                        customer: { name: i.customer_name, address: i.customer_address },
+                        inspectionDate: i.inspection_date,
+                        created: i.created_at,
+                        status: i.status || 'draft',
+                        source: 'supabase'
+                    }));
+                } catch (e) {
+                    console.error('Failed to load from Supabase:', e);
+                }
+            }
+
+            // Also check localStorage for any local-only inspections
+            const localInspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+            // Add local inspections that aren't in Supabase (by ID)
+            const supabaseIds = new Set(inspections.map(i => i.id));
+            localInspections.forEach(i => {
+                if (!supabaseIds.has(i.id)) {
+                    inspections.push({ ...i, source: 'local' });
+                }
+            });
 
             if (inspections.length === 0) {
                 list.innerHTML = '';
@@ -2051,18 +2127,57 @@
 
             emptyState.style.display = 'none';
             list.innerHTML = inspections.map(i => `
-                <li class="inspection-item" onclick="loadInspection('${i.id}')">
-                    <h3>${i.customer.name || 'Unnamed'}</h3>
-                    <div class="meta">${i.customer.address || 'No address'}</div>
+                <li class="inspection-item" onclick="loadInspection('${i.id}', '${i.source || 'local'}')">
+                    <h3>${i.customer?.name || 'Unnamed'}</h3>
+                    <div class="meta">${i.customer?.address || 'No address'}</div>
                     <div class="meta">${formatDate(i.inspectionDate || i.created)}</div>
                     <span class="status-badge ${i.status}">${i.status}</span>
                 </li>
             `).join('');
         }
 
-        async function loadInspection(id) {
-            const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
-            const inspection = inspections.find(i => i.id === id);
+        async function loadInspection(id, source = 'local') {
+            let inspection = null;
+
+            // Try Supabase first if source is supabase
+            if (source === 'supabase' && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                try {
+                    const data = await SupabaseClient.getInspection(id);
+                    if (data) {
+                        // Convert Supabase format to form format
+                        inspection = {
+                            id: data.id,
+                            created: data.created_at,
+                            updated: data.updated_at,
+                            status: data.status || 'draft',
+                            customer: {
+                                name: data.customer_name,
+                                address: data.customer_address,
+                                phone: data.customer_phone,
+                                email: data.customer_email
+                            },
+                            inspectionDate: data.inspection_date,
+                            inspectorName: data.inspector_name,
+                            concerns: data.concerns || {},
+                            roof: data.roof || {},
+                            findings: data.findings || {},
+                            recommendation: data.recommendation || {},
+                            wrapup: data.wrapup || {},
+                            miniPhotos: {},
+                            photos: data.photos || []
+                        };
+                    }
+                } catch (e) {
+                    console.error('Failed to load from Supabase:', e);
+                }
+            }
+
+            // Fallback to localStorage
+            if (!inspection) {
+                const inspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+                inspection = inspections.find(i => i.id === id);
+            }
+
             if (!inspection) return;
 
             currentInspection = inspection;
