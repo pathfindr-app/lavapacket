@@ -1,21 +1,21 @@
 {
   "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/packets/new",
-      "dest": "/packets/builder.html"
+      "source": "/packets/new",
+      "destination": "/packets/builder.html"
     },
     {
-      "src": "/packets/([^/]+)",
-      "dest": "/packets/builder.html?id=$1"
+      "source": "/packets/:id",
+      "destination": "/packets/builder.html?id=:id"
     },
     {
-      "src": "/inspections/new",
-      "dest": "/inspections/form.html"
+      "source": "/inspections/new",
+      "destination": "/inspections/form.html"
     },
     {
-      "src": "/inspections/([^/]+)",
-      "dest": "/inspections/form.html?id=$1"
+      "source": "/inspections/:id",
+      "destination": "/inspections/form.html?id=:id"
     }
   ],
   "headers": [
