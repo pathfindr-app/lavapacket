@@ -2014,9 +2014,12 @@
             // Try Supabase first
             if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
                 try {
+                    // Check if ID is a valid UUID (contains hyphens like 939647a9-b45a-436f-9ec0-4b31facd7d67)
+                    const isUUID = data.id && data.id.includes('-') && data.id.length === 36;
+
                     // Convert form data to Supabase schema
                     const supabaseData = {
-                        id: data.id && data.id.length > 10 ? data.id : null, // Only use if it's a UUID
+                        id: isUUID ? data.id : null, // Only use if it's a valid UUID
                         customer_name: data.customer.name,
                         customer_address: data.customer.address,
                         customer_phone: data.customer.phone,
@@ -2035,7 +2038,7 @@
 
                     if (result) {
                         // Update current inspection with new ID if created
-                        if (!data.id || data.id.length <= 10) {
+                        if (!isUUID) {
                             data.id = result.id;
                             // Update URL without reloading
                             const newUrl = new URL(window.location);
