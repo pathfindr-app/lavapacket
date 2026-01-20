@@ -269,6 +269,7 @@ body {
 .action-icon.blue { background: #e8f0fe; }
 .action-icon.orange { background: #fef3e8; }
 .action-icon.green { background: #e8f5e9; }
+.action-icon.red { background: #fee8e8; }
 
 .action-title {
     font-size: 1rem;

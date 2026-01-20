@@ -17,3 +17,5 @@ tmpclaude-*
 WhatsApp Chat*/
 .claude/
 node_modules/
+.vercel
+.env*.local
