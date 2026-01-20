@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAVA Roofing - Repair Estimate</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --lava-orange: #e85a2c;
+            --lava-red: #c41e3a;
+            --lava-dark: #1a1a1a;
+            --cream: #faf8f5;
+            --text-muted: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--lava-orange);
+        }
+
+        .logo { height: 40px; }
+
+        .header-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: white;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .tab:hover { background: #f5f5f5; }
+        .tab.active {
+            background: var(--lava-orange);
+            color: white;
+        }
+
+        /* Panels */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--lava-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title .icon {
+            width: 24px;
+            height: 24px;
+            background: var(--lava-orange);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* Form Elements */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--lava-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--lava-orange);
+        }
+
+        .form-textarea { min-height: 100px; resize: vertical; }
+
+        /* Photo Upload */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .photo-upload {
+            aspect-ratio: 1;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--lava-orange);
+            background: #fff5f2;
+        }
+
+        .photo-upload.has-photo {
+            border-style: solid;
+            border-color: var(--success);
+        }
+
+        .photo-upload img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload svg {
+            width: 32px;
+            height: 32px;
+            color: #9ca3af;
+        }
+
+        .photo-upload span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Location Pills */
+        .location-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .location-pill {
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .location-pill:hover {
+            border-color: var(--lava-orange);
+        }
+
+        .location-pill.selected {
+            border-color: var(--lava-orange);
+            background: var(--lava-orange);
+            color: white;
+        }
+
+        .location-pill .fee {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* Calculator Section */
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .calc-row:last-child { border-bottom: none; }
+
+        .calc-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .calc-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .calc-input {
+            width: 120px;
+            padding: 0.5rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 6px;
+            text-align: right;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .calc-total {
+            background: var(--lava-dark);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .calc-total .calc-row { border-color: rgba(255,255,255,0.2); }
+        .calc-total .calc-label { color: rgba(255,255,255,0.7); }
+        .calc-total .calc-value { color: white; font-size: 1.5rem; }
+
+        /* Profit Indicator */
+        .profit-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .profit-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .profit-fill.warning { background: var(--warning); }
+        .profit-fill.danger { background: var(--lava-red); }
+
+        .profit-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--lava-orange);
+            color: white;
+        }
+
+        .btn-primary:hover { background: var(--lava-red); }
+
+        .btn-secondary {
+            background: white;
+            color: var(--lava-dark);
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover { border-color: var(--lava-orange); }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Breakdown */
+        .breakdown-section {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .breakdown-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--lava-dark);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .tabs { flex-direction: column; }
+            .location-options { flex-direction: column; }
+            .location-pill { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="../assets/logo-dark.png" alt="LAVA Roofing" class="logo">
+            <h1 class="header-title">Repair Estimate</h1>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showPanel('intake')">Customer Intake</button>
+            <button class="tab" onclick="showPanel('calculator')">Pricing Calculator</button>
+        </div>
+
+        <!-- Customer Intake Panel -->
+        <div id="intake" class="panel active">
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">1</span>
+                    Contact Information
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-input" id="customerName" placeholder="Full name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone *</label>
+                        <input type="tel" class="form-input" id="customerPhone" placeholder="(808) 555-1234">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="customerEmail" placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address *</label>
+                        <input type="text" class="form-input" id="customerAddress" placeholder="Street address, City">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">2</span>
+                    Location / Travel Zone
+                </div>
+                <div class="location-options">
+                    <div class="location-pill selected" data-zone="kahului" data-fee="0" onclick="selectZone(this)">
+                        <div>Kahului Area</div>
+                        <div class="fee">No travel fee</div>
+                    </div>
+                    <div class="location-pill" data-zone="central" data-fee="150" onclick="selectZone(this)">
+                        <div>Central / Kihei / Wailuku</div>
+                        <div class="fee">+$150 travel</div>
+                    </div>
+                    <div class="location-pill" data-zone="upcountry" data-fee="300" onclick="selectZone(this)">
+                        <div>Upcountry / Lahaina</div>
+                        <div class="fee">+$300 travel</div>
+                    </div>
+                    <div class="location-pill" data-zone="remote" data-fee="500" onclick="selectZone(this)">
+                        <div>Hana / Remote</div>
+                        <div class="fee">+$500 travel</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">3</span>
+                    Repair Details
+                </div>
+                <div class="form-group">
+                    <label class="form-label">What's the issue? *</label>
+                    <textarea class="form-textarea" id="issueDescription" placeholder="Describe the problem - leaks, damaged shingles, flashing issues, etc."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Roof Type</label>
+                        <select class="form-select" id="roofType">
+                            <option value="">Select...</option>
+                            <option value="shingle">Shingle</option>
+                            <option value="metal">Metal</option>
+                            <option value="tile">Tile</option>
+                            <option value="flat">Flat / TPO</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Urgency</label>
+                        <select class="form-select" id="urgency">
+                            <option value="low">Not urgent - planning ahead</option>
+                            <option value="medium">Soon - within a few weeks</option>
+                            <option value="high">Urgent - active leak</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">4</span>
+                    Photos (Required)
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                    Please upload clear photos of the damage. This helps us provide an accurate estimate.
+                </p>
+                <div class="photo-grid">
+                    <div class="photo-upload" onclick="document.getElementById('photo1').click()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span>Photo 1 *</span>
+                        <input type="file" id="photo1" accept="image/*" hidden onchange="handlePhoto(this, 0)">
+                    </div>
+                    <div class="photo-upload" onclick="document.getElementById('photo2').click()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span>Photo 2</span>
+                        <input type="file" id="photo2" accept="image/*" hidden onchange="handlePhoto(this, 1)">
+                    </div>
+                    <div class="photo-upload" onclick="document.getElementById('photo3').click()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span>Photo 3</span>
+                        <input type="file" id="photo3" accept="image/*" hidden onchange="handlePhoto(this, 2)">
+                    </div>
+                    <div class="photo-upload" onclick="document.getElementById('photo4').click()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span>Photo 4</span>
+                        <input type="file" id="photo4" accept="image/*" hidden onchange="handlePhoto(this, 3)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="submitIntake()">Submit Request</button>
+                <button class="btn btn-secondary" onclick="copyToCalculator()">Open in Calculator</button>
+            </div>
+        </div>
+
+        <!-- Pricing Calculator Panel -->
+        <div id="calculator" class="panel">
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon">$</span>
+                    Job Pricing
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Customer Name</label>
+                    <input type="text" class="form-input" id="calcCustomer" placeholder="Customer name">
+                </div>
+
+                <div class="breakdown-section">
+                    <div class="breakdown-title">Labor</div>
+                    <div class="calc-row">
+                        <span class="calc-label">Labor Hours</span>
+                        <input type="number" class="calc-input" id="laborHours" value="4" min="0" step="0.5" onchange="calculate()">
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Hourly Rate</span>
+                        <span class="calc-value">$375/hr</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Labor Subtotal</span>
+                        <span class="calc-value" id="laborSubtotal">$1,500</span>
+                    </div>
+                    <div class="calc-row" style="font-size: 0.85rem; color: var(--text-muted);">
+                        <span>Minimum: $1,500 (half day)</span>
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="breakdown-section">
+                    <div class="breakdown-title">Materials</div>
+                    <div class="calc-row">
+                        <span class="calc-label">Materials Cost (your cost)</span>
+                        <div>
+                            <span style="color: var(--text-muted)">$</span>
+                            <input type="number" class="calc-input" id="materialsCost" value="0" min="0" onchange="calculate()" style="width: 100px;">
+                        </div>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Markup (25%)</span>
+                        <span class="calc-value" id="materialsMarkup">$0</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Materials Total</span>
+                        <span class="calc-value" id="materialsTotal">$0</span>
+                    </div>
+                </div>
+
+                <div class="breakdown-section">
+                    <div class="breakdown-title">Travel & Fees</div>
+                    <div class="calc-row">
+                        <span class="calc-label">Travel Zone</span>
+                        <select class="form-select" id="calcZone" style="width: 180px;" onchange="calculate()">
+                            <option value="0">Kahului ($0)</option>
+                            <option value="150">Central / Kihei ($150)</option>
+                            <option value="300">Upcountry / Lahaina ($300)</option>
+                            <option value="500">Hana / Remote ($500)</option>
+                        </select>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Inspection Fee (optional)</span>
+                        <div>
+                            <span style="color: var(--text-muted)">$</span>
+                            <input type="number" class="calc-input" id="inspectionFee" value="0" min="0" onchange="calculate()" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-total">
+                    <div class="calc-row">
+                        <span class="calc-label">Customer Total</span>
+                        <span class="calc-value" id="grandTotal">$1,500</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="icon" style="background: var(--success);">%</span>
+                    Profit Analysis
+                </div>
+
+                <div class="calc-row">
+                    <span class="calc-label">Your Costs (materials only)</span>
+                    <span class="calc-value" id="totalCosts">$0</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Gross Profit</span>
+                    <span class="calc-value" id="grossProfit" style="color: var(--success);">$1,500</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Commission (~$1,000 target)</span>
+                    <span class="calc-value" id="commission">$1,000</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Net to Company</span>
+                    <span class="calc-value" id="netProfit">$500</span>
+                </div>
+
+                <div class="profit-bar">
+                    <div class="profit-fill" id="profitBar" style="width: 50%;"></div>
+                </div>
+                <div class="profit-labels">
+                    <span>Low margin</span>
+                    <span id="profitPercent">50% margin</span>
+                    <span>High margin</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Quick Estimates</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <button class="btn btn-secondary" onclick="quickEstimate('leak', 4, 200)">Small Leak Repair</button>
+                    <button class="btn btn-secondary" onclick="quickEstimate('shingle', 4, 300)">Shingle Replacement</button>
+                    <button class="btn btn-secondary" onclick="quickEstimate('flashing', 6, 400)">Flashing Repair</button>
+                    <button class="btn btn-secondary" onclick="quickEstimate('valley', 8, 600)">Valley Repair</button>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="generateQuote()">Generate Quote</button>
+                <button class="btn btn-secondary" onclick="copyEstimate()">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="../js/lib/supabase.js"></script>
+    <script>
+        // State
+        let photos = [];
+        let selectedZone = { zone: 'kahului', fee: 0 };
+        const HOURLY_RATE = 375; // $1,500 / 4 hours = $375/hr
+        const MIN_LABOR = 1500;
+        const MARKUP = 0.25;
+        const TARGET_COMMISSION = 1000;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SupabaseClient !== 'undefined') {
+                SupabaseClient.init();
+            }
+            calculate();
+        });
+
+        // Tab switching
+        function showPanel(panel) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`[onclick="showPanel('${panel}')"]`).classList.add('active');
+            document.getElementById(panel).classList.add('active');
+        }
+
+        // Zone selection
+        function selectZone(el) {
+            document.querySelectorAll('.location-pill').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedZone = {
+                zone: el.dataset.zone,
+                fee: parseInt(el.dataset.fee)
+            };
+        }
+
+        // Photo handling
+        function handlePhoto(input, index) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = input.closest('.photo-upload');
+                container.classList.add('has-photo');
+
+                let img = container.querySelector('img');
+                if (!img) {
+                    img = document.createElement('img');
+                    container.appendChild(img);
+                }
+                img.src = e.target.result;
+
+                photos[index] = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Calculator
+        function calculate() {
+            const hours = parseFloat(document.getElementById('laborHours').value) || 0;
+            const materialsCost = parseFloat(document.getElementById('materialsCost').value) || 0;
+            const travelFee = parseFloat(document.getElementById('calcZone').value) || 0;
+            const inspectionFee = parseFloat(document.getElementById('inspectionFee').value) || 0;
+
+            // Labor (minimum $1,500)
+            const laborRaw = hours * HOURLY_RATE;
+            const labor = Math.max(laborRaw, MIN_LABOR);
+            document.getElementById('laborSubtotal').textContent = '$' + labor.toLocaleString();
+
+            // Materials
+            const materialsMarkup = materialsCost * MARKUP;
+            const materialsTotal = materialsCost + materialsMarkup;
+            document.getElementById('materialsMarkup').textContent = '$' + materialsMarkup.toFixed(0);
+            document.getElementById('materialsTotal').textContent = '$' + materialsTotal.toFixed(0);
+
+            // Total
+            const total = labor + materialsTotal + travelFee + inspectionFee;
+            document.getElementById('grandTotal').textContent = '$' + total.toLocaleString();
+
+            // Profit analysis
+            const costs = materialsCost;
+            const grossProfit = total - costs;
+            const commission = TARGET_COMMISSION;
+            const netProfit = grossProfit - commission;
+            const profitPercent = total > 0 ? (grossProfit / total * 100) : 0;
+
+            document.getElementById('totalCosts').textContent = '$' + costs.toLocaleString();
+            document.getElementById('grossProfit').textContent = '$' + grossProfit.toLocaleString();
+            document.getElementById('commission').textContent = '$' + commission.toLocaleString();
+            document.getElementById('netProfit').textContent = '$' + netProfit.toLocaleString();
+            document.getElementById('profitPercent').textContent = profitPercent.toFixed(0) + '% margin';
+
+            // Profit bar
+            const bar = document.getElementById('profitBar');
+            bar.style.width = Math.min(profitPercent, 100) + '%';
+            bar.className = 'profit-fill';
+            if (profitPercent < 30) bar.classList.add('danger');
+            else if (profitPercent < 50) bar.classList.add('warning');
+        }
+
+        // Quick estimates
+        function quickEstimate(type, hours, materials) {
+            document.getElementById('laborHours').value = hours;
+            document.getElementById('materialsCost').value = materials;
+            calculate();
+            showToast(`Loaded ${type} estimate template`);
+        }
+
+        // Submit intake
+        function submitIntake() {
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            const address = document.getElementById('customerAddress').value;
+            const issue = document.getElementById('issueDescription').value;
+
+            if (!name || !phone || !address || !issue) {
+                showToast('Please fill in all required fields', true);
+                return;
+            }
+
+            if (photos.filter(p => p).length === 0) {
+                showToast('Please upload at least one photo', true);
+                return;
+            }
+
+            // Save to localStorage for now
+            const request = {
+                id: Date.now().toString(),
+                customer: {
+                    name, phone, address,
+                    email: document.getElementById('customerEmail').value
+                },
+                issue,
+                roofType: document.getElementById('roofType').value,
+                urgency: document.getElementById('urgency').value,
+                zone: selectedZone,
+                photos: photos.filter(p => p),
+                created: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            const requests = JSON.parse(localStorage.getItem('lava_repair_requests') || '[]');
+            requests.unshift(request);
+            localStorage.setItem('lava_repair_requests', JSON.stringify(requests));
+
+            showToast('Repair request submitted!');
+
+            // Clear form
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('issueDescription').value = '';
+        }
+
+        // Copy to calculator
+        function copyToCalculator() {
+            document.getElementById('calcCustomer').value = document.getElementById('customerName').value;
+            document.getElementById('calcZone').value = selectedZone.fee;
+            showPanel('calculator');
+            calculate();
+        }
+
+        // Generate quote
+        function generateQuote() {
+            const customer = document.getElementById('calcCustomer').value || 'Customer';
+            const total = document.getElementById('grandTotal').textContent;
+
+            showToast(`Quote generated for ${customer}: ${total}`);
+        }
+
+        // Copy estimate
+        function copyEstimate() {
+            const customer = document.getElementById('calcCustomer').value || 'Customer';
+            const total = document.getElementById('grandTotal').textContent;
+            const labor = document.getElementById('laborSubtotal').textContent;
+            const materials = document.getElementById('materialsTotal').textContent;
+            const zone = document.getElementById('calcZone').selectedOptions[0].text;
+
+            const text = `LAVA Roofing - Repair Estimate
+Customer: ${customer}
+
+Labor: ${labor}
+Materials: ${materials}
+Travel: ${zone}
+─────────────
+TOTAL: ${total}
+
+Valid for 30 days.
+LAVA Roofing Co. | (808) 657-3737`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Estimate copied to clipboard!');
+            });
+        }
+
+        // Toast
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = isError ? 'var(--lava-red)' : 'var(--lava-dark)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
