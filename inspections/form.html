@@ -2088,6 +2088,66 @@
             }, 2000);
         }
 
+        // Migrate localStorage inspections to Supabase
+        async function migrateToCloud() {
+            if (typeof SupabaseClient === 'undefined' || !SupabaseClient.isAvailable()) {
+                showToast('Cloud not available', true);
+                return;
+            }
+
+            const localInspections = JSON.parse(localStorage.getItem('lava_inspections') || '[]');
+            if (localInspections.length === 0) {
+                showToast('No local inspections to migrate');
+                return;
+            }
+
+            let migrated = 0;
+            let failed = 0;
+
+            for (const inspection of localInspections) {
+                try {
+                    // Convert to Supabase format
+                    const supabaseData = {
+                        customer_name: inspection.customer?.name || '',
+                        customer_address: inspection.customer?.address || '',
+                        customer_phone: inspection.customer?.phone || '',
+                        customer_email: inspection.customer?.email || '',
+                        inspection_date: inspection.inspectionDate || null,
+                        inspector_name: inspection.inspectorName || '',
+                        concerns: inspection.concerns || {},
+                        roof: inspection.roof || {},
+                        findings: inspection.findings || {},
+                        recommendation: inspection.recommendation || {},
+                        wrapup: inspection.wrapup || {},
+                        status: inspection.status || 'draft'
+                    };
+
+                    const result = await SupabaseClient.saveInspection(supabaseData);
+                    if (result) {
+                        migrated++;
+                    } else {
+                        failed++;
+                    }
+                } catch (e) {
+                    console.error('Migration failed for:', inspection.id, e);
+                    failed++;
+                }
+            }
+
+            // Clear localStorage after successful migration
+            if (migrated > 0 && failed === 0) {
+                localStorage.removeItem('lava_inspections');
+                showToast(`Migrated ${migrated} inspections to cloud!`);
+            } else if (migrated > 0) {
+                showToast(`Migrated ${migrated}, failed ${failed}`);
+            } else {
+                showToast('Migration failed', true);
+            }
+
+            // Reload the list
+            loadInspectionList();
+        }
+
         // Load inspections list
         async function loadInspectionList() {
             const list = document.getElementById('inspectionList');
