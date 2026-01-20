@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Library - LAVA Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <style>
+        .media-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .media-filters {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--lava-orange);
+            color: white;
+            border-color: var(--lava-orange);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 250px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--lava-dark);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .media-section {
+            margin-bottom: 2rem;
+        }
+
+        .media-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .ai-chat-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--lava-orange);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(232, 90, 44, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .ai-chat-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="../inspections/index.html" class="portal-nav-btn">Inspections</a>
+                <a href="index.html" class="portal-nav-btn active">Media</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <h1 class="page-title">Media Library</h1>
+        <p class="page-subtitle">Upload and manage photos, videos, and documents</p>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="statsBar">
+            <div class="stat">
+                <div class="stat-value" id="totalCount">-</div>
+                <div class="stat-label">Total Files</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="imageCount">-</div>
+                <div class="stat-label">Images</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="videoCount">-</div>
+                <div class="stat-label">Videos</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="docCount">-</div>
+                <div class="stat-label">Documents</div>
+            </div>
+        </div>
+
+        <!-- Upload Zone -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="media-dropzone" id="uploadZone">
+                <div class="media-dropzone-icon">📁</div>
+                <div class="media-dropzone-text">Drop files here or click to upload</div>
+                <div class="media-dropzone-hint">Images (auto-converted to WebP), Videos (max 50MB), Documents</div>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="media-header">
+            <div class="media-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="image">Images</button>
+                <button class="filter-btn" data-filter="video">Videos</button>
+                <button class="filter-btn" data-filter="document">Documents</button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search files...">
+                <button class="btn btn-primary" onclick="searchMedia()">Search</button>
+            </div>
+        </div>
+
+        <!-- Media Grid -->
+        <div class="media-section">
+            <div class="media-grid" id="mediaGrid">
+                <div class="empty-state">Loading media...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Media Modal -->
+    <div class="media-modal" id="mediaModal">
+        <button class="media-modal-close" onclick="closeModal()">&times;</button>
+        <div class="media-modal-content" id="modalContent"></div>
+    </div>
+
+    <!-- AI Chat Button (placeholder for future) -->
+    <button class="ai-chat-btn" onclick="openAIChat()" title="AI Assistant">🤖</button>
+
+    <!-- Toast -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/media.js"></script>
+
+    <script>
+        let currentFilter = 'all';
+        let allMedia = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', initMedia);
+
+            if (Auth.isAuthenticated()) {
+                initMedia();
+            }
+        });
+
+        async function initMedia() {
+            // Set up upload zone
+            setupUploadZone();
+
+            // Set up filters
+            setupFilters();
+
+            // Load media
+            await loadMedia();
+        }
+
+        function setupUploadZone() {
+            const zone = document.getElementById('uploadZone');
+
+            Media.createDropZone(zone, {
+                linkedType: 'general',
+                multiple: true
+            }, (result, error) => {
+                if (error) {
+                    showToast('Upload failed: ' + error.message, 'error');
+                } else {
+                    showToast('Upload successful!', 'success');
+                    loadMedia();
+                }
+            });
+        }
+
+        function setupFilters() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderMedia();
+                });
+            });
+        }
+
+        async function loadMedia() {
+            try {
+                const { data, error } = await SupabaseClient.client
+                    .from('media')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allMedia = data || [];
+                updateStats();
+                renderMedia();
+            } catch (error) {
+                console.error('Failed to load media:', error);
+                document.getElementById('mediaGrid').innerHTML = `
+                    <div class="empty-state">
+                        <p>Failed to load media. Make sure the media table exists.</p>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Run the SQL in supabase-media-schema.sql</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats() {
+            const images = allMedia.filter(m => m.file_type === 'image').length;
+            const videos = allMedia.filter(m => m.file_type === 'video').length;
+            const docs = allMedia.filter(m => m.file_type === 'document').length;
+
+            document.getElementById('totalCount').textContent = allMedia.length;
+            document.getElementById('imageCount').textContent = images;
+            document.getElementById('videoCount').textContent = videos;
+            document.getElementById('docCount').textContent = docs;
+        }
+
+        function renderMedia() {
+            const grid = document.getElementById('mediaGrid');
+            let filtered = allMedia;
+
+            if (currentFilter !== 'all') {
+                filtered = allMedia.filter(m => m.file_type === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No media files found</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="media-item" onclick="openMedia('${item.id}')">
+                    ${renderMediaThumb(item)}
+                    <span class="media-item-badge ${item.file_type}">${item.file_type}</span>
+                    <div class="media-item-overlay">
+                        ${item.filename || 'Unnamed'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderMediaThumb(item) {
+            if (item.file_type === 'image') {
+                return `<img src="${item.public_url}" alt="${item.filename || ''}" loading="lazy">`;
+            }
+            if (item.file_type === 'video') {
+                return `<video src="${item.public_url}" muted></video>`;
+            }
+            // Document
+            const ext = (item.filename || '').split('.').pop().toUpperCase();
+            const icon = getDocIcon(ext);
+            return `
+                <div class="media-doc-placeholder">
+                    <div class="media-doc-placeholder-icon">${icon}</div>
+                    <div class="media-doc-placeholder-name">${item.filename || 'Document'}</div>
+                </div>
+            `;
+        }
+
+        function getDocIcon(ext) {
+            const icons = {
+                'PDF': '📕',
+                'DOC': '📘', 'DOCX': '📘',
+                'XLS': '📗', 'XLSX': '📗',
+                'PPT': '📙', 'PPTX': '📙',
+                'TXT': '📄',
+                'ZIP': '📦', 'RAR': '📦'
+            };
+            return icons[ext] || '📄';
+        }
+
+        function openMedia(id) {
+            const item = allMedia.find(m => m.id === id);
+            if (!item) return;
+
+            const modal = document.getElementById('mediaModal');
+            const content = document.getElementById('modalContent');
+
+            if (item.file_type === 'image') {
+                content.innerHTML = `<img src="${item.public_url}" alt="${item.filename || ''}">`;
+            } else if (item.file_type === 'video') {
+                content.innerHTML = `<video src="${item.public_url}" controls autoplay></video>`;
+            } else {
+                // Open document in new tab
+                window.open(item.public_url, '_blank');
+                return;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('mediaModal');
+            modal.classList.remove('active');
+            document.getElementById('modalContent').innerHTML = '';
+        }
+
+        // Close modal on escape or click outside
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+        document.getElementById('mediaModal').addEventListener('click', (e) => {
+            if (e.target.id === 'mediaModal') closeModal();
+        });
+
+        async function searchMedia() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                loadMedia();
+                return;
+            }
+
+            try {
+                const results = await Media.search(query);
+                allMedia = results;
+                updateStats();
+                renderMedia();
+            } catch (error) {
+                showToast('Search failed', 'error');
+            }
+        }
+
+        // Enter to search
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchMedia();
+        });
+
+        function openAIChat() {
+            showToast('AI Assistant coming soon!', 'info');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
