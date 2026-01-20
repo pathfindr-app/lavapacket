@@ -425,24 +425,18 @@
             <div class="card">
                 <div class="card-title">
                     <span class="icon">2</span>
-                    Location / Travel Zone
+                    Travel Fee
                 </div>
-                <div class="location-options">
-                    <div class="location-pill selected" data-zone="kahului" data-fee="0" onclick="selectZone(this)">
-                        <div>Kahului Area</div>
-                        <div class="fee">No travel fee</div>
-                    </div>
-                    <div class="location-pill" data-zone="central" data-fee="150" onclick="selectZone(this)">
-                        <div>Central / Kihei / Wailuku</div>
-                        <div class="fee">+$150 travel</div>
-                    </div>
-                    <div class="location-pill" data-zone="upcountry" data-fee="300" onclick="selectZone(this)">
-                        <div>Upcountry / Lahaina</div>
-                        <div class="fee">+$300 travel</div>
-                    </div>
-                    <div class="location-pill" data-zone="remote" data-fee="500" onclick="selectZone(this)">
-                        <div>Hana / Remote</div>
-                        <div class="fee">+$500 travel</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Distance / Travel Fee</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: var(--text-muted); font-size: 1.1rem;">$</span>
+                            <input type="number" class="form-input" id="travelFee" value="0" min="0" step="50" placeholder="0" style="width: 120px;">
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
+                            Enter travel fee based on job location
+                        </p>
                     </div>
                 </div>
             </div>
@@ -572,13 +566,11 @@
                 <div class="breakdown-section">
                     <div class="breakdown-title">Travel & Fees</div>
                     <div class="calc-row">
-                        <span class="calc-label">Travel Zone</span>
-                        <select class="form-select" id="calcZone" style="width: 180px;" onchange="calculate()">
-                            <option value="0">Kahului ($0)</option>
-                            <option value="150">Central / Kihei ($150)</option>
-                            <option value="300">Upcountry / Lahaina ($300)</option>
-                            <option value="500">Hana / Remote ($500)</option>
-                        </select>
+                        <span class="calc-label">Travel / Distance Fee</span>
+                        <div>
+                            <span style="color: var(--text-muted)">$</span>
+                            <input type="number" class="calc-input" id="calcTravelFee" value="0" min="0" step="50" onchange="calculate()" style="width: 100px;">
+                        </div>
                     </div>
                     <div class="calc-row">
                         <span class="calc-label">Inspection Fee (optional)</span>
@@ -653,7 +645,6 @@
     <script>
         // State
         let photos = [];
-        let selectedZone = { zone: 'kahului', fee: 0 };
         const HOURLY_RATE = 375; // $1,500 / 4 hours = $375/hr
         const MIN_LABOR = 1500;
         const MARKUP = 0.25;
@@ -673,16 +664,6 @@
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             document.querySelector(`[onclick="showPanel('${panel}')"]`).classList.add('active');
             document.getElementById(panel).classList.add('active');
-        }
-
-        // Zone selection
-        function selectZone(el) {
-            document.querySelectorAll('.location-pill').forEach(p => p.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedZone = {
-                zone: el.dataset.zone,
-                fee: parseInt(el.dataset.fee)
-            };
         }
 
         // Photo handling
@@ -711,7 +692,7 @@
         function calculate() {
             const hours = parseFloat(document.getElementById('laborHours').value) || 0;
             const materialsCost = parseFloat(document.getElementById('materialsCost').value) || 0;
-            const travelFee = parseFloat(document.getElementById('calcZone').value) || 0;
+            const travelFee = parseFloat(document.getElementById('calcTravelFee').value) || 0;
             const inspectionFee = parseFloat(document.getElementById('inspectionFee').value) || 0;
 
             // Labor (minimum $1,500)
@@ -785,7 +766,7 @@
                 issue,
                 roofType: document.getElementById('roofType').value,
                 urgency: document.getElementById('urgency').value,
-                zone: selectedZone,
+                travelFee: parseFloat(document.getElementById('travelFee').value) || 0,
                 photos: photos.filter(p => p),
                 created: new Date().toISOString(),
                 status: 'pending'
@@ -808,7 +789,7 @@
         // Copy to calculator
         function copyToCalculator() {
             document.getElementById('calcCustomer').value = document.getElementById('customerName').value;
-            document.getElementById('calcZone').value = selectedZone.fee;
+            document.getElementById('calcTravelFee').value = document.getElementById('travelFee').value || 0;
             showPanel('calculator');
             calculate();
         }
@@ -827,14 +808,14 @@
             const total = document.getElementById('grandTotal').textContent;
             const labor = document.getElementById('laborSubtotal').textContent;
             const materials = document.getElementById('materialsTotal').textContent;
-            const zone = document.getElementById('calcZone').selectedOptions[0].text;
+            const travelFee = parseFloat(document.getElementById('calcTravelFee').value) || 0;
 
             const text = `LAVA Roofing - Repair Estimate
 Customer: ${customer}
 
 Labor: ${labor}
 Materials: ${materials}
-Travel: ${zone}
+Travel: $${travelFee.toLocaleString()}
 ─────────────
 TOTAL: ${total}
 
