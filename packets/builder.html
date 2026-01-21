@@ -312,12 +312,28 @@
                         </div>
 
                         <div class="brava-visuals">
-                            <div class="brava-visual-item">
-                                <img src="../assets/images/portfolio/Brava2.png" alt="Brava Authentic Look" class="brava-visual-img">
+                            <div class="brava-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('bravaInput1').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('bravaImg1','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('bravaImg1','left')">←</button><button onclick="movePhoto('bravaImg1','center')">•</button><button onclick="movePhoto('bravaImg1','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('bravaImg1','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('bravaImg1','out')">−</button><button onclick="zoomPhoto('bravaImg1','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/Brava2.png" alt="Brava Authentic Look" class="brava-visual-img repositionable" id="bravaImg1">
+                                <input type="file" id="bravaInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'bravaImg1')">
                                 <div class="brava-visual-caption editable" data-field="bravaCaption1">Authentic wood shake & slate appearance</div>
                             </div>
-                            <div class="brava-visual-item">
-                                <img src="../assets/images/portfolio/Brava1.png" alt="Brava Recycled Materials" class="brava-visual-img">
+                            <div class="brava-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('bravaInput2').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('bravaImg2','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('bravaImg2','left')">←</button><button onclick="movePhoto('bravaImg2','center')">•</button><button onclick="movePhoto('bravaImg2','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('bravaImg2','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('bravaImg2','out')">−</button><button onclick="zoomPhoto('bravaImg2','in')">+</button></div>
+                                </div>
+                                <img src="../assets/images/portfolio/Brava1.png" alt="Brava Recycled Materials" class="brava-visual-img repositionable" id="bravaImg2">
+                                <input type="file" id="bravaInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'bravaImg2')">
                                 <div class="brava-visual-caption editable" data-field="bravaCaption2">100% recycled materials process</div>
                             </div>
                         </div>
@@ -368,11 +384,27 @@
 
                         <div class="ss-visuals">
                             <div class="ss-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('shingleInput1').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('shingleImg1','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('shingleImg1','left')">←</button><button onclick="movePhoto('shingleImg1','center')">•</button><button onclick="movePhoto('shingleImg1','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('shingleImg1','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('shingleImg1','out')">−</button><button onclick="zoomPhoto('shingleImg1','in')">+</button></div>
+                                </div>
                                 <img src="../assets/images/portfolio/IMG_7279.jpg" alt="Shingles" class="ss-visual-img repositionable" id="shingleImg1">
+                                <input type="file" id="shingleInput1" class="photo-input" accept="image/*" onchange="changePhoto(this, 'shingleImg1')">
                                 <div class="ss-visual-caption editable" data-field="shingleCaption1">Dimensional appearance</div>
                             </div>
                             <div class="ss-visual-item" style="position:relative;">
+                                <button class="change-photo-btn" onclick="document.getElementById('shingleInput2').click()">Change</button>
+                                <div class="photo-controls">
+                                    <div class="pos-row"><button onclick="movePhoto('shingleImg2','up')">↑</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('shingleImg2','left')">←</button><button onclick="movePhoto('shingleImg2','center')">•</button><button onclick="movePhoto('shingleImg2','right')">→</button></div>
+                                    <div class="pos-row"><button onclick="movePhoto('shingleImg2','down')">↓</button></div>
+                                    <div class="zoom-row"><button onclick="zoomPhoto('shingleImg2','out')">−</button><button onclick="zoomPhoto('shingleImg2','in')">+</button></div>
+                                </div>
                                 <img src="../assets/images/portfolio/FullSizeRender3.jpg" alt="Shingles Detail" class="ss-visual-img repositionable" id="shingleImg2">
+                                <input type="file" id="shingleInput2" class="photo-input" accept="image/*" onchange="changePhoto(this, 'shingleImg2')">
                                 <div class="ss-visual-caption editable" data-field="shingleCaption2">Wind-resistant design</div>
                             </div>
                         </div>
