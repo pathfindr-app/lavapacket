@@ -186,6 +186,12 @@ const Photos = {
 
                 // Update UI
                 this.setPhotoFromUrl(imgId, publicUrl);
+
+                // Trigger save to store photo URL in packet config
+                if (typeof Storage !== 'undefined') {
+                    Storage.save();
+                }
+
                 Storage.showToast('Photo uploaded', 'success');
             } else {
                 throw new Error('Upload failed');

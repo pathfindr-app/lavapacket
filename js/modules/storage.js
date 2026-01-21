@@ -67,6 +67,7 @@ const Storage = {
                 fields: data.fields,
                 config: {
                     ...data.config,
+                    photos: data.photos,
                     photoPositions: data.photoPositions,
                     photoZoom: data.photoZoom,
                     estimate: data.estimate,
@@ -171,6 +172,12 @@ const Storage = {
             if (data.config) {
                 this.setConfig(data.config);
 
+                // Restore photos from config (base64 data)
+                if (data.config.photos && typeof Photos !== 'undefined') {
+                    console.log('[Storage] Restoring photos from config:', Object.keys(data.config.photos));
+                    Photos.setAllPhotos(data.config.photos);
+                }
+
                 // Restore photo positions
                 if (data.config.photoPositions && typeof Photos !== 'undefined') {
                     Photos.setAllPositions(data.config.photoPositions);
@@ -185,9 +192,14 @@ const Storage = {
                 if (data.config.estimate && typeof Estimate !== 'undefined') {
                     Estimate.setEstimateData(data.config.estimate);
                 }
+
+                // Restore eagleview
+                if (data.config.eagleview && typeof EagleView !== 'undefined') {
+                    EagleView.setReportData(data.config.eagleview);
+                }
             }
 
-            // Load photos from Supabase storage
+            // Also try loading photos from Supabase storage (fallback)
             if (data.photos && data.photos.length > 0) {
                 this.loadPhotosFromSupabase(data.photos);
             }
