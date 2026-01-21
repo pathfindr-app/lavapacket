@@ -71,24 +71,16 @@ const Photos = {
     },
 
     /**
-     * Compress image to WebP and optionally upload to Supabase
+     * Compress image to WebP and store as base64
      */
     compressAndSetPhoto(file, imgId) {
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
-                // Compress to WebP blob
-                this.compressImageToBlob(img, async (blob) => {
-                    if (this.useSupabase && typeof Storage !== 'undefined' && Storage.currentPacketId) {
-                        // Upload to Supabase Storage
-                        await this.uploadToSupabase(imgId, blob);
-                    } else {
-                        // Fall back to base64 for localStorage
-                        const dataUrl = await this.blobToDataUrl(blob);
-                        this.setPhoto(imgId, dataUrl);
-                    }
-                });
+                // Compress to WebP and store as base64 (reliable across all storage methods)
+                const dataUrl = this.compressImage(img);
+                this.setPhoto(imgId, dataUrl);
             };
             img.src = e.target.result;
         };
