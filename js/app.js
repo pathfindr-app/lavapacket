@@ -103,12 +103,16 @@ const App = {
             printBuilderBtn.addEventListener('click', () => window.print());
         }
 
-        // Customer info inputs
+        // Customer info inputs - sync to editable elements AND trigger auto-save
         document.querySelectorAll('.customer-input').forEach(input => {
             input.addEventListener('input', (e) => {
                 const field = e.target.dataset.field;
                 if (field) {
                     Editor.setFieldValue(field, e.target.value);
+                    // Trigger auto-save when customer info changes
+                    if (typeof Editor !== 'undefined') {
+                        Editor.scheduleAutoSave();
+                    }
                 }
             });
         });
@@ -184,16 +188,13 @@ const App = {
 
     newPacket() {
         if (confirm('Create a new packet? Any unsaved changes will be lost.')) {
-            // Generate new packet ID
-            const newId = 'packet-' + Date.now();
+            // Clear the current packet ID from localStorage
+            localStorage.removeItem('lava_current_packet_id');
 
-            // Clear current data
-            if (typeof Storage !== 'undefined') {
-                Storage.currentPacketId = newId;
-            }
-
-            // Reload the page to reset
-            window.location.reload();
+            // Remove ?id from URL and reload
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.delete('id');
+            window.location.href = newUrl.toString();
         }
     },
 
@@ -241,7 +242,7 @@ const App = {
     getPacketId() {
         // Get packet ID from URL or generate default
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('packet') || 'default';
+        return urlParams.get('id') || 'default';
     },
 
     // Utility: Generate unique ID

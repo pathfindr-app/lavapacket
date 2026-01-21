@@ -704,17 +704,25 @@
     <script src="../js/app.js"></script>
 
     <script>
-        // Sync customer inputs with editable fields
+        // Sync customer inputs with editable fields AND trigger auto-save
         document.getElementById('customerNameInput').addEventListener('input', function(e) {
             document.querySelectorAll('[data-field="customerName"]').forEach(el => {
                 el.textContent = e.target.value || 'Customer Name';
             });
+            // Trigger auto-save
+            if (typeof Editor !== 'undefined' && Editor.scheduleAutoSave) {
+                Editor.scheduleAutoSave();
+            }
         });
 
         document.getElementById('customerAddressInput').addEventListener('input', function(e) {
             document.querySelectorAll('[data-field="customerAddress"]').forEach(el => {
                 el.textContent = e.target.value || 'Property Address';
             });
+            // Trigger auto-save
+            if (typeof Editor !== 'undefined' && Editor.scheduleAutoSave) {
+                Editor.scheduleAutoSave();
+            }
         });
 
         // Product switcher

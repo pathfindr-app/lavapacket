@@ -113,6 +113,62 @@
         .ai-chat-btn:hover {
             transform: scale(1.1);
         }
+
+        .upload-address {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-address label {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .upload-address input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .upload-address input:focus {
+            outline: none;
+            border-color: var(--lava-orange);
+        }
+
+        .use-last-btn {
+            padding: 0.6rem 1rem;
+            background: #f0f0f0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .use-last-btn:hover {
+            background: var(--lava-orange);
+            color: white;
+            border-color: var(--lava-orange);
+        }
+
+        .use-last-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .media-item-address {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.8);
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -167,6 +223,13 @@
 
         <!-- Upload Zone -->
         <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="upload-address">
+                <label for="uploadAddress">Address *</label>
+                <input type="text" id="uploadAddress" placeholder="Enter job site address (e.g., 2950 Hana Highway)">
+                <button type="button" class="use-last-btn" id="useLastBtn" onclick="useLastAddress()">
+                    Use Last
+                </button>
+            </div>
             <div class="media-dropzone" id="uploadZone">
                 <div class="media-dropzone-icon">📁</div>
                 <div class="media-dropzone-text">Drop files here or click to upload</div>
@@ -230,6 +293,9 @@
         });
 
         async function initMedia() {
+            // Initialize address field with last used
+            initAddressField();
+
             // Set up upload zone
             setupUploadZone();
 
@@ -240,18 +306,122 @@
             await loadMedia();
         }
 
+        function initAddressField() {
+            const lastAddress = Media.getLastAddress();
+            const useLastBtn = document.getElementById('useLastBtn');
+
+            if (lastAddress) {
+                useLastBtn.textContent = `Use: ${lastAddress.substring(0, 20)}${lastAddress.length > 20 ? '...' : ''}`;
+                useLastBtn.disabled = false;
+            } else {
+                useLastBtn.textContent = 'No previous address';
+                useLastBtn.disabled = true;
+            }
+        }
+
+        function useLastAddress() {
+            const lastAddress = Media.getLastAddress();
+            if (lastAddress) {
+                document.getElementById('uploadAddress').value = lastAddress;
+                showToast('Address filled!', 'success');
+            }
+        }
+
+        function getUploadAddress() {
+            const address = document.getElementById('uploadAddress').value.trim();
+            if (!address) {
+                showToast('Please enter an address before uploading', 'error');
+                document.getElementById('uploadAddress').focus();
+                return null;
+            }
+            return address;
+        }
+
         function setupUploadZone() {
             const zone = document.getElementById('uploadZone');
+            const addressInput = document.getElementById('uploadAddress');
 
-            Media.createDropZone(zone, {
-                linkedType: 'general',
-                multiple: true
-            }, (result, error) => {
-                if (error) {
-                    showToast('Upload failed: ' + error.message, 'error');
-                } else {
+            // Custom upload handling to include address validation
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+                zone.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            ['dragenter', 'dragover'].forEach(event => {
+                zone.addEventListener(event, () => zone.classList.add('dragover'));
+            });
+
+            ['dragleave', 'drop'].forEach(event => {
+                zone.addEventListener(event, () => zone.classList.remove('dragover'));
+            });
+
+            // Handle drop
+            zone.addEventListener('drop', async (e) => {
+                const address = getUploadAddress();
+                if (!address) return;
+
+                const files = e.dataTransfer.files;
+                if (files.length === 0) return;
+
+                zone.classList.add('uploading');
+                try {
+                    for (const file of files) {
+                        await Media.upload(file, {
+                            address: address,
+                            linkedType: 'general',
+                            multiple: true
+                        });
+                    }
                     showToast('Upload successful!', 'success');
+                    initAddressField(); // Update "use last" button
                     loadMedia();
+                } catch (error) {
+                    showToast('Upload failed: ' + error.message, 'error');
+                } finally {
+                    zone.classList.remove('uploading');
+                }
+            });
+
+            // Handle click to upload
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = '*/*';
+            input.style.display = 'none';
+            zone.appendChild(input);
+
+            zone.addEventListener('click', () => {
+                const address = getUploadAddress();
+                if (address) {
+                    input.click();
+                }
+            });
+
+            input.addEventListener('change', async (e) => {
+                const address = getUploadAddress();
+                if (!address) return;
+
+                const files = e.target.files;
+                if (files.length === 0) return;
+
+                zone.classList.add('uploading');
+                try {
+                    for (const file of files) {
+                        await Media.upload(file, {
+                            address: address,
+                            linkedType: 'general'
+                        });
+                    }
+                    showToast('Upload successful!', 'success');
+                    initAddressField(); // Update "use last" button
+                    loadMedia();
+                } catch (error) {
+                    showToast('Upload failed: ' + error.message, 'error');
+                } finally {
+                    zone.classList.remove('uploading');
+                    input.value = '';
                 }
             });
         }
@@ -320,6 +490,7 @@
                     <span class="media-item-badge ${item.file_type}">${item.file_type}</span>
                     <div class="media-item-overlay">
                         ${item.filename || 'Unnamed'}
+                        ${item.address ? `<div class="media-item-address">${item.address}</div>` : ''}
                     </div>
                 </div>
             `).join('');

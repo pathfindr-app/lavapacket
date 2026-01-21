@@ -12,10 +12,11 @@ const Storage = {
         // Check if Supabase is available
         this.useSupabase = typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable();
 
-        // Get packet ID from URL or use provided/default
+        // Get packet ID from URL, localStorage fallback, or use provided/default
         if (!packetId) {
             const urlParams = new URLSearchParams(window.location.search);
-            packetId = urlParams.get('id') || 'default';
+            packetId = urlParams.get('id') || localStorage.getItem('lava_current_packet_id') || 'default';
+            console.log('[Storage] init() - URL id:', urlParams.get('id'), 'localStorage id:', localStorage.getItem('lava_current_packet_id'), 'using:', packetId);
         }
 
         this.currentPacketId = packetId;
@@ -28,6 +29,8 @@ const Storage = {
 
     async save() {
         const data = this.collectData();
+        console.log('[Storage] save() called, useSupabase:', this.useSupabase, 'currentPacketId:', this.currentPacketId);
+        console.log('[Storage] collected data:', JSON.stringify(data, null, 2).substring(0, 500));
 
         if (this.useSupabase) {
             return await this.saveToSupabase(data);
@@ -71,19 +74,24 @@ const Storage = {
                 }
             };
 
+            console.log('[Storage] saveToSupabase() packetData:', JSON.stringify(packetData, null, 2).substring(0, 500));
             const result = await SupabaseClient.savePacket(packetData);
+            console.log('[Storage] saveToSupabase() result:', result);
 
             if (result) {
                 // Update current packet ID if it was a new packet
                 if (!data.id && result.id) {
                     this.currentPacketId = result.id;
+                    // Save to localStorage as fallback
+                    localStorage.setItem('lava_current_packet_id', result.id);
                     // Update URL without reloading
                     const newUrl = new URL(window.location);
                     newUrl.searchParams.set('id', result.id);
                     window.history.replaceState({}, '', newUrl);
+                    console.log('[Storage] New packet created! ID:', result.id, 'URL updated to:', newUrl.toString());
                 }
 
-                console.log('Packet saved to Supabase:', this.currentPacketId);
+                console.log('[Storage] Packet saved to Supabase:', this.currentPacketId);
                 this.showToast('Saved', 'success');
                 return true;
             } else {
@@ -116,31 +124,41 @@ const Storage = {
     },
 
     async load() {
+        console.log('[Storage] load() called - useSupabase:', this.useSupabase, 'currentPacketId:', this.currentPacketId);
         if (this.useSupabase && this.currentPacketId !== 'default') {
             return await this.loadFromSupabase();
         } else {
+            console.log('[Storage] Using localStorage fallback');
             return this.loadFromLocalStorage();
         }
     },
 
     async loadFromSupabase() {
         try {
+            console.log('[Storage] loadFromSupabase() - fetching packet:', this.currentPacketId);
             const data = await SupabaseClient.getPacket(this.currentPacketId);
+            console.log('[Storage] loadFromSupabase() - received data:', data ? 'yes' : 'null', data ? `name: ${data.customer_name}` : '');
 
             if (!data) {
-                console.log('No saved data in Supabase for:', this.currentPacketId);
+                console.log('[Storage] No saved data in Supabase for:', this.currentPacketId);
                 return false;
             }
 
-            console.log('Loading packet from Supabase:', this.currentPacketId);
+            console.log('[Storage] Loading packet from Supabase:', this.currentPacketId, 'customer_name:', data.customer_name);
 
             // Set customer info
             const nameInput = document.getElementById('customerNameInput');
             const addressInput = document.getElementById('customerAddressInput');
+
+            console.log('[Storage] Setting customer name input to:', data.customer_name);
+            console.log('[Storage] nameInput element found:', !!nameInput);
+
             if (nameInput) nameInput.value = data.customer_name || '';
             if (addressInput) addressInput.value = data.customer_address || '';
 
-            // Trigger input events to sync
+            console.log('[Storage] After setting - nameInput.value:', nameInput?.value);
+
+            // Trigger input events to sync with preview
             if (nameInput) nameInput.dispatchEvent(new Event('input'));
             if (addressInput) addressInput.dispatchEvent(new Event('input'));
 

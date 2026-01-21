@@ -17,6 +17,7 @@ const SupabaseClient = {
      * Initialize the Supabase client
      */
     init() {
+        console.log('[SupabaseClient] init() called, already initialized:', this.initialized);
         if (this.initialized) return this.client;
 
         // Try to get config from meta tags if not in window
@@ -29,18 +30,21 @@ const SupabaseClient = {
             if (keyMeta) this.config.anonKey = keyMeta.content;
         }
 
+        console.log('[SupabaseClient] config.url:', this.config.url ? 'present' : 'missing');
+        console.log('[SupabaseClient] config.anonKey:', this.config.anonKey ? 'present' : 'missing');
+
         if (!this.config.url || !this.config.anonKey) {
-            console.warn('Supabase not configured. Using localStorage fallback.');
+            console.warn('[SupabaseClient] Supabase not configured. Using localStorage fallback.');
             return null;
         }
 
         try {
             this.client = supabase.createClient(this.config.url, this.config.anonKey);
             this.initialized = true;
-            console.log('Supabase client initialized');
+            console.log('[SupabaseClient] Supabase client initialized successfully');
             return this.client;
         } catch (e) {
-            console.error('Failed to initialize Supabase:', e);
+            console.error('[SupabaseClient] Failed to initialize Supabase:', e);
             return null;
         }
     },
@@ -113,7 +117,11 @@ const SupabaseClient = {
      * Get a single packet by ID
      */
     async getPacket(id) {
-        if (!this.isAvailable()) return null;
+        console.log('[SupabaseClient] getPacket() called, id:', id);
+        if (!this.isAvailable()) {
+            console.log('[SupabaseClient] getPacket() - not available');
+            return null;
+        }
 
         try {
             const { data, error } = await this.client
@@ -122,7 +130,12 @@ const SupabaseClient = {
                 .eq('id', id)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('[SupabaseClient] getPacket() error:', error);
+                throw error;
+            }
+
+            console.log('[SupabaseClient] getPacket() found:', data?.customer_name);
 
             // Also get photos
             if (data) {
@@ -138,7 +151,7 @@ const SupabaseClient = {
 
             return data;
         } catch (e) {
-            console.error('Failed to get packet:', e);
+            console.error('[SupabaseClient] Failed to get packet:', e);
             return null;
         }
     },
@@ -147,15 +160,21 @@ const SupabaseClient = {
      * Save a packet (create or update)
      */
     async savePacket(packetData) {
-        if (!this.isAvailable()) return null;
+        console.log('[SupabaseClient] savePacket() called, isAvailable:', this.isAvailable());
+        if (!this.isAvailable()) {
+            console.log('[SupabaseClient] savePacket() - Supabase not available, returning null');
+            return null;
+        }
 
         try {
             const { id, photos, ...data } = packetData;
             const now = new Date().toISOString();
+            console.log('[SupabaseClient] savePacket() id:', id, 'data keys:', Object.keys(data));
 
             let result;
             if (id) {
                 // Update existing
+                console.log('[SupabaseClient] Updating existing packet:', id);
                 const { data: updated, error } = await this.client
                     .from('packets')
                     .update({ ...data, updated_at: now })
@@ -163,23 +182,31 @@ const SupabaseClient = {
                     .select()
                     .single();
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[SupabaseClient] Update error:', error);
+                    throw error;
+                }
                 result = updated;
             } else {
                 // Create new
+                console.log('[SupabaseClient] Creating new packet');
                 const { data: created, error } = await this.client
                     .from('packets')
                     .insert({ ...data, created_at: now, updated_at: now })
                     .select()
                     .single();
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[SupabaseClient] Insert error:', error);
+                    throw error;
+                }
                 result = created;
             }
 
+            console.log('[SupabaseClient] savePacket() success, result id:', result?.id);
             return result;
         } catch (e) {
-            console.error('Failed to save packet:', e);
+            console.error('[SupabaseClient] Failed to save packet:', e);
             return null;
         }
     },

@@ -2027,7 +2027,7 @@
                         inspection_date: data.inspectionDate || null,
                         inspector_name: data.inspectorName,
                         concerns: data.concerns,
-                        roof: data.roof,
+                        roof: { ...data.roof, miniPhotos: data.miniPhotos }, // Include miniPhotos in roof data
                         findings: data.findings,
                         recommendation: data.recommendation,
                         wrapup: data.wrapup,
@@ -2226,7 +2226,7 @@
                             findings: data.findings || {},
                             recommendation: data.recommendation || {},
                             wrapup: data.wrapup || {},
-                            miniPhotos: {},
+                            miniPhotos: data.roof?.miniPhotos || {},
                             photos: data.photos || []
                         };
                     }

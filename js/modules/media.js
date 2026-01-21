@@ -8,11 +8,29 @@ const Media = {
     maxImageSize: 1200,
     imageQuality: 0.8,
     maxFileSize: 50 * 1024 * 1024, // 50MB for Supabase free tier
+    LAST_ADDRESS_KEY: 'lava_media_last_address',
+
+    /**
+     * Get the last used address from localStorage
+     */
+    getLastAddress() {
+        return localStorage.getItem(this.LAST_ADDRESS_KEY) || '';
+    },
+
+    /**
+     * Save the last used address to localStorage
+     */
+    setLastAddress(address) {
+        if (address && address.trim()) {
+            localStorage.setItem(this.LAST_ADDRESS_KEY, address.trim());
+        }
+    },
 
     /**
      * Upload a file to Supabase Storage and record in media table
      * @param {File} file - The file to upload
      * @param {Object} options - Upload options
+     * @param {string} options.address - REQUIRED: Job site address for organization
      * @param {string} options.linkedType - 'packet', 'inspection', 'repair', 'general'
      * @param {string} options.linkedId - UUID of linked record (optional for 'general')
      * @param {string} options.slot - Slot identifier like 'aerial', 'ssImg1', etc.
@@ -21,7 +39,15 @@ const Media = {
      * @returns {Promise<Object>} - The created media record
      */
     async upload(file, options = {}) {
-        const { linkedType = 'general', linkedId = null, slot = null, caption = '', tags = [] } = options;
+        const { address, linkedType = 'general', linkedId = null, slot = null, caption = '', tags = [] } = options;
+
+        // Address is required for organization
+        if (!address || !address.trim()) {
+            throw new Error('Address is required for media uploads');
+        }
+
+        // Save address for "use last" feature
+        this.setLastAddress(address);
 
         // Validate file size
         if (file.size > this.maxFileSize) {
@@ -76,7 +102,8 @@ const Media = {
             linked_id: linkedId,
             slot: slot,
             caption: caption,
-            tags: tags
+            tags: tags,
+            address: address.trim()
         };
 
         const { data, error } = await SupabaseClient.client
@@ -156,18 +183,49 @@ const Media = {
     },
 
     /**
-     * Search media by filename or caption
+     * Search media by filename, caption, or address
      */
     async search(query) {
         const { data, error } = await SupabaseClient.client
             .from('media')
             .select('*')
-            .or(`filename.ilike.%${query}%,caption.ilike.%${query}%`)
+            .or(`filename.ilike.%${query}%,caption.ilike.%${query}%,address.ilike.%${query}%`)
             .order('created_at', { ascending: false })
             .limit(50);
 
         if (error) throw error;
         return data || [];
+    },
+
+    /**
+     * Get all media for a specific address
+     */
+    async getByAddress(address) {
+        const { data, error } = await SupabaseClient.client
+            .from('media')
+            .select('*')
+            .ilike('address', `%${address}%`)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    /**
+     * Get unique addresses (for filtering/grouping)
+     */
+    async getUniqueAddresses() {
+        const { data, error } = await SupabaseClient.client
+            .from('media')
+            .select('address')
+            .not('address', 'is', null)
+            .order('address');
+
+        if (error) throw error;
+
+        // Extract unique addresses
+        const addresses = [...new Set(data.map(d => d.address).filter(Boolean))];
+        return addresses;
     },
 
     /**
