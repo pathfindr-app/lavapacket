@@ -9,6 +9,7 @@
     html { font-size: 12pt; }
     body { background: white; }
 
+    /* Hide all UI controls */
     .toolbar,
     .no-print,
     .photo-upload-btn,
@@ -17,8 +18,65 @@
     .photo-controls,
     .change-photo-btn,
     .toast-container,
-    .toast {
+    .toast,
+    .ev-placeholder,
+    .estimate-dropzone:empty,
+    .zoom-controls {
         display: none !important;
+    }
+
+    /* Remove ALL dashed borders and outlines from editable elements */
+    .editable,
+    .editable[contenteditable],
+    .editable[contenteditable="true"],
+    .editable[contenteditable="false"],
+    [contenteditable],
+    [contenteditable="true"],
+    [contenteditable="false"],
+    .packet .editable,
+    .page .editable,
+    .closing-page .editable {
+        outline: none !important;
+        outline-width: 0 !important;
+        outline-style: none !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Specifically target the closing page elements */
+    .contact-header,
+    .contact-name,
+    .contact-role,
+    .contact-row span,
+    .terms-header,
+    .terms-list,
+    .company-name,
+    .company-address,
+    .company-license,
+    .closing-message,
+    .closing-tagline,
+    .work-label,
+    .photo-label {
+        outline: none !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    /* Fix text overflow - allow wrapping */
+    .editable,
+    .photo-caption,
+    .photo-label,
+    .work-label,
+    figcaption,
+    .caption,
+    .work-item figcaption,
+    .work-grid figcaption {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        max-height: none !important;
     }
 
     .packet { max-width: 100%; }
