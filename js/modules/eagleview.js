@@ -400,7 +400,45 @@ Only return the JSON object, no other text.`;
     },
 
     getReportData() {
-        return this.reportData;
+        return {
+            reportData: this.reportData,
+            aerialImage: this.aerialImage,
+            diagramImage: this.diagramImage
+        };
+    },
+
+    setReportData(data) {
+        if (!data) return;
+
+        this.reportData = data.reportData || null;
+
+        // Restore aerial image
+        if (data.aerialImage) {
+            this.aerialImage = data.aerialImage;
+            const img = document.getElementById('aerialImg');
+            const placeholder = document.getElementById('aerialPlaceholder');
+            if (img) {
+                img.src = data.aerialImage;
+                img.style.display = 'block';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        }
+
+        // Restore diagram image
+        if (data.diagramImage) {
+            this.diagramImage = data.diagramImage;
+            const img = document.getElementById('diagramImg');
+            const placeholder = document.getElementById('diagramPlaceholder');
+            if (img) {
+                img.src = data.diagramImage;
+                img.style.display = 'block';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+        }
     }
 };
 
