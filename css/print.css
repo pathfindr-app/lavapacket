@@ -131,6 +131,63 @@
         margin: 0 auto;
         display: block;
     }
+
+    /* ========================================
+       ABOUT PAGE - Scale to fit
+    ======================================== */
+    .about-work-page {
+        overflow: visible !important;
+    }
+
+    .about-banner {
+        height: 160px !important;
+        margin-bottom: 0.3in !important;
+    }
+
+    .about-banner img {
+        height: 100% !important;
+    }
+
+    .about-split {
+        margin-bottom: 0.25in !important;
+        gap: 1rem !important;
+    }
+
+    .about-text {
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+    }
+
+    .about-text p {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .about-stats {
+        gap: 0.4rem !important;
+    }
+
+    .stat-item {
+        padding: 0.3rem 0.5rem !important;
+    }
+
+    /* Work showcase - smaller for print */
+    .work-showcase {
+        gap: 0.4rem !important;
+        margin-top: 0.2in !important;
+    }
+
+    .work-item {
+        height: 145px !important;
+    }
+
+    .work-item-large {
+        height: auto !important;
+    }
+
+    .work-label {
+        font-size: 0.6rem !important;
+        padding: 1.2rem 0.4rem 0.35rem !important;
+    }
 }
 
 @page {
