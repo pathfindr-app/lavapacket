@@ -162,18 +162,72 @@ const Clients = {
     /**
      * Get all history for a client
      * @param {string} clientId
+     * @param {string} clientName - Optional client name for local media matching
      * @returns {Promise<Object>}
      */
-    async getHistory(clientId) {
-        if (!SupabaseClient.isAvailable()) {
-            return { packets: [], inspections: [], media: [] };
+    async getHistory(clientId, clientName = '') {
+        let history = { packets: [], inspections: [], media: [] };
+
+        // Try to get from Supabase first
+        if (SupabaseClient.isAvailable()) {
+            try {
+                history = await SupabaseClient.getClientHistory(clientId);
+            } catch (e) {
+                console.error('[Clients] Failed to get history from Supabase:', e);
+            }
         }
 
+        // Also include locally stored quick-capture media
+        const localMedia = this.getLocalQuickMedia(clientId, clientName);
+        if (localMedia.length > 0) {
+            // Merge local media, avoiding duplicates by id
+            const existingIds = new Set(history.media.map(m => m.id));
+            localMedia.forEach(m => {
+                if (!existingIds.has(m.id)) {
+                    history.media.push(m);
+                }
+            });
+
+            // Sort by created_at descending
+            history.media.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+
+        return history;
+    },
+
+    /**
+     * Get local quick-capture media for a client
+     * @param {string} clientId
+     * @param {string} clientName - Optional client name for matching
+     * @returns {Array}
+     */
+    getLocalQuickMedia(clientId, clientName = '') {
         try {
-            return await SupabaseClient.getClientHistory(clientId);
+            const allMedia = JSON.parse(localStorage.getItem('lavaQuickMedia') || '[]');
+
+            // Filter by client_id or client name
+            return allMedia.filter(m => {
+                // Exact ID match
+                if (m.client_id === clientId) return true;
+                // ID might be stored with different format
+                if (m.client_id && clientId && m.client_id.toString() === clientId.toString()) return true;
+                // Match by client name (case insensitive)
+                if (clientName && m.client_name &&
+                    m.client_name.toLowerCase() === clientName.toLowerCase()) return true;
+                return false;
+            }).map(m => ({
+                id: m.id,
+                filename: m.id + (m.type === 'photo' ? '.jpg' : m.type === 'video' ? '.mp4' : '.webm'),
+                file_type: m.type === 'voice' ? 'audio' : m.type,
+                public_url: m.url || m.blob, // Use blob (base64) if no URL
+                caption: m.note || m.transcript || '',
+                tags: [m.client_name, m.type].filter(Boolean),
+                created_at: m.created_at,
+                is_local: !m.url // Flag to indicate this is local/base64 data
+            }));
         } catch (e) {
-            console.error('[Clients] Failed to get history:', e);
-            return { packets: [], inspections: [], media: [] };
+            console.error('[Clients] Failed to get local quick media:', e);
+            return [];
         }
     },
 

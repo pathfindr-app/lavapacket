@@ -195,8 +195,8 @@
                     return;
                 }
 
-                // Load history
-                clientHistory = await Clients.getHistory(clientId);
+                // Load history (pass client name for local media matching)
+                clientHistory = await Clients.getHistory(clientId, currentClient.name);
 
                 // Render
                 renderClient();
@@ -309,18 +309,32 @@
             if (clientHistory.media.length === 0) {
                 mediaList.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-icon">📷</div><div class="empty-title">No files</div><a href="../media/index.html" class="btn btn-primary">Upload Files</a></div>';
             } else {
-                mediaList.innerHTML = clientHistory.media.map(m => `
-                    <div class="media-item" onclick="openMedia('${m.public_url}', '${m.file_type}')">
-                        ${m.file_type === 'image' ?
-                            `<img src="${m.public_url}" alt="${escapeHtml(m.filename)}" loading="lazy">` :
-                            m.file_type === 'video' ?
-                            `<video src="${m.public_url}" muted></video>` :
-                            `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">📄</div><div class="media-doc-placeholder-name">${escapeHtml(m.filename)}</div></div>`
-                        }
-                        <span class="media-item-badge ${m.file_type}">${m.file_type}</span>
-                        <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
-                    </div>
-                `).join('');
+                mediaList.innerHTML = clientHistory.media.map(m => {
+                    const url = m.public_url || '';
+                    const fileType = m.file_type || 'document';
+                    const isImage = fileType === 'image' || fileType === 'photo';
+                    const isVideo = fileType === 'video';
+                    const isAudio = fileType === 'audio' || fileType === 'voice';
+
+                    let content;
+                    if (isImage) {
+                        content = `<img src="${url}" alt="${escapeHtml(m.filename)}" loading="lazy">`;
+                    } else if (isVideo) {
+                        content = `<video src="${url}" muted></video>`;
+                    } else if (isAudio) {
+                        content = `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">🎤</div><div class="media-doc-placeholder-name">${escapeHtml(m.caption || 'Voice Memo')}</div></div>`;
+                    } else {
+                        content = `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">📄</div><div class="media-doc-placeholder-name">${escapeHtml(m.filename)}</div></div>`;
+                    }
+
+                    return `
+                        <div class="media-item" onclick="openMedia('${url}', '${fileType}')">
+                            ${content}
+                            <span class="media-item-badge ${fileType}">${fileType}</span>
+                            <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
+                        </div>
+                    `;
+                }).join('');
             }
         }
 
@@ -402,10 +416,22 @@
                 // Simple lightbox
                 const modal = document.createElement('div');
                 modal.className = 'media-modal active';
+
+                let content;
+                if (type === 'image' || type === 'photo') {
+                    content = `<img src="${url}">`;
+                } else if (type === 'video') {
+                    content = `<video src="${url}" controls autoplay></video>`;
+                } else if (type === 'audio' || type === 'voice') {
+                    content = `<div style="padding: 2rem; text-align: center;"><div style="font-size: 4rem; margin-bottom: 1rem;">🎤</div><audio src="${url}" controls autoplay style="width: 100%; max-width: 400px;"></audio></div>`;
+                } else {
+                    content = `<div style="padding: 2rem; text-align: center;"><div style="font-size: 4rem;">📄</div><p>Unable to preview this file</p></div>`;
+                }
+
                 modal.innerHTML = `
                     <button class="media-modal-close" onclick="this.parentElement.remove()">&times;</button>
                     <div class="media-modal-content">
-                        ${type === 'image' ? `<img src="${url}">` : `<video src="${url}" controls autoplay></video>`}
+                        ${content}
                     </div>
                 `;
                 modal.addEventListener('click', (e) => {
