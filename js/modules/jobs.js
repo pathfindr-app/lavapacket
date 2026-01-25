@@ -11,10 +11,12 @@ const Jobs = {
      * List all jobs with optional filters
      */
     async list(filters = {}) {
-        if (!SupabaseClient.isAvailable()) return this.listLocal(filters);
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) return this.listLocal(filters);
 
         try {
-            let query = SupabaseClient.getClient()
+            let query = client
                 .from('jobs')
                 .select(`
                     *,
@@ -44,7 +46,7 @@ const Jobs = {
             return data || [];
         } catch (e) {
             console.error('[Jobs] Failed to list:', e);
-            return [];
+            return this.listLocal(filters);
         }
     },
 
@@ -52,10 +54,12 @@ const Jobs = {
      * Get job with full summary (includes expenses totals)
      */
     async get(id) {
-        if (!SupabaseClient.isAvailable()) return this.getLocal(id);
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) return this.getLocal(id);
 
         try {
-            const { data, error } = await SupabaseClient.getClient()
+            const { data, error } = await client
                 .from('job_summary')
                 .select('*')
                 .eq('id', id)
@@ -65,7 +69,7 @@ const Jobs = {
             return data;
         } catch (e) {
             console.error('[Jobs] Failed to get:', e);
-            return null;
+            return this.getLocal(id);
         }
     },
 
@@ -73,10 +77,15 @@ const Jobs = {
      * Create a new job
      */
     async create(jobData) {
-        if (!SupabaseClient.isAvailable()) return this.createLocal(jobData);
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) {
+            console.log('[Jobs] Supabase not available, using local storage');
+            return this.createLocal(jobData);
+        }
 
         try {
-            const { data, error } = await SupabaseClient.getClient()
+            const { data, error } = await client
                 .from('jobs')
                 .insert(jobData)
                 .select()
@@ -88,7 +97,8 @@ const Jobs = {
             return data;
         } catch (e) {
             console.error('[Jobs] Failed to create:', e);
-            return null;
+            // Fallback to local storage on error
+            return this.createLocal(jobData);
         }
     },
 
@@ -130,10 +140,12 @@ const Jobs = {
      * Update a job
      */
     async update(id, updates) {
-        if (!SupabaseClient.isAvailable()) return this.updateLocal(id, updates);
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) return this.updateLocal(id, updates);
 
         try {
-            const { data, error } = await SupabaseClient.getClient()
+            const { data, error } = await client
                 .from('jobs')
                 .update(updates)
                 .eq('id', id)
@@ -146,7 +158,7 @@ const Jobs = {
             return data;
         } catch (e) {
             console.error('[Jobs] Failed to update:', e);
-            return null;
+            return this.updateLocal(id, updates);
         }
     },
 
@@ -191,10 +203,12 @@ const Jobs = {
      * Delete a job
      */
     async delete(id) {
-        if (!SupabaseClient.isAvailable()) return this.deleteLocal(id);
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) return this.deleteLocal(id);
 
         try {
-            const { error } = await SupabaseClient.getClient()
+            const { error } = await client
                 .from('jobs')
                 .delete()
                 .eq('id', id);
@@ -205,7 +219,7 @@ const Jobs = {
             return true;
         } catch (e) {
             console.error('[Jobs] Failed to delete:', e);
-            return false;
+            return this.deleteLocal(id);
         }
     },
 
@@ -213,10 +227,17 @@ const Jobs = {
      * Get jobs for calendar display
      */
     async getForCalendar(startDate, endDate) {
-        if (!SupabaseClient.isAvailable()) return [];
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) {
+            // Return local jobs filtered by date
+            return this.listLocal().filter(j =>
+                j.scheduled_date >= startDate && j.scheduled_date <= endDate
+            );
+        }
 
         try {
-            const { data, error } = await SupabaseClient.getClient()
+            const { data, error } = await client
                 .from('jobs')
                 .select(`
                     id, title, status, scheduled_date, scheduled_time,
@@ -232,7 +253,9 @@ const Jobs = {
             return data || [];
         } catch (e) {
             console.error('[Jobs] Failed to get calendar jobs:', e);
-            return [];
+            return this.listLocal().filter(j =>
+                j.scheduled_date >= startDate && j.scheduled_date <= endDate
+            );
         }
     },
 
@@ -261,11 +284,11 @@ const Jobs = {
      * Get job statistics
      */
     async getStats() {
-        if (!SupabaseClient.isAvailable()) return this.getLocalStats();
+        const client = SupabaseClient.isAvailable() ? SupabaseClient.getClient() : null;
+
+        if (!client || !client.from) return this.getLocalStats();
 
         try {
-            const client = SupabaseClient.getClient();
-
             const [pending, scheduled, inProgress, completed, thisMonth] = await Promise.all([
                 client.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
                 client.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'scheduled'),
@@ -285,7 +308,7 @@ const Jobs = {
             };
         } catch (e) {
             console.error('[Jobs] Failed to get stats:', e);
-            return { pending: 0, scheduled: 0, inProgress: 0, completed: 0, completedThisMonth: 0 };
+            return this.getLocalStats();
         }
     },
 
