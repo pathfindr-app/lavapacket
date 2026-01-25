@@ -110,6 +110,79 @@
     color: #1a1a1a;
 }
 
+/* Batch Preview */
+.batch-preview {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f0f9ff;
+    border-radius: 12px;
+    border: 2px solid #3b82f6;
+}
+
+.batch-items {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.batch-item {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.batch-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.batch-item-icon {
+    font-size: 1.5rem;
+}
+
+.batch-item-remove {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: white;
+    border: none;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.batch-continue-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.batch-continue-btn:hover {
+    background: #2563eb;
+}
+
 /* Capture Options Grid */
 .capture-options {
     display: grid;
@@ -208,7 +281,13 @@
 /* Preview Controls */
 #previewControls {
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#previewControls button {
+    flex: 1;
+    min-width: 80px;
 }
 
 /* Buttons */

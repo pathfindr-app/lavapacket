@@ -15,6 +15,9 @@ const QuickCapture = {
     liveTranscript: '',
     detectedNames: [],
 
+    // Batch capture support
+    batchItems: [], // Array of {blob, type, thumbnail, transcript}
+
     /**
      * Initialize quick capture - adds floating button to page
      */
@@ -60,6 +63,15 @@ const QuickCapture = {
                 <!-- Step 1: Choose capture type -->
                 <div class="capture-step" id="captureStep1">
                     <div class="capture-title">Add Media</div>
+
+                    <!-- Batch preview (shows when items are queued) -->
+                    <div class="batch-preview" id="batchPreview" style="display: none;">
+                        <div class="batch-items" id="batchItems"></div>
+                        <button class="batch-continue-btn" onclick="QuickCapture.goToTagging()">
+                            Continue with <span id="batchCount">0</span> items →
+                        </button>
+                    </div>
+
                     <div class="capture-options">
                         <button class="capture-option" onclick="QuickCapture.capturePhoto()">
                             <span class="capture-option-icon">📷</span>
@@ -107,7 +119,8 @@ const QuickCapture = {
                     <!-- Preview controls -->
                     <div id="previewControls" style="display: none;">
                         <button class="capture-btn-secondary" onclick="QuickCapture.retake()">Retake</button>
-                        <button class="capture-btn-primary" onclick="QuickCapture.goToTagging()">Use This →</button>
+                        <button class="capture-btn-secondary" onclick="QuickCapture.addToBatch()">+ Add More</button>
+                        <button class="capture-btn-primary" onclick="QuickCapture.addAndContinue()">Done →</button>
                     </div>
                 </div>
 
@@ -189,6 +202,7 @@ const QuickCapture = {
         this.selectedClientData = null;
         this.liveTranscript = '';
         this.detectedNames = [];
+        this.batchItems = [];
 
         // Stop speech recognition if active
         if (this.speechRecognition) {
@@ -211,6 +225,10 @@ const QuickCapture = {
         // Reset live transcript
         const liveTranscriptEl = document.getElementById('liveTranscript');
         if (liveTranscriptEl) liveTranscriptEl.style.display = 'none';
+
+        // Reset batch preview
+        const batchPreview = document.getElementById('batchPreview');
+        if (batchPreview) batchPreview.style.display = 'none';
     },
 
     /**
@@ -578,6 +596,17 @@ const QuickCapture = {
      * Go to tagging step
      */
     goToTagging() {
+        // If we have a current item that hasn't been added to batch, add it
+        if (this.currentBlob && !this.batchItems.find(item => item.blob === this.currentBlob)) {
+            this.addCurrentToBatch();
+        }
+
+        // Need at least one item
+        if (this.batchItems.length === 0) {
+            alert('Please capture at least one item');
+            return;
+        }
+
         this.showStep(3);
 
         // Auto-select detected client if we found one during voice recording
@@ -598,15 +627,126 @@ const QuickCapture = {
             `;
             selectedEl.style.display = 'flex';
 
-            // Pre-fill note with live transcript if it was a voice memo
-            if (this.currentType === 'voice' && this.liveTranscript) {
-                document.getElementById('captureNote').value = this.liveTranscript;
+            // Pre-fill note with any voice transcript
+            const voiceItem = this.batchItems.find(item => item.type === 'voice' && item.transcript);
+            if (voiceItem) {
+                document.getElementById('captureNote').value = voiceItem.transcript;
             }
         } else {
             setTimeout(() => {
                 document.getElementById('clientSearchInput').focus();
             }, 100);
         }
+
+        // Update save button text for batch
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.textContent = this.batchItems.length > 1
+                ? `Save ${this.batchItems.length} Items`
+                : 'Save';
+        }
+    },
+
+    /**
+     * Add current item to batch and go back to capture more
+     */
+    addToBatch() {
+        this.addCurrentToBatch();
+        this.updateBatchPreview();
+
+        // Reset current item and go back to step 1
+        this.currentBlob = null;
+        this.currentType = null;
+        this.liveTranscript = '';
+
+        // Hide previews
+        document.getElementById('photoPreview').style.display = 'none';
+        document.getElementById('videoPreview').style.display = 'none';
+        document.getElementById('audioPreview').style.display = 'none';
+
+        this.showStep(1);
+    },
+
+    /**
+     * Add current item to batch and continue to tagging
+     */
+    addAndContinue() {
+        this.addCurrentToBatch();
+        this.goToTagging();
+    },
+
+    /**
+     * Add the current captured item to the batch
+     */
+    async addCurrentToBatch() {
+        if (!this.currentBlob) return;
+
+        // Create thumbnail for preview
+        let thumbnail = '';
+        if (this.currentType === 'photo') {
+            thumbnail = await this.createThumbnail(this.currentBlob);
+        } else if (this.currentType === 'video') {
+            thumbnail = '🎥';
+        } else if (this.currentType === 'voice') {
+            thumbnail = '🎤';
+        }
+
+        this.batchItems.push({
+            id: 'batch_' + Date.now() + '_' + this.batchItems.length,
+            blob: this.currentBlob,
+            type: this.currentType,
+            thumbnail: thumbnail,
+            transcript: this.liveTranscript || null
+        });
+
+        console.log('[QuickCapture] Added to batch, total items:', this.batchItems.length);
+    },
+
+    /**
+     * Create a thumbnail from an image blob
+     */
+    async createThumbnail(blob) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve('📷');
+            reader.readAsDataURL(blob);
+        });
+    },
+
+    /**
+     * Update the batch preview display
+     */
+    updateBatchPreview() {
+        const batchPreview = document.getElementById('batchPreview');
+        const batchItems = document.getElementById('batchItems');
+        const batchCount = document.getElementById('batchCount');
+
+        if (this.batchItems.length === 0) {
+            batchPreview.style.display = 'none';
+            return;
+        }
+
+        batchPreview.style.display = 'block';
+        batchCount.textContent = this.batchItems.length;
+
+        batchItems.innerHTML = this.batchItems.map((item, index) => `
+            <div class="batch-item" data-index="${index}">
+                ${item.type === 'photo' && item.thumbnail.startsWith('data:')
+                    ? `<img src="${item.thumbnail}" alt="Photo">`
+                    : `<span class="batch-item-icon">${item.thumbnail}</span>`
+                }
+                <button class="batch-item-remove" onclick="QuickCapture.removeBatchItem(${index})">&times;</button>
+            </div>
+        `).join('');
+    },
+
+    /**
+     * Remove an item from the batch
+     */
+    removeBatchItem(index) {
+        this.batchItems.splice(index, 1);
+        this.updateBatchPreview();
     },
 
     // ==================== CLIENT SEARCH ====================
@@ -770,10 +910,10 @@ const QuickCapture = {
     // ==================== SAVE ====================
 
     /**
-     * Save the captured media
+     * Save the captured media (supports batch)
      */
     async save() {
-        if (!this.currentBlob) {
+        if (this.batchItems.length === 0) {
             alert('No media to save');
             return;
         }
@@ -785,98 +925,106 @@ const QuickCapture = {
 
         const saveBtn = document.getElementById('saveBtn');
         saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
+        const totalItems = this.batchItems.length;
+        let savedCount = 0;
 
         try {
-            let note = document.getElementById('captureNote').value.trim();
-            let transcript = null;
+            const note = document.getElementById('captureNote').value.trim();
+            const savedEntries = [];
 
-            // Transcribe voice memos
-            if (this.currentType === 'voice' && typeof Transcribe !== 'undefined' && Transcribe.isAvailable()) {
-                saveBtn.textContent = 'Transcribing...';
-                try {
-                    transcript = await Transcribe.transcribe(this.currentBlob);
-                    console.log('[QuickCapture] Transcription:', transcript);
-                    // Use transcript as note if no note provided
-                    if (!note && transcript) {
-                        note = transcript;
+            for (const item of this.batchItems) {
+                savedCount++;
+                saveBtn.textContent = `Saving ${savedCount}/${totalItems}...`;
+
+                let transcript = item.transcript;
+
+                // Transcribe voice memos if not already done
+                if (item.type === 'voice' && !transcript && typeof Transcribe !== 'undefined' && Transcribe.isAvailable()) {
+                    saveBtn.textContent = `Transcribing ${savedCount}/${totalItems}...`;
+                    try {
+                        transcript = await Transcribe.transcribe(item.blob);
+                        console.log('[QuickCapture] Transcription:', transcript);
+                    } catch (transcribeErr) {
+                        console.warn('[QuickCapture] Transcription failed:', transcribeErr);
                     }
-                } catch (transcribeErr) {
-                    console.warn('[QuickCapture] Transcription failed:', transcribeErr);
-                    // Continue without transcript
                 }
-                saveBtn.textContent = 'Saving...';
-            }
 
-            // Create media entry
-            const mediaEntry = {
-                id: 'media_' + Date.now(),
-                type: this.currentType,
-                client_id: this.selectedClientId,
-                client_name: this.selectedClientData.name,
-                client_address: this.selectedClientData.address,
-                note: note,
-                transcript: transcript,
-                created_at: new Date().toISOString(),
-                blob: null,
-                url: null
-            };
+                // Create media entry
+                const mediaEntry = {
+                    id: 'media_' + Date.now() + '_' + savedCount,
+                    type: item.type,
+                    client_id: this.selectedClientId,
+                    client_name: this.selectedClientData.name,
+                    client_address: this.selectedClientData.address,
+                    note: note,
+                    transcript: transcript,
+                    created_at: new Date().toISOString(),
+                    blob: null,
+                    url: null
+                };
 
-            // Try to upload to Supabase Storage
-            const supabaseClient = typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()
-                ? SupabaseClient.getClient()
-                : null;
+                // Try to upload to Supabase Storage
+                const supabaseClient = typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()
+                    ? SupabaseClient.getClient()
+                    : null;
 
-            if (supabaseClient && supabaseClient.storage) {
-                try {
-                    const ext = this.currentType === 'photo' ? 'jpg' : this.currentType === 'video' ? 'mp4' : 'webm';
-                    const path = `media/${this.selectedClientId || 'local'}/${mediaEntry.id}.${ext}`;
+                if (supabaseClient && supabaseClient.storage) {
+                    try {
+                        const ext = item.type === 'photo' ? 'jpg' : item.type === 'video' ? 'mp4' : 'webm';
+                        const path = `media/${this.selectedClientId || 'local'}/${mediaEntry.id}.${ext}`;
 
-                    const { data, error } = await supabaseClient.storage
-                        .from('photos')
-                        .upload(path, this.currentBlob, {
-                            contentType: this.currentBlob.type,
-                            upsert: true
-                        });
-
-                    if (!error) {
-                        const { data: urlData } = supabaseClient.storage
+                        const { data, error } = await supabaseClient.storage
                             .from('photos')
-                            .getPublicUrl(path);
-                        mediaEntry.url = urlData.publicUrl;
-                        mediaEntry.storage_path = path;
-
-                        // Save to media table
-                        await supabaseClient
-                            .from('media')
-                            .insert({
-                                client_id: this.selectedClientId,
-                                filename: `${mediaEntry.id}.${ext}`,
-                                file_type: this.currentType,
-                                storage_path: path,
-                                public_url: mediaEntry.url,
-                                caption: note,
-                                tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
+                            .upload(path, item.blob, {
+                                contentType: item.blob.type,
+                                upsert: true
                             });
-                    } else {
-                        console.warn('[QuickCapture] Storage upload failed:', error);
+
+                        if (!error) {
+                            const { data: urlData } = supabaseClient.storage
+                                .from('photos')
+                                .getPublicUrl(path);
+                            mediaEntry.url = urlData.publicUrl;
+                            mediaEntry.storage_path = path;
+
+                            // Save to media table
+                            await supabaseClient
+                                .from('media')
+                                .insert({
+                                    client_id: this.selectedClientId,
+                                    filename: `${mediaEntry.id}.${ext}`,
+                                    file_type: item.type,
+                                    storage_path: path,
+                                    public_url: mediaEntry.url,
+                                    caption: transcript || note,
+                                    tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
+                                });
+                        } else {
+                            console.warn('[QuickCapture] Storage upload failed:', error);
+                        }
+                    } catch (uploadErr) {
+                        console.warn('[QuickCapture] Storage upload error:', uploadErr);
                     }
-                } catch (uploadErr) {
-                    console.warn('[QuickCapture] Storage upload error:', uploadErr);
-                    // Continue - will save locally
+                }
+
+                // Also save locally as backup
+                if (!mediaEntry.url) {
+                    mediaEntry.blob = await this.blobToBase64(item.blob);
+                }
+
+                savedEntries.push(mediaEntry);
+
+                // Small delay between uploads
+                if (savedCount < totalItems) {
+                    await new Promise(r => setTimeout(r, 100));
                 }
             }
 
-            // Also save locally as backup
-            if (!mediaEntry.url) {
-                // Convert to base64 for local storage (limited, but works for small files)
-                mediaEntry.blob = await this.blobToBase64(this.currentBlob);
-            }
-
+            // Save all to localStorage
             const localMedia = JSON.parse(localStorage.getItem('lavaQuickMedia') || '[]');
-            localMedia.unshift(mediaEntry);
-            // Keep only last 50 entries locally
-            localStorage.setItem('lavaQuickMedia', JSON.stringify(localMedia.slice(0, 50)));
+            localMedia.unshift(...savedEntries);
+            // Keep only last 100 entries locally
+            localStorage.setItem('lavaQuickMedia', JSON.stringify(localMedia.slice(0, 100)));
 
             // Show success
             this.showStep(4);
@@ -885,14 +1033,16 @@ const QuickCapture = {
             setTimeout(() => {
                 this.close();
                 // Dispatch event for other modules
-                document.dispatchEvent(new CustomEvent('quickcapture:saved', { detail: mediaEntry }));
+                document.dispatchEvent(new CustomEvent('quickcapture:saved', {
+                    detail: { items: savedEntries, count: savedEntries.length }
+                }));
             }, 1500);
 
         } catch (err) {
             console.error('Save failed:', err);
             alert('Failed to save: ' + err.message);
             saveBtn.disabled = false;
-            saveBtn.textContent = 'Save';
+            saveBtn.textContent = `Save ${totalItems} Items`;
         }
     },
 
