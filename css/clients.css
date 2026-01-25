@@ -1,5 +1,6 @@
 /**
- * LAVA Roofing Portal - Clients Module Styles
+ * LAVA Roofing - Clients Styles
+ * Clean, professional design
  */
 
 /* ========================================
@@ -8,136 +9,118 @@
 
 .client-dialog-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1001;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }
 
 .client-dialog {
-    background: white;
-    border-radius: 16px;
+    background: var(--surface, #fff);
+    border-radius: var(--radius-md, 8px);
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .client-dialog-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
 }
 
 .client-dialog-header h2 {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary, #111827);
 }
 
 .client-dialog-header .btn-close {
     background: none;
     border: none;
-    font-size: 1.5rem;
-    color: var(--text-muted);
+    font-size: 1.25rem;
+    color: var(--text-muted, #9ca3af);
     cursor: pointer;
-    padding: 0;
+    padding: 0.25rem;
     line-height: 1;
-    transition: color 0.2s;
+    transition: color 0.15s;
 }
 
 .client-dialog-header .btn-close:hover {
-    color: var(--text-primary);
+    color: var(--text-primary, #111827);
 }
 
 .client-dialog-body {
     flex: 1;
     overflow-y: auto;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
 }
 
 .client-search-box {
     position: relative;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .client-search-box .search-icon {
     position: absolute;
-    left: 0.875rem;
+    left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-muted);
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.875rem;
 }
 
 .client-search-box input {
     width: 100%;
-    padding: 0.875rem 1rem 0.875rem 2.5rem;
-    font-size: 0.95rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    transition: border-color 0.2s;
+    padding: 0.625rem 0.875rem 0.625rem 2.25rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
+    transition: border-color 0.15s;
 }
 
 .client-search-box input:focus {
     outline: none;
-    border-color: var(--lava-blue);
+    border-color: var(--lava-blue, #1e3a5f);
 }
 
 .client-list {
-    max-height: 250px;
+    max-height: 240px;
     overflow-y: auto;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .client-list .loading,
 .client-list .empty-state {
-    padding: 2rem;
+    padding: 1.5rem;
     text-align: center;
-    color: var(--text-muted);
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.875rem;
 }
 
 .client-list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.875rem 1rem;
-    border-radius: 8px;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm, 6px);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.15s;
     border: 1px solid transparent;
 }
 
 .client-list-item:hover {
-    background: var(--lava-light);
-    border-color: var(--border-color);
+    background: var(--background, #f8fafc);
+    border-color: var(--border-color, #e5e7eb);
 }
 
 .client-item-info {
@@ -146,7 +129,9 @@
 }
 
 .client-item-name {
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-primary, #111827);
     margin-bottom: 0.125rem;
     white-space: nowrap;
     overflow: hidden;
@@ -154,31 +139,31 @@
 }
 
 .client-item-address {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    font-size: 0.75rem;
+    color: var(--text-muted, #9ca3af);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .client-item-meta {
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    font-size: 0.6875rem;
+    color: var(--text-muted, #9ca3af);
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-shrink: 0;
 }
 
 .client-create-section {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+    padding-top: 0.75rem;
     margin-top: 0.5rem;
 }
 
 .divider {
     display: flex;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .divider::before,
@@ -186,77 +171,78 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--border-color);
+    background: var(--border-color, #e5e7eb);
 }
 
 .divider span {
-    padding: 0 1rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    padding: 0 0.75rem;
+    font-size: 0.6875rem;
+    color: var(--text-muted, #9ca3af);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.04em;
 }
 
 .client-create-form {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .client-create-form .form-row {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .client-create-form input {
     flex: 1;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    transition: border-color 0.2s;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
+    transition: border-color 0.15s;
 }
 
 .client-create-form input:focus {
     outline: none;
-    border-color: var(--lava-blue);
+    border-color: var(--lava-blue, #1e3a5f);
 }
 
 .client-create-form .btn-primary {
-    margin-top: 0.5rem;
+    margin-top: 0.375rem;
 }
 
 .client-dialog-footer {
     display: flex;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
-    background: #fafafa;
-    border-radius: 0 0 16px 16px;
+    padding: 0.875rem 1.25rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+    background: var(--background, #f8fafc);
 }
 
 /* ========================================
-   CLIENT BADGE (inline component)
+   CLIENT BADGE
 ======================================== */
 
 .client-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    background: #e8f0fe;
-    border-radius: 8px;
-    font-size: 0.875rem;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    background: var(--background, #f8fafc);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
+    font-size: 0.8125rem;
 }
 
 .client-badge-icon {
-    font-size: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted, #9ca3af);
 }
 
 .client-badge-name {
     font-weight: 500;
-    color: var(--lava-blue);
-    max-width: 200px;
+    color: var(--text-primary, #111827);
+    max-width: 180px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -267,39 +253,39 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.25rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    transition: color 0.2s;
+    padding: 0.125rem;
+    font-size: 0.75rem;
+    color: var(--text-muted, #9ca3af);
+    transition: color 0.15s;
 }
 
 .client-badge-change:hover,
 .client-badge-clear:hover {
-    color: var(--text-primary);
+    color: var(--text-primary, #111827);
 }
 
 .client-select-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 500;
-    transition: all 0.2s;
+    color: var(--text-secondary, #4b5563);
+    transition: border-color 0.15s;
 }
 
 .client-select-btn:hover {
-    background: var(--lava-light);
-    border-color: var(--lava-blue);
+    border-color: var(--lava-blue, #1e3a5f);
 }
 
 .btn-small {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
 }
 
 /* ========================================
@@ -307,21 +293,20 @@
 ======================================== */
 
 .client-card {
-    background: white;
-    padding: 1.25rem;
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
+    background: var(--surface, #fff);
+    padding: 1rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: border-color 0.15s;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
 }
 
 .client-card:hover {
-    box-shadow: var(--card-shadow-hover);
-    transform: translateY(-1px);
+    border-color: var(--lava-blue, #1e3a5f);
 }
 
 .client-card-info {
@@ -329,18 +314,19 @@
 }
 
 .client-card-name {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-primary, #111827);
+    margin-bottom: 0.125rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .client-card-address {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary, #4b5563);
+    margin-bottom: 0.375rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -348,9 +334,9 @@
 
 .client-card-stats {
     display: flex;
-    gap: 1rem;
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted, #9ca3af);
 }
 
 .client-card-stat {
@@ -361,17 +347,17 @@
 
 .client-card-tags {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.375rem;
     flex-wrap: wrap;
-    margin-top: 0.5rem;
+    margin-top: 0.375rem;
 }
 
 .client-tag {
-    padding: 0.125rem 0.5rem;
-    background: var(--lava-light);
+    padding: 0.125rem 0.375rem;
+    background: var(--background, #f8fafc);
     border-radius: 4px;
-    font-size: 0.7rem;
-    color: var(--text-secondary);
+    font-size: 0.6875rem;
+    color: var(--text-muted, #9ca3af);
 }
 
 /* ========================================
@@ -379,61 +365,64 @@
 ======================================== */
 
 .client-header {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 1.5rem;
+    background: var(--surface, #fff);
+    padding: 1.25rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    margin-bottom: 1rem;
 }
 
 .client-header-main {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .client-name {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary, #111827);
+    margin-bottom: 0.125rem;
 }
 
 .client-address {
-    font-size: 1rem;
-    color: var(--text-secondary);
+    font-size: 0.875rem;
+    color: var(--text-secondary, #4b5563);
 }
 
 .client-header-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.375rem;
 }
 
 .client-contact-info {
     display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    gap: 1.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
 }
 
 .client-contact-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary, #4b5563);
 }
 
 .client-contact-icon {
-    color: var(--text-muted);
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.875rem;
 }
 
 .client-stats-row {
     display: flex;
-    gap: 1.5rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
 }
 
 .client-stat-item {
@@ -441,70 +430,60 @@
 }
 
 .client-stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--lava-blue);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--lava-blue, #1e3a5f);
 }
 
 .client-stat-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    font-size: 0.6875rem;
+    color: var(--text-muted, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 /* Tabs */
 .client-tabs {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0.5rem;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
 }
 
 .client-tab {
-    padding: 0.75rem 1.25rem;
-    font-size: 0.9rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--text-muted, #9ca3af);
     background: none;
     border: none;
-    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid transparent;
     cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
+    transition: color 0.15s;
+    margin-bottom: -1px;
 }
 
 .client-tab:hover {
-    color: var(--text-primary);
-    background: var(--lava-light);
+    color: var(--text-primary, #111827);
 }
 
 .client-tab.active {
-    color: var(--lava-blue);
-    background: white;
-}
-
-.client-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -0.5rem;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--lava-blue);
+    color: var(--lava-blue, #1e3a5f);
+    border-bottom-color: var(--lava-blue, #1e3a5f);
 }
 
 .client-tab-count {
-    margin-left: 0.5rem;
-    padding: 0.125rem 0.5rem;
-    background: var(--lava-light);
-    border-radius: 10px;
-    font-size: 0.75rem;
+    margin-left: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    background: var(--background, #f8fafc);
+    border-radius: 4px;
+    font-size: 0.6875rem;
     font-weight: 600;
 }
 
 .client-tab.active .client-tab-count {
-    background: #e8f0fe;
-    color: var(--lava-blue);
+    background: rgba(30, 58, 95, 0.1);
+    color: var(--lava-blue, #1e3a5f);
 }
 
 /* Tab Content */
@@ -518,76 +497,81 @@
 
 /* Client Notes */
 .client-notes {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
-    margin-top: 1.5rem;
+    background: var(--surface, #fff);
+    padding: 1rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    margin-top: 1rem;
 }
 
 .client-notes-title {
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
+    color: var(--text-primary, #111827);
+    margin-bottom: 0.5rem;
 }
 
 .client-notes-content {
-    color: var(--text-secondary);
-    line-height: 1.6;
+    color: var(--text-secondary, #4b5563);
+    font-size: 0.875rem;
+    line-height: 1.5;
     white-space: pre-wrap;
 }
 
 .client-notes-empty {
-    color: var(--text-muted);
+    color: var(--text-muted, #9ca3af);
     font-style: italic;
+    font-size: 0.875rem;
 }
 
 /* Edit Form */
 .client-edit-form {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
+    background: var(--surface, #fff);
+    padding: 1.25rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
 }
 
 .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
 }
 
 .form-group label {
     display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.375rem;
+    color: var(--text-muted, #9ca3af);
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    transition: border-color 0.2s;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
+    transition: border-color 0.15s;
     font-family: inherit;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--lava-blue);
+    border-color: var(--lava-blue, #1e3a5f);
 }
 
 .form-group textarea {
-    min-height: 120px;
+    min-height: 100px;
     resize: vertical;
 }
 
 .form-actions {
     display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
 }
 
 /* ========================================
@@ -607,7 +591,7 @@
 
     .client-header-main {
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .client-header-actions {
@@ -621,7 +605,7 @@
 
     .client-contact-info {
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
     .client-stats-row {
@@ -631,5 +615,9 @@
     .client-tabs {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .client-tab {
+        white-space: nowrap;
     }
 }
