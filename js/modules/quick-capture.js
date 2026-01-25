@@ -11,6 +11,9 @@ const QuickCapture = {
     audioChunks: [],
     videoChunks: [],
     recordingStartTime: null,
+    speechRecognition: null,
+    liveTranscript: '',
+    detectedNames: [],
 
     /**
      * Initialize quick capture - adds floating button to page
@@ -92,6 +95,10 @@ const QuickCapture = {
                     <!-- Recording controls -->
                     <div id="recordingControls" style="display: none;">
                         <div class="recording-timer" id="recordingTimer">00:00</div>
+                        <div class="live-transcript" id="liveTranscript" style="display: none;">
+                            <div class="live-transcript-text" id="liveTranscriptText"></div>
+                            <div class="detected-clients" id="detectedClients"></div>
+                        </div>
                         <button class="recording-stop-btn" id="stopRecordingBtn" onclick="QuickCapture.stopRecording()">
                             ⏹️ Stop
                         </button>
@@ -180,6 +187,14 @@ const QuickCapture = {
         this.videoChunks = [];
         this.selectedClientId = null;
         this.selectedClientData = null;
+        this.liveTranscript = '';
+        this.detectedNames = [];
+
+        // Stop speech recognition if active
+        if (this.speechRecognition) {
+            try { this.speechRecognition.stop(); } catch (e) {}
+            this.speechRecognition = null;
+        }
 
         // Reset UI
         document.getElementById('clientSearchInput').value = '';
@@ -192,6 +207,10 @@ const QuickCapture = {
         document.getElementById('videoPreview').style.display = 'none';
         document.getElementById('audioPreview').style.display = 'none';
         document.getElementById('cameraPreview').style.display = 'none';
+
+        // Reset live transcript
+        const liveTranscriptEl = document.getElementById('liveTranscript');
+        if (liveTranscriptEl) liveTranscriptEl.style.display = 'none';
     },
 
     /**
@@ -285,10 +304,12 @@ const QuickCapture = {
     },
 
     /**
-     * Capture voice memo
+     * Capture voice memo with real-time transcription
      */
     async captureVoice() {
         this.currentType = 'voice';
+        this.liveTranscript = '';
+        this.detectedNames = [];
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -306,6 +327,11 @@ const QuickCapture = {
                 stream.getTracks().forEach(track => track.stop());
                 this.currentBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
 
+                // Stop speech recognition
+                if (this.speechRecognition) {
+                    try { this.speechRecognition.stop(); } catch (e) {}
+                }
+
                 // Show audio preview
                 const audio = document.getElementById('audioPreview');
                 audio.src = URL.createObjectURL(this.currentBlob);
@@ -321,6 +347,9 @@ const QuickCapture = {
             this.recordingStartTime = Date.now();
             this.updateRecordingTimer();
 
+            // Start real-time transcription for client name detection
+            this.startLiveTranscription();
+
             document.getElementById('captureStep2Title').textContent = 'Recording Voice...';
             document.getElementById('recordingControls').style.display = 'flex';
             document.getElementById('capturePreviewContainer').style.display = 'none';
@@ -329,6 +358,147 @@ const QuickCapture = {
 
         } catch (err) {
             alert('Could not access microphone: ' + err.message);
+        }
+    },
+
+    /**
+     * Start live transcription using Web Speech API
+     * This runs alongside MediaRecorder to detect client names in real-time
+     */
+    startLiveTranscription() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.log('[QuickCapture] Speech recognition not supported');
+            return;
+        }
+
+        this.speechRecognition = new SpeechRecognition();
+        this.speechRecognition.continuous = true;
+        this.speechRecognition.interimResults = true;
+        this.speechRecognition.lang = 'en-US';
+
+        const liveTranscriptEl = document.getElementById('liveTranscript');
+        const liveTranscriptText = document.getElementById('liveTranscriptText');
+        const detectedClientsEl = document.getElementById('detectedClients');
+
+        if (liveTranscriptEl) liveTranscriptEl.style.display = 'block';
+
+        this.speechRecognition.onresult = async (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            // Update live transcript display
+            this.liveTranscript = finalTranscript || interimTranscript;
+            if (liveTranscriptText) {
+                liveTranscriptText.textContent = this.liveTranscript || '...listening';
+            }
+
+            // Search for potential client names in the transcript
+            if (this.liveTranscript.length > 2) {
+                await this.detectClientNames(this.liveTranscript);
+            }
+        };
+
+        this.speechRecognition.onerror = (event) => {
+            console.log('[QuickCapture] Speech recognition error:', event.error);
+            // Don't alert - it's okay if speech recognition fails
+        };
+
+        this.speechRecognition.onend = () => {
+            // Restart if still recording
+            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+                try {
+                    this.speechRecognition.start();
+                } catch (e) {}
+            }
+        };
+
+        try {
+            this.speechRecognition.start();
+        } catch (e) {
+            console.log('[QuickCapture] Could not start speech recognition:', e);
+        }
+    },
+
+    /**
+     * Detect client names in transcript and show suggestions
+     */
+    async detectClientNames(transcript) {
+        const detectedClientsEl = document.getElementById('detectedClients');
+        if (!detectedClientsEl) return;
+
+        // Extract potential names (words that could be last names)
+        const words = transcript.split(/\s+/).filter(w => w.length > 2);
+
+        // Search each word as a potential name
+        let matchedClients = [];
+
+        for (const word of words) {
+            // Skip common words
+            const skipWords = ['the', 'and', 'for', 'this', 'that', 'with', 'have', 'been', 'roof', 'roofing', 'house', 'home', 'need', 'needs', 'want', 'wants', 'going', 'looking', 'about', 'just', 'their', 'they', 'them', 'from'];
+            if (skipWords.includes(word.toLowerCase())) continue;
+
+            // Search for clients matching this word
+            let clients = [];
+
+            if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                try {
+                    clients = await SupabaseClient.searchClients(word);
+                } catch (e) {}
+            }
+
+            // Also check localStorage
+            const localClients = this.searchLocalClients(word);
+            localClients.forEach(lc => {
+                if (!clients.find(c => c.name === lc.name)) {
+                    clients.push(lc);
+                }
+            });
+
+            // Add matched clients
+            clients.forEach(c => {
+                if (!matchedClients.find(mc => mc.name === c.name)) {
+                    matchedClients.push(c);
+                }
+            });
+        }
+
+        // Display matched clients as quick-select buttons
+        if (matchedClients.length > 0) {
+            this.detectedNames = matchedClients.slice(0, 3);
+            detectedClientsEl.innerHTML = `
+                <div class="detected-label">Detected:</div>
+                ${this.detectedNames.map(c => `
+                    <button class="detected-client-btn" onclick="QuickCapture.selectDetectedClient('${c.id || ''}', '${this.escapeHtml(c.name)}', '${this.escapeHtml(c.address || '')}')">
+                        ${this.escapeHtml(c.name)}
+                    </button>
+                `).join('')}
+            `;
+        } else {
+            detectedClientsEl.innerHTML = '';
+        }
+    },
+
+    /**
+     * Select a client detected from voice
+     */
+    selectDetectedClient(id, name, address) {
+        this.selectedClientId = id;
+        this.selectedClientData = { id, name, address };
+
+        // Visual feedback
+        const detectedClientsEl = document.getElementById('detectedClients');
+        if (detectedClientsEl) {
+            detectedClientsEl.innerHTML = `<div class="detected-selected">✓ ${name}</div>`;
         }
     },
 
@@ -409,9 +579,27 @@ const QuickCapture = {
      */
     goToTagging() {
         this.showStep(3);
-        setTimeout(() => {
-            document.getElementById('clientSearchInput').focus();
-        }, 100);
+
+        // If a client was detected from voice, pre-select them
+        if (this.selectedClientData) {
+            document.getElementById('clientSearchInput').style.display = 'none';
+            document.getElementById('clientSearchResults').innerHTML = '';
+
+            const selectedEl = document.getElementById('selectedClient');
+            document.getElementById('selectedClientName').innerHTML = `
+                <strong>${this.selectedClientData.name}</strong>${this.selectedClientData.address ? `<br><small>${this.selectedClientData.address}</small>` : ''}
+            `;
+            selectedEl.style.display = 'flex';
+
+            // Pre-fill note with live transcript if it was a voice memo
+            if (this.currentType === 'voice' && this.liveTranscript) {
+                document.getElementById('captureNote').value = this.liveTranscript;
+            }
+        } else {
+            setTimeout(() => {
+                document.getElementById('clientSearchInput').focus();
+            }, 100);
+        }
     },
 
     // ==================== CLIENT SEARCH ====================
@@ -628,36 +816,47 @@ const QuickCapture = {
             };
 
             // Try to upload to Supabase Storage
-            if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
-                const ext = this.currentType === 'photo' ? 'jpg' : this.currentType === 'video' ? 'mp4' : 'webm';
-                const path = `media/${this.selectedClientId || 'local'}/${mediaEntry.id}.${ext}`;
+            const supabaseClient = typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()
+                ? SupabaseClient.getClient()
+                : null;
 
-                const { data, error } = await SupabaseClient.getClient().storage
-                    .from('photos')
-                    .upload(path, this.currentBlob, {
-                        contentType: this.currentBlob.type,
-                        upsert: true
-                    });
+            if (supabaseClient && supabaseClient.storage) {
+                try {
+                    const ext = this.currentType === 'photo' ? 'jpg' : this.currentType === 'video' ? 'mp4' : 'webm';
+                    const path = `media/${this.selectedClientId || 'local'}/${mediaEntry.id}.${ext}`;
 
-                if (!error) {
-                    const { data: urlData } = SupabaseClient.getClient().storage
+                    const { data, error } = await supabaseClient.storage
                         .from('photos')
-                        .getPublicUrl(path);
-                    mediaEntry.url = urlData.publicUrl;
-                    mediaEntry.storage_path = path;
-
-                    // Save to media table
-                    await SupabaseClient.getClient()
-                        .from('media')
-                        .insert({
-                            client_id: this.selectedClientId,
-                            filename: `${mediaEntry.id}.${ext}`,
-                            file_type: this.currentType,
-                            storage_path: path,
-                            public_url: mediaEntry.url,
-                            caption: note,
-                            tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
+                        .upload(path, this.currentBlob, {
+                            contentType: this.currentBlob.type,
+                            upsert: true
                         });
+
+                    if (!error) {
+                        const { data: urlData } = supabaseClient.storage
+                            .from('photos')
+                            .getPublicUrl(path);
+                        mediaEntry.url = urlData.publicUrl;
+                        mediaEntry.storage_path = path;
+
+                        // Save to media table
+                        await supabaseClient
+                            .from('media')
+                            .insert({
+                                client_id: this.selectedClientId,
+                                filename: `${mediaEntry.id}.${ext}`,
+                                file_type: this.currentType,
+                                storage_path: path,
+                                public_url: mediaEntry.url,
+                                caption: note,
+                                tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
+                            });
+                    } else {
+                        console.warn('[QuickCapture] Storage upload failed:', error);
+                    }
+                } catch (uploadErr) {
+                    console.warn('[QuickCapture] Storage upload error:', uploadErr);
+                    // Continue - will save locally
                 }
             }
 

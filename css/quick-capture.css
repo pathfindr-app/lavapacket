@@ -454,3 +454,98 @@
 .hide-quick-capture .quick-capture-fab {
     display: none;
 }
+
+/* Live Transcript Display */
+.live-transcript {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.live-transcript-text {
+    font-size: 1rem;
+    color: #333;
+    font-style: italic;
+    margin-bottom: 12px;
+    min-height: 24px;
+    line-height: 1.4;
+}
+
+.live-transcript-text:empty::after {
+    content: '...listening';
+    color: #999;
+}
+
+/* Detected Clients */
+.detected-clients {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.detected-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.detected-client-btn {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: fadeInUp 0.3s ease;
+}
+
+.detected-client-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.detected-client-btn:active {
+    transform: scale(0.95);
+}
+
+.detected-selected {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Recording pulse animation */
+.recording-timer {
+    animation: recordingPulse 1s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
