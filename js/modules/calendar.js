@@ -8,11 +8,14 @@ const Calendar = {
     currentView: 'month', // 'month', 'week', 'day'
     jobs: [],
     crew: [],
+    clients: [],
     selectedCrew: null, // null = all crew
     container: null,
     onJobClick: null,
     onDateClick: null,
     onJobDrop: null,
+    onEventCreate: null,
+    addEventModal: null,
 
     /**
      * Initialize calendar in a container
@@ -27,26 +30,59 @@ const Calendar = {
         this.onJobClick = options.onJobClick || null;
         this.onDateClick = options.onDateClick || null;
         this.onJobDrop = options.onJobDrop || null;
+        this.onEventCreate = options.onEventCreate || null;
 
         this.render();
+        this.createAddEventModal();
         this.loadData();
     },
 
     /**
-     * Load jobs and crew data
+     * Load jobs, crew, and clients data
      */
     async loadData() {
         const { startDate, endDate } = this.getDateRange();
 
-        // Load jobs and crew in parallel
-        const [jobs, crew] = await Promise.all([
+        // Load jobs, crew, and clients in parallel
+        const [jobs, crew, clients] = await Promise.all([
             typeof Jobs !== 'undefined' ? Jobs.getForCalendar(startDate, endDate) : [],
-            typeof Crew !== 'undefined' ? Crew.list() : []
+            typeof Crew !== 'undefined' ? Crew.list() : [],
+            typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()
+                ? SupabaseClient.listClients()
+                : this.getLocalClients()
         ]);
 
         this.jobs = jobs;
         this.crew = crew;
+        this.clients = clients;
         this.renderCalendarContent();
+    },
+
+    /**
+     * Get clients from localStorage as fallback
+     */
+    getLocalClients() {
+        const clients = [];
+        // Check local clients storage
+        try {
+            const localClients = JSON.parse(localStorage.getItem('lavaClients') || '[]');
+            clients.push(...localClients);
+        } catch (e) {}
+        // Check packets for customer names
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('lavaPacketBuilder_')) {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    const name = data.customer_name || '';
+                    const address = data.customer_address || '';
+                    if (name && !clients.find(c => c.name === name)) {
+                        clients.push({ id: key, name, address });
+                    }
+                } catch (e) {}
+            }
+        }
+        return clients;
     },
 
     /**
@@ -509,6 +545,309 @@ const Calendar = {
                 }
             });
         });
+    },
+
+    // ==================== ADD EVENT MODAL ====================
+
+    /**
+     * Create the add event modal
+     */
+    createAddEventModal() {
+        // Remove existing
+        const existing = document.getElementById('addEventModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'addEventModal';
+        modal.className = 'add-event-modal';
+        modal.innerHTML = `
+            <div class="add-event-content">
+                <button class="add-event-close" onclick="Calendar.closeAddEventModal()">&times;</button>
+                <h3 class="add-event-title">Add to Calendar</h3>
+                <div class="add-event-date" id="addEventDate"></div>
+
+                <!-- Event Type -->
+                <div class="event-type-tabs">
+                    <button class="event-type-tab active" data-type="job">Job</button>
+                    <button class="event-type-tab" data-type="reminder">Reminder</button>
+                    <button class="event-type-tab" data-type="meeting">Meeting</button>
+                </div>
+
+                <!-- Event Title -->
+                <div class="form-group">
+                    <input type="text" id="eventTitle" class="event-input" placeholder="What needs to be done?">
+                </div>
+
+                <!-- Time -->
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Start Time</label>
+                        <input type="time" id="eventStartTime" class="event-input" value="08:00">
+                    </div>
+                    <div class="form-group half">
+                        <label>Duration</label>
+                        <select id="eventDuration" class="event-input">
+                            <option value="1">1 hour</option>
+                            <option value="2">2 hours</option>
+                            <option value="4" selected>Half day</option>
+                            <option value="8">Full day</option>
+                            <option value="multi">Multi-day</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Client Tag -->
+                <div class="form-group">
+                    <label>Client (optional)</label>
+                    <div class="tag-search-wrapper">
+                        <input type="text" id="eventClientSearch" class="event-input"
+                            placeholder="Search client name..."
+                            autocomplete="off"
+                            oninput="Calendar.searchClients(this.value)">
+                        <div class="tag-search-results" id="clientSearchResults"></div>
+                    </div>
+                    <div class="selected-tags" id="selectedClient" style="display: none;"></div>
+                </div>
+
+                <!-- Crew/Employee Tags -->
+                <div class="form-group">
+                    <label>Assign Crew</label>
+                    <div class="crew-checkboxes" id="crewCheckboxes"></div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <textarea id="eventNotes" class="event-input event-textarea" placeholder="Notes (optional)"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="add-event-actions">
+                    <button class="btn btn-secondary" onclick="Calendar.closeAddEventModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="Calendar.saveEvent()">Add to Calendar</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        this.addEventModal = modal;
+
+        // Event type tabs
+        modal.querySelectorAll('.event-type-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                modal.querySelectorAll('.event-type-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+    },
+
+    /**
+     * Open the add event modal for a specific date
+     */
+    openAddEventModal(dateStr) {
+        if (!this.addEventModal) this.createAddEventModal();
+
+        const date = new Date(dateStr + 'T12:00:00');
+        document.getElementById('addEventDate').textContent =
+            date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+        this.addEventModal.dataset.date = dateStr;
+
+        // Populate crew checkboxes
+        const crewContainer = document.getElementById('crewCheckboxes');
+        crewContainer.innerHTML = this.crew.map(member => `
+            <label class="crew-checkbox">
+                <input type="checkbox" value="${member.id}" name="assignedCrew">
+                <span class="crew-checkbox-dot" style="background: ${member.color}"></span>
+                <span class="crew-checkbox-name">${member.name}</span>
+            </label>
+        `).join('') || '<span class="no-crew">No crew members yet. <a href="../crew/index.html">Add crew</a></span>';
+
+        // Reset form
+        document.getElementById('eventTitle').value = '';
+        document.getElementById('eventStartTime').value = '08:00';
+        document.getElementById('eventDuration').value = '4';
+        document.getElementById('eventClientSearch').value = '';
+        document.getElementById('clientSearchResults').innerHTML = '';
+        document.getElementById('selectedClient').style.display = 'none';
+        document.getElementById('selectedClient').innerHTML = '';
+        document.getElementById('eventNotes').value = '';
+        crewContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+        // Show modal
+        this.addEventModal.classList.add('open');
+        setTimeout(() => document.getElementById('eventTitle').focus(), 100);
+    },
+
+    /**
+     * Close the add event modal
+     */
+    closeAddEventModal() {
+        if (this.addEventModal) {
+            this.addEventModal.classList.remove('open');
+        }
+    },
+
+    /**
+     * Search clients for tagging
+     */
+    searchClients(query) {
+        const resultsContainer = document.getElementById('clientSearchResults');
+        if (!resultsContainer) return;
+
+        if (query.length < 2) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        const q = query.toLowerCase();
+        const matches = this.clients.filter(c =>
+            c.name.toLowerCase().includes(q) ||
+            (c.address || '').toLowerCase().includes(q)
+        ).slice(0, 5);
+
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="tag-result create-new" onclick="Calendar.createClient('${this.escapeHtml(query)}')">
+                    <span class="tag-result-icon">➕</span>
+                    <span>Create "${query}"</span>
+                </div>
+            `;
+        } else {
+            resultsContainer.innerHTML = matches.map(c => `
+                <div class="tag-result" onclick="Calendar.selectClient('${c.id}', '${this.escapeHtml(c.name)}', '${this.escapeHtml(c.address || '')}')">
+                    <span class="tag-result-icon">👤</span>
+                    <span>${this.escapeHtml(c.name)}</span>
+                    ${c.address ? `<small>${this.escapeHtml(c.address)}</small>` : ''}
+                </div>
+            `).join('');
+        }
+    },
+
+    /**
+     * Select a client for the event
+     */
+    selectClient(id, name, address) {
+        document.getElementById('eventClientSearch').style.display = 'none';
+        document.getElementById('clientSearchResults').innerHTML = '';
+
+        const selectedContainer = document.getElementById('selectedClient');
+        selectedContainer.innerHTML = `
+            <span class="selected-tag">
+                <strong>${name}</strong>${address ? ` - ${address}` : ''}
+                <button onclick="Calendar.clearClient()">&times;</button>
+            </span>
+        `;
+        selectedContainer.style.display = 'flex';
+        selectedContainer.dataset.clientId = id;
+        selectedContainer.dataset.clientName = name;
+        selectedContainer.dataset.clientAddress = address;
+    },
+
+    /**
+     * Create a new client from the modal
+     */
+    async createClient(name) {
+        let clientId = 'local_' + Date.now();
+
+        // Try to create in Supabase
+        if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+            const created = await SupabaseClient.saveClient({ name });
+            if (created) {
+                clientId = created.id;
+                this.clients.push(created);
+            }
+        } else {
+            // Save locally
+            const localClients = JSON.parse(localStorage.getItem('lavaClients') || '[]');
+            const newClient = { id: clientId, name, address: '' };
+            localClients.push(newClient);
+            localStorage.setItem('lavaClients', JSON.stringify(localClients));
+            this.clients.push(newClient);
+        }
+
+        this.selectClient(clientId, name, '');
+    },
+
+    /**
+     * Clear selected client
+     */
+    clearClient() {
+        document.getElementById('eventClientSearch').style.display = 'block';
+        document.getElementById('eventClientSearch').value = '';
+        document.getElementById('selectedClient').style.display = 'none';
+        document.getElementById('selectedClient').innerHTML = '';
+        delete document.getElementById('selectedClient').dataset.clientId;
+    },
+
+    /**
+     * Save the event
+     */
+    async saveEvent() {
+        const dateStr = this.addEventModal.dataset.date;
+        const title = document.getElementById('eventTitle').value.trim();
+        const startTime = document.getElementById('eventStartTime').value;
+        const duration = document.getElementById('eventDuration').value;
+        const notes = document.getElementById('eventNotes').value.trim();
+        const eventType = this.addEventModal.querySelector('.event-type-tab.active').dataset.type;
+
+        const selectedClientEl = document.getElementById('selectedClient');
+        const clientId = selectedClientEl.dataset.clientId || null;
+        const clientName = selectedClientEl.dataset.clientName || '';
+
+        const assignedCrew = Array.from(
+            document.querySelectorAll('input[name="assignedCrew"]:checked')
+        ).map(cb => cb.value);
+
+        if (!title) {
+            alert('Please enter what needs to be done');
+            return;
+        }
+
+        const eventData = {
+            title: title,
+            type: eventType,
+            scheduled_date: dateStr,
+            scheduled_time: startTime,
+            duration_hours: duration === 'multi' ? null : parseInt(duration),
+            client_id: clientId,
+            client_name: clientName,
+            assigned_crew: assignedCrew,
+            notes: notes,
+            status: 'scheduled'
+        };
+
+        console.log('[Calendar] Saving event:', eventData);
+
+        // Try to save via Jobs module or callback
+        let saved = false;
+
+        if (this.onEventCreate) {
+            saved = await this.onEventCreate(eventData);
+        } else if (typeof Jobs !== 'undefined') {
+            // Create as a job
+            const job = await Jobs.create(eventData);
+            saved = !!job;
+        } else {
+            // Save locally
+            const localEvents = JSON.parse(localStorage.getItem('lavaCalendarEvents') || '[]');
+            eventData.id = 'event_' + Date.now();
+            eventData.created_at = new Date().toISOString();
+            localEvents.push(eventData);
+            localStorage.setItem('lavaCalendarEvents', JSON.stringify(localEvents));
+            saved = true;
+        }
+
+        if (saved) {
+            this.closeAddEventModal();
+            this.loadData(); // Refresh calendar
+
+            // Show toast
+            if (typeof showToast === 'function') {
+                showToast(`Added "${title}" to calendar`);
+            }
+        } else {
+            alert('Failed to save event. Please try again.');
+        }
     },
 
     // ==================== NAVIGATION ====================

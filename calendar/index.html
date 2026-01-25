@@ -84,11 +84,28 @@
                     window.location.href = `../jobs/view.html?id=${jobId}`;
                 },
                 onDateClick: (date) => {
-                    window.location.href = `../jobs/new.html?date=${date}`;
+                    // Open add event modal instead of redirecting
+                    Calendar.openAddEventModal(date);
                 },
                 onJobDrop: async (jobId, newDate) => {
                     await Jobs.schedule(jobId, newDate);
                     showToast('Job rescheduled successfully');
+                },
+                onEventCreate: async (eventData) => {
+                    // Create job from event data
+                    if (typeof Jobs !== 'undefined') {
+                        const job = await Jobs.create({
+                            title: eventData.title,
+                            client_id: eventData.client_id,
+                            scheduled_date: eventData.scheduled_date,
+                            scheduled_time: eventData.scheduled_time,
+                            assigned_crew: eventData.assigned_crew,
+                            notes: eventData.notes,
+                            status: eventData.status
+                        });
+                        return !!job;
+                    }
+                    return false;
                 }
             });
         }
