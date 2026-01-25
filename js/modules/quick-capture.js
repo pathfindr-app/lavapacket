@@ -580,6 +580,13 @@ const QuickCapture = {
     goToTagging() {
         this.showStep(3);
 
+        // Auto-select detected client if we found one during voice recording
+        if (!this.selectedClientData && this.detectedNames.length > 0) {
+            const bestMatch = this.detectedNames[0];
+            this.selectedClientId = bestMatch.id;
+            this.selectedClientData = bestMatch;
+        }
+
         // If a client was detected from voice, pre-select them
         if (this.selectedClientData) {
             document.getElementById('clientSearchInput').style.display = 'none';
