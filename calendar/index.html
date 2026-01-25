@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/calendar.css">
+    <link rel="stylesheet" href="../css/jobs.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+    <link rel="stylesheet" href="../css/quick-capture.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="index.html" class="portal-nav-btn active">Calendar</a>
+                <a href="../reports/index.html" class="portal-nav-btn">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Calendar</h1>
+                <p class="page-subtitle">Schedule and manage roofing jobs</p>
+            </div>
+            <div class="page-actions">
+                <a href="../jobs/index.html" class="btn btn-secondary">View Jobs List</a>
+                <a href="../crew/index.html" class="btn btn-secondary">Manage Crew</a>
+            </div>
+        </div>
+
+        <!-- Calendar Container -->
+        <div id="calendar"></div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/config.local.js"></script>
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/crew.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/calendar.js"></script>
+    <script src="../js/modules/transcribe.js"></script>
+    <script src="../js/modules/quick-capture.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', initCalendar);
+            if (Auth.isAuthenticated()) {
+                initCalendar();
+            }
+        });
+
+        function initCalendar() {
+            Calendar.init('calendar', {
+                onJobClick: (jobId) => {
+                    window.location.href = `../jobs/view.html?id=${jobId}`;
+                },
+                onDateClick: (date) => {
+                    window.location.href = `../jobs/new.html?date=${date}`;
+                },
+                onJobDrop: async (jobId, newDate) => {
+                    await Jobs.schedule(jobId, newDate);
+                    showToast('Job rescheduled successfully');
+                }
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container') || createToastContainer();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        }
+    </script>
+</body>
+</html>

@@ -1053,6 +1053,10 @@
                     </div>
                     <div class="section-content">
                         <div class="form-group">
+                            <label>Link to Client (Optional)</label>
+                            <div id="clientBadgeContainer"></div>
+                        </div>
+                        <div class="form-group">
                             <label>Customer Name <span class="required">*</span></label>
                             <input type="text" name="customerName" required>
                         </div>
@@ -1493,8 +1497,12 @@
     <div class="toast" id="toast"></div>
     </div><!-- End app-wrapper -->
 
+    <!-- Client Selection CSS -->
+    <link rel="stylesheet" href="../css/clients.css">
+
     <!-- Supabase Client -->
     <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/clients.js"></script>
 
     <script>
         // ==================== IndexedDB Storage (50MB+) ====================
@@ -1623,6 +1631,36 @@
         let photos = [];
         let miniPhotos = {}; // For checklist item photos
         let additionalPhotoCount = 0;
+        let selectedClient = null;
+
+        // Initialize client selection badge
+        function initClientSelection() {
+            const container = document.getElementById('clientBadgeContainer');
+            if (!container || typeof Clients === 'undefined') return;
+
+            Clients.showClientBadge(selectedClient, container, (client) => {
+                selectedClient = client;
+                // Auto-fill customer info from client
+                if (client) {
+                    if (client.name) {
+                        document.querySelector('input[name="customerName"]').value = client.name;
+                    }
+                    if (client.address) {
+                        document.querySelector('input[name="address"]').value = client.address;
+                    }
+                    if (client.phone) {
+                        document.querySelector('input[name="phone"]').value = client.phone;
+                    }
+                    if (client.email) {
+                        document.querySelector('input[name="email"]').value = client.email;
+                    }
+                }
+                autoSave();
+            });
+        }
+
+        // Initialize client selection after page loads
+        setTimeout(initClientSelection, 100);
 
         // Toggle shingle layers field
         function toggleShingleLayers(select) {
@@ -2020,6 +2058,7 @@
                     // Convert form data to Supabase schema
                     const supabaseData = {
                         id: isUUID ? data.id : null, // Only use if it's a valid UUID
+                        client_id: selectedClient ? selectedClient.id : null,
                         customer_name: data.customer.name,
                         customer_address: data.customer.address,
                         customer_phone: data.customer.phone,

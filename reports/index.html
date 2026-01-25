@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/reports.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+                <a href="index.html" class="portal-nav-btn active">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Reports</h1>
+                <p class="page-subtitle">Analytics and business insights</p>
+            </div>
+            <div class="page-actions">
+                <div class="date-range-picker">
+                    <button class="date-range-btn" data-range="month">This Month</button>
+                    <button class="date-range-btn active" data-range="quarter">Quarter</button>
+                    <button class="date-range-btn" data-range="year">Year</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">💰</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalRevenue">-</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="avgMargin">-</div>
+                    <div class="stat-label">Avg Profit Margin</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="jobsCompleted">-</div>
+                    <div class="stat-label">Jobs Completed</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="closeRate">-</div>
+                    <div class="stat-label">Close Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Grid -->
+        <div class="reports-grid">
+            <!-- Revenue by Month -->
+            <div class="report-card report-card-full">
+                <div class="report-header">
+                    <h3 class="report-title">Revenue by Month</h3>
+                    <button class="export-btn" onclick="exportRevenue()">
+                        📊 Export CSV
+                    </button>
+                </div>
+                <div id="revenueChart" style="height: 250px;">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Jobs by Status -->
+            <div class="report-card">
+                <div class="report-header">
+                    <h3 class="report-title">Jobs by Status</h3>
+                </div>
+                <div id="statusChart">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Revenue by Product -->
+            <div class="report-card">
+                <div class="report-header">
+                    <h3 class="report-title">Revenue by Product</h3>
+                </div>
+                <div id="productChart">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Crew Utilization -->
+            <div class="report-card">
+                <div class="report-header">
+                    <h3 class="report-title">Crew Utilization</h3>
+                </div>
+                <div id="crewChart">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Jobs by Area -->
+            <div class="report-card">
+                <div class="report-header">
+                    <h3 class="report-title">Jobs by Area</h3>
+                </div>
+                <div id="areaChart">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/crew.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/expenses.js"></script>
+    <script src="../js/modules/costing.js"></script>
+    <script src="../js/modules/reports.js"></script>
+
+    <script>
+        let revenueData = [];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', loadReports);
+            if (Auth.isAuthenticated()) {
+                loadReports();
+            }
+
+            // Date range picker
+            document.querySelectorAll('.date-range-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.date-range-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    loadReports();
+                });
+            });
+        });
+
+        async function loadReports() {
+            await Promise.all([
+                loadStats(),
+                loadRevenueChart(),
+                loadStatusChart(),
+                loadProductChart(),
+                loadCrewChart(),
+                loadAreaChart()
+            ]);
+        }
+
+        async function loadStats() {
+            const stats = await Reports.getDashboardStats();
+
+            if (stats.costing) {
+                document.getElementById('totalRevenue').textContent = Reports.formatCurrency(stats.costing.totalRevenue);
+                document.getElementById('avgMargin').textContent = stats.costing.avgProfitMargin.toFixed(1) + '%';
+                document.getElementById('jobsCompleted').textContent = stats.costing.totalJobs;
+            }
+
+            if (stats.closeRate) {
+                document.getElementById('closeRate').textContent = stats.closeRate.closeRate + '%';
+            }
+        }
+
+        async function loadRevenueChart() {
+            revenueData = await Reports.getRevenueByMonth(6);
+            const container = document.getElementById('revenueChart');
+
+            if (revenueData.length === 0) {
+                container.innerHTML = '<div class="report-empty"><div class="report-empty-title">No revenue data</div></div>';
+                return;
+            }
+
+            container.innerHTML = Reports.renderBarChart(revenueData, {
+                valueKey: 'revenue',
+                labelKey: 'label',
+                height: 250
+            });
+        }
+
+        async function loadStatusChart() {
+            const data = await Reports.getJobsByStatus();
+            const container = document.getElementById('statusChart');
+
+            if (data.every(d => d.count === 0)) {
+                container.innerHTML = '<div class="report-empty"><div class="report-empty-title">No jobs</div></div>';
+                return;
+            }
+
+            container.innerHTML = Reports.renderPieChart(data, {
+                valueKey: 'count',
+                labelKey: 'label',
+                colorKey: 'color',
+                donut: true,
+                size: 150
+            });
+        }
+
+        async function loadProductChart() {
+            const data = await Reports.getRevenueByProduct();
+            const container = document.getElementById('productChart');
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="report-empty"><div class="report-empty-title">No data</div></div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    ${data.map(item => `
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 80px; font-size: 0.875rem; color: #333;">${item.product}</div>
+                            <div style="flex: 1;">
+                                ${Reports.renderGauge(item.revenue, data[0].revenue, {
+                                    color: item.color,
+                                    showValue: false,
+                                    size: 'small'
+                                })}
+                            </div>
+                            <div style="width: 80px; text-align: right; font-size: 0.875rem; font-weight: 500;">
+                                ${Reports.formatCurrency(item.revenue)}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function loadCrewChart() {
+            const now = new Date();
+            const startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString().split('T')[0];
+            const endDate = now.toISOString().split('T')[0];
+
+            const data = await Reports.getCrewUtilization(startDate, endDate);
+            const container = document.getElementById('crewChart');
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="report-empty"><div class="report-empty-title">No crew data</div></div>';
+                return;
+            }
+
+            const maxDays = Math.max(...data.map(d => d.daysWorked)) || 1;
+
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    ${data.map(member => `
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 100px; display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="width: 10px; height: 10px; background: ${member.color}; border-radius: 50%;"></span>
+                                <span style="font-size: 0.875rem;">${member.name.split(' ')[0]}</span>
+                            </div>
+                            <div style="flex: 1;">
+                                ${Reports.renderGauge(member.daysWorked, maxDays, {
+                                    color: member.color,
+                                    showValue: false,
+                                    size: 'small'
+                                })}
+                            </div>
+                            <div style="width: 60px; text-align: right; font-size: 0.875rem;">
+                                ${member.daysWorked} days
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function loadAreaChart() {
+            const data = await Reports.getJobsByArea();
+            const container = document.getElementById('areaChart');
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="report-empty"><div class="report-empty-title">No area data</div></div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Area</th>
+                            <th class="number">Jobs</th>
+                            <th class="number">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.slice(0, 5).map(item => `
+                            <tr>
+                                <td>${item.area}</td>
+                                <td class="number">${item.count}</td>
+                                <td class="number">${Reports.formatCurrency(item.revenue)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function exportRevenue() {
+            if (revenueData.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            Reports.exportToCSV(revenueData, 'revenue-report.csv');
+        }
+    </script>
+</body>
+</html>

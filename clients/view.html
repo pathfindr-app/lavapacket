@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Details - LAVA Roofing Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase config -->
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/clients.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="../inspections/index.html" class="portal-nav-btn">Inspections</a>
+                <a href="index.html" class="portal-nav-btn active">Clients</a>
+                <a href="../media/index.html" class="portal-nav-btn">Media</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <!-- Back link -->
+        <a href="index.html" class="back-link">&larr; Back to Clients</a>
+
+        <!-- Loading state -->
+        <div id="loadingState" class="loading">
+            <div class="loading-spinner"></div>
+            Loading client...
+        </div>
+
+        <!-- Client View -->
+        <div id="clientView" style="display: none;">
+            <!-- Client Header -->
+            <div class="client-header">
+                <div class="client-header-main">
+                    <div>
+                        <h1 class="client-name" id="clientName"></h1>
+                        <div class="client-address" id="clientAddress"></div>
+                    </div>
+                    <div class="client-header-actions">
+                        <button class="btn btn-secondary" id="editBtn">✏️ Edit</button>
+                        <button class="btn btn-danger" id="deleteBtn">🗑️ Delete</button>
+                    </div>
+                </div>
+                <div class="client-contact-info" id="clientContact"></div>
+                <div class="client-stats-row" id="clientStats"></div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="client-tabs" id="clientTabs">
+                <button class="client-tab active" data-tab="packets">
+                    📦 Packets <span class="client-tab-count" id="packetsCount">0</span>
+                </button>
+                <button class="client-tab" data-tab="inspections">
+                    🔍 Inspections <span class="client-tab-count" id="inspectionsCount">0</span>
+                </button>
+                <button class="client-tab" data-tab="media">
+                    📷 Media <span class="client-tab-count" id="mediaCount">0</span>
+                </button>
+            </div>
+
+            <!-- Tab Content: Packets -->
+            <div class="client-tab-content active" id="packetsContent">
+                <div class="item-list" id="packetsList"></div>
+            </div>
+
+            <!-- Tab Content: Inspections -->
+            <div class="client-tab-content" id="inspectionsContent">
+                <div class="item-list" id="inspectionsList"></div>
+            </div>
+
+            <!-- Tab Content: Media -->
+            <div class="client-tab-content" id="mediaContent">
+                <div class="media-grid" id="mediaList"></div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="client-notes" id="notesSection">
+                <div class="client-notes-title">Notes</div>
+                <div class="client-notes-content" id="clientNotes"></div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div id="clientEdit" style="display: none;">
+            <h1 class="page-title">Edit Client</h1>
+            <div class="client-edit-form">
+                <div class="form-group">
+                    <label for="editName">Name *</label>
+                    <input type="text" id="editName" placeholder="Client name" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAddress">Address</label>
+                    <input type="text" id="editAddress" placeholder="Job site address">
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Phone</label>
+                    <input type="tel" id="editPhone" placeholder="Phone number">
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" placeholder="Email address">
+                </div>
+                <div class="form-group">
+                    <label for="editNotes">Notes</label>
+                    <textarea id="editNotes" placeholder="Internal notes about this client..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="saveBtn">Save Changes</button>
+                    <button class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/clients.js"></script>
+
+    <script>
+        let currentClient = null;
+        let clientHistory = { packets: [], inspections: [], media: [] };
+        let isEditMode = false;
+
+        // Get client ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get('id');
+        const startInEditMode = urlParams.get('edit') === 'true';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!clientId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Initialize Supabase
+            SupabaseClient.init();
+
+            // Initialize auth
+            Auth.init();
+
+            // Load data after auth
+            document.addEventListener('auth:unlocked', loadClient);
+
+            // If already authenticated, load immediately
+            if (Auth.isAuthenticated()) {
+                loadClient();
+            }
+
+            // Tab click handlers
+            document.querySelectorAll('.client-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // Button handlers
+            document.getElementById('editBtn').addEventListener('click', enterEditMode);
+            document.getElementById('deleteBtn').addEventListener('click', deleteClient);
+            document.getElementById('saveBtn').addEventListener('click', saveClient);
+            document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+        });
+
+        async function loadClient() {
+            try {
+                currentClient = await Clients.get(clientId);
+                if (!currentClient) {
+                    showToast('Client not found', 'error');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Load history
+                clientHistory = await Clients.getHistory(clientId);
+
+                // Render
+                renderClient();
+                renderHistory();
+
+                // Hide loading, show view
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('clientView').style.display = 'block';
+
+                // Start in edit mode if requested
+                if (startInEditMode) {
+                    enterEditMode();
+                }
+
+            } catch (e) {
+                console.error('Failed to load client:', e);
+                showToast('Error loading client', 'error');
+            }
+        }
+
+        function renderClient() {
+            document.title = `${currentClient.name} - LAVA Roofing Portal`;
+            document.getElementById('clientName').textContent = currentClient.name;
+            document.getElementById('clientAddress').textContent = currentClient.address || 'No address';
+
+            // Contact info
+            const contactHtml = [];
+            if (currentClient.phone) {
+                contactHtml.push(`<div class="client-contact-item"><span class="client-contact-icon">📞</span> <a href="tel:${currentClient.phone}">${escapeHtml(currentClient.phone)}</a></div>`);
+            }
+            if (currentClient.email) {
+                contactHtml.push(`<div class="client-contact-item"><span class="client-contact-icon">✉️</span> <a href="mailto:${currentClient.email}">${escapeHtml(currentClient.email)}</a></div>`);
+            }
+            document.getElementById('clientContact').innerHTML = contactHtml.join('') || '<div class="client-contact-item" style="color: var(--text-muted);">No contact info</div>';
+
+            // Stats
+            const statsHtml = `
+                <div class="client-stat-item">
+                    <div class="client-stat-value">${currentClient.total_packets || 0}</div>
+                    <div class="client-stat-label">Packets</div>
+                </div>
+                <div class="client-stat-item">
+                    <div class="client-stat-value">${currentClient.total_inspections || 0}</div>
+                    <div class="client-stat-label">Inspections</div>
+                </div>
+                <div class="client-stat-item">
+                    <div class="client-stat-value">${currentClient.total_media || 0}</div>
+                    <div class="client-stat-label">Files</div>
+                </div>
+            `;
+            document.getElementById('clientStats').innerHTML = statsHtml;
+
+            // Notes
+            const notesEl = document.getElementById('clientNotes');
+            if (currentClient.notes) {
+                notesEl.textContent = currentClient.notes;
+                notesEl.classList.remove('client-notes-empty');
+            } else {
+                notesEl.innerHTML = '<span class="client-notes-empty">No notes</span>';
+            }
+
+            // Update tab counts
+            document.getElementById('packetsCount').textContent = clientHistory.packets.length;
+            document.getElementById('inspectionsCount').textContent = clientHistory.inspections.length;
+            document.getElementById('mediaCount').textContent = clientHistory.media.length;
+        }
+
+        function renderHistory() {
+            // Packets
+            const packetsList = document.getElementById('packetsList');
+            if (clientHistory.packets.length === 0) {
+                packetsList.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No packets</div><a href="../packets/builder.html" class="btn btn-primary">Create Packet</a></div>';
+            } else {
+                packetsList.innerHTML = clientHistory.packets.map(p => `
+                    <div class="item-card" onclick="window.location.href='../packets/builder.html?id=${p.id}'">
+                        <div class="item-info">
+                            <div class="item-name">${escapeHtml(p.customer_name || 'Unnamed')}</div>
+                            <div class="item-meta">
+                                <span>${formatProductType(p.product_type)}</span>
+                                <span>${formatDate(p.updated_at)}</span>
+                            </div>
+                        </div>
+                        <span class="item-badge packet">Packet</span>
+                    </div>
+                `).join('');
+            }
+
+            // Inspections
+            const inspectionsList = document.getElementById('inspectionsList');
+            if (clientHistory.inspections.length === 0) {
+                inspectionsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No inspections</div><a href="../inspections/form.html" class="btn btn-primary">Create Inspection</a></div>';
+            } else {
+                inspectionsList.innerHTML = clientHistory.inspections.map(i => `
+                    <div class="item-card" onclick="window.location.href='../inspections/form.html?id=${i.id}'">
+                        <div class="item-info">
+                            <div class="item-name">${escapeHtml(i.customer_name || 'Unnamed')}</div>
+                            <div class="item-meta">
+                                <span>${i.inspection_date || 'No date'}</span>
+                                <span>${i.status || 'Draft'}</span>
+                                <span>${formatDate(i.updated_at)}</span>
+                            </div>
+                        </div>
+                        <span class="item-badge inspection">Inspection</span>
+                    </div>
+                `).join('');
+            }
+
+            // Media
+            const mediaList = document.getElementById('mediaList');
+            if (clientHistory.media.length === 0) {
+                mediaList.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-icon">📷</div><div class="empty-title">No files</div><a href="../media/index.html" class="btn btn-primary">Upload Files</a></div>';
+            } else {
+                mediaList.innerHTML = clientHistory.media.map(m => `
+                    <div class="media-item" onclick="openMedia('${m.public_url}', '${m.file_type}')">
+                        ${m.file_type === 'image' ?
+                            `<img src="${m.public_url}" alt="${escapeHtml(m.filename)}" loading="lazy">` :
+                            m.file_type === 'video' ?
+                            `<video src="${m.public_url}" muted></video>` :
+                            `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">📄</div><div class="media-doc-placeholder-name">${escapeHtml(m.filename)}</div></div>`
+                        }
+                        <span class="media-item-badge ${m.file_type}">${m.file_type}</span>
+                        <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.client-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+
+            // Update tab content
+            document.querySelectorAll('.client-tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabName}Content`);
+            });
+        }
+
+        function enterEditMode() {
+            document.getElementById('clientView').style.display = 'none';
+            document.getElementById('clientEdit').style.display = 'block';
+
+            // Populate form
+            document.getElementById('editName').value = currentClient.name || '';
+            document.getElementById('editAddress').value = currentClient.address || '';
+            document.getElementById('editPhone').value = currentClient.phone || '';
+            document.getElementById('editEmail').value = currentClient.email || '';
+            document.getElementById('editNotes').value = currentClient.notes || '';
+
+            isEditMode = true;
+        }
+
+        function exitEditMode() {
+            document.getElementById('clientEdit').style.display = 'none';
+            document.getElementById('clientView').style.display = 'block';
+            isEditMode = false;
+        }
+
+        async function saveClient() {
+            const name = document.getElementById('editName').value.trim();
+            if (!name) {
+                showToast('Name is required', 'error');
+                return;
+            }
+
+            const updated = await Clients.update(clientId, {
+                name,
+                address: document.getElementById('editAddress').value.trim(),
+                phone: document.getElementById('editPhone').value.trim(),
+                email: document.getElementById('editEmail').value.trim(),
+                notes: document.getElementById('editNotes').value.trim()
+            });
+
+            if (updated) {
+                currentClient = updated;
+                renderClient();
+                exitEditMode();
+                showToast('Client updated', 'success');
+            } else {
+                showToast('Failed to update client', 'error');
+            }
+        }
+
+        async function deleteClient() {
+            if (!confirm(`Are you sure you want to delete "${currentClient.name}"? This cannot be undone.`)) {
+                return;
+            }
+
+            const success = await Clients.delete(clientId);
+            if (success) {
+                showToast('Client deleted', 'success');
+                window.location.href = 'index.html';
+            } else {
+                showToast('Failed to delete client', 'error');
+            }
+        }
+
+        function openMedia(url, type) {
+            if (type === 'document') {
+                window.open(url, '_blank');
+            } else {
+                // Simple lightbox
+                const modal = document.createElement('div');
+                modal.className = 'media-modal active';
+                modal.innerHTML = `
+                    <button class="media-modal-close" onclick="this.parentElement.remove()">&times;</button>
+                    <div class="media-modal-content">
+                        ${type === 'image' ? `<img src="${url}">` : `<video src="${url}" controls autoplay></video>`}
+                    </div>
+                `;
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+                document.body.appendChild(modal);
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Unknown';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} hr ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatProductType(type) {
+            const types = {
+                'standing-seam': 'Standing Seam',
+                'mechanical-lock': 'Mechanical Lock',
+                'brava': 'Brava Tile',
+                'shingles': 'Shingles'
+            };
+            return types[type] || type || 'Unknown';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+
+    <style>
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            color: var(--lava-blue);
+        }
+
+        .client-contact-info a {
+            color: var(--lava-blue);
+            text-decoration: none;
+        }
+
+        .client-contact-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</body>
+</html>

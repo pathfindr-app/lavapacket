@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/builder.css">
     <link rel="stylesheet" href="../css/print.css">
+    <link rel="stylesheet" href="../css/clients.css">
 </head>
 <body class="builder-mode">
     <!-- Builder Layout -->
@@ -29,6 +30,12 @@
                     <div class="sidebar-title">Packet Builder</div>
                     <div class="sidebar-subtitle">Create customer proposals</div>
                 </div>
+            </div>
+
+            <!-- Client Selection -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Client</div>
+                <div id="clientBadgeContainer" class="client-section-badge"></div>
             </div>
 
             <!-- Customer Info -->
@@ -733,6 +740,7 @@
     <script src="../js/modules/resize.js"></script>
     <script src="../js/modules/estimate.js"></script>
     <script src="../js/modules/eagleview.js"></script>
+    <script src="../js/modules/clients.js"></script>
     <script src="../js/app.js"></script>
 
     <script>
@@ -798,7 +806,73 @@
             document.querySelectorAll('.page-preview').forEach(page => {
                 page.classList.add('editing');
             });
+
+            // Initialize client badge
+            initClientSelection();
         });
+
+        // Client selection management
+        let selectedClient = null;
+
+        function initClientSelection() {
+            const container = document.getElementById('clientBadgeContainer');
+            if (!container) return;
+
+            // Check if there's a client_id in the loaded packet data
+            const checkForExistingClient = async () => {
+                if (typeof Storage !== 'undefined' && Storage.currentPacketId) {
+                    const packet = await SupabaseClient.getPacket(Storage.currentPacketId);
+                    if (packet && packet.client_id) {
+                        selectedClient = await SupabaseClient.getClient(packet.client_id);
+                    }
+                }
+                renderClientBadge();
+            };
+
+            // Delay to allow Storage to load packet
+            setTimeout(checkForExistingClient, 500);
+        }
+
+        function renderClientBadge() {
+            const container = document.getElementById('clientBadgeContainer');
+            if (!container) return;
+
+            Clients.showClientBadge(selectedClient, container, (client) => {
+                selectedClient = client;
+                // Auto-fill customer info from client
+                if (client) {
+                    if (client.name) {
+                        document.getElementById('customerNameInput').value = client.name;
+                        document.querySelectorAll('[data-field="customerName"]').forEach(el => {
+                            el.textContent = client.name;
+                        });
+                    }
+                    if (client.address) {
+                        document.getElementById('customerAddressInput').value = client.address;
+                        document.querySelectorAll('[data-field="customerAddress"]').forEach(el => {
+                            el.textContent = client.address;
+                        });
+                    }
+                    // Store client_id for saving
+                    if (typeof Storage !== 'undefined') {
+                        Storage.currentClientId = client.id;
+                    }
+                } else {
+                    if (typeof Storage !== 'undefined') {
+                        Storage.currentClientId = null;
+                    }
+                }
+                // Trigger auto-save
+                if (typeof Editor !== 'undefined' && Editor.scheduleAutoSave) {
+                    Editor.scheduleAutoSave();
+                }
+            });
+        }
+
+        // Expose for external access
+        window.getSelectedClientId = function() {
+            return selectedClient ? selectedClient.id : null;
+        };
     </script>
 </body>
 </html>

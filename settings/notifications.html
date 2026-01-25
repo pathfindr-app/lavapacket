@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Settings - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="../clients/index.html" class="portal-nav-btn">Clients</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <a href="../index.html" class="back-link">&larr; Back to Dashboard</a>
+                <h1 class="page-title">Notification Settings</h1>
+                <p class="page-subtitle">Configure email and SMS notifications</p>
+            </div>
+        </div>
+
+        <!-- Email Templates -->
+        <div class="settings-section">
+            <h2 class="settings-section-title">Email Templates</h2>
+            <p class="settings-section-desc">Customize the messages sent to customers</p>
+
+            <div class="template-list" id="emailTemplates">
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-icon">📦</div>
+                        <div class="template-info">
+                            <div class="template-name">Packet Sent</div>
+                            <div class="template-desc">Sent when a proposal is shared with a customer</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate('packet_sent')">Edit</button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-icon">🔍</div>
+                        <div class="template-info">
+                            <div class="template-name">Inspection Complete</div>
+                            <div class="template-desc">Sent when an inspection report is ready</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate('inspection_complete')">Edit</button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-icon">📅</div>
+                        <div class="template-info">
+                            <div class="template-name">Job Scheduled</div>
+                            <div class="template-desc">Sent when a job is scheduled on the calendar</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate('job_scheduled')">Edit</button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-icon">🚀</div>
+                        <div class="template-info">
+                            <div class="template-name">Job Starting Tomorrow</div>
+                            <div class="template-desc">Reminder sent the day before a job starts</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate('job_starting')">Edit</button>
+                    </div>
+                </div>
+
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-icon">✅</div>
+                        <div class="template-info">
+                            <div class="template-name">Job Complete</div>
+                            <div class="template-desc">Sent when a roofing job is finished</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="editTemplate('job_complete')">Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMS Settings -->
+        <div class="settings-section">
+            <h2 class="settings-section-title">SMS Settings</h2>
+            <p class="settings-section-desc">Configure text message notifications</p>
+
+            <div class="settings-form">
+                <div class="form-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="smsEnabled" checked>
+                        <span class="toggle-text">Enable SMS notifications</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>SMS From Number</label>
+                    <input type="text" class="form-input" id="smsFromNumber"
+                        value="+1 (808) 555-LAVA" readonly>
+                    <small class="form-hint">Contact support to change this number</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Log -->
+        <div class="settings-section">
+            <h2 class="settings-section-title">Recent Notifications</h2>
+            <p class="settings-section-desc">View sent emails and text messages</p>
+
+            <div class="notification-log" id="notificationLog">
+                <div class="loading">Loading notification history...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Template Edit Dialog -->
+    <div class="dialog-overlay" id="templateDialog" style="display: none;">
+        <div class="dialog">
+            <div class="dialog-header">
+                <h3 class="dialog-title">Edit Template</h3>
+                <button class="dialog-close" onclick="closeTemplateDialog()">&times;</button>
+            </div>
+            <div class="dialog-content">
+                <form id="templateForm">
+                    <input type="hidden" id="templateId">
+                    <div class="form-group">
+                        <label>Subject Line</label>
+                        <input type="text" class="form-input" id="templateSubject" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Body</label>
+                        <textarea class="form-input" id="templateBody" rows="8" required></textarea>
+                        <small class="form-hint">
+                            Available variables: {customer_name}, {address}, {date}, {time}, {product_type}
+                        </small>
+                    </div>
+                    <div class="dialog-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeTemplateDialog()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Template</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/notifications.js"></script>
+
+    <script>
+        const defaultTemplates = {
+            packet_sent: {
+                subject: 'Your LAVA Roofing Proposal is Ready',
+                body: `Aloha {customer_name},
+
+Thank you for choosing LAVA Roofing! Your roofing proposal is ready for review.
+
+Property: {address}
+Product: {product_type}
+
+Click the link below to view your personalized proposal:
+{portal_link}
+
+If you have any questions, please don't hesitate to call us at (808) 555-LAVA.
+
+Mahalo,
+The LAVA Roofing Team`
+            },
+            inspection_complete: {
+                subject: 'Your Roof Inspection Report is Ready',
+                body: `Aloha {customer_name},
+
+Your roof inspection has been completed and your report is ready.
+
+Property: {address}
+Inspection Date: {date}
+
+View your full report here:
+{portal_link}
+
+If you have any questions about the findings, we're happy to discuss them with you.
+
+Mahalo,
+The LAVA Roofing Team`
+            },
+            job_scheduled: {
+                subject: 'Your Roofing Job is Scheduled',
+                body: `Aloha {customer_name},
+
+Great news! Your roofing project has been scheduled.
+
+Property: {address}
+Start Date: {date}
+Start Time: {time}
+Product: {product_type}
+
+Our crew will arrive at the scheduled time. Please ensure the work area is accessible.
+
+If you need to reschedule, please call us at (808) 555-LAVA.
+
+Mahalo,
+The LAVA Roofing Team`
+            },
+            job_starting: {
+                subject: 'Reminder: Your Roofing Job Starts Tomorrow',
+                body: `Aloha {customer_name},
+
+This is a friendly reminder that your roofing project begins tomorrow!
+
+Property: {address}
+Date: {date}
+Time: {time}
+
+Please ensure:
+- Vehicles are moved from the driveway
+- Outdoor furniture is secured or moved
+- Pets are kept inside
+
+Our crew will introduce themselves when they arrive.
+
+Mahalo,
+The LAVA Roofing Team`
+            },
+            job_complete: {
+                subject: 'Your New Roof is Complete!',
+                body: `Aloha {customer_name},
+
+Congratulations! Your roofing project is now complete.
+
+Property: {address}
+Product: {product_type}
+
+We hope you love your new roof! Your warranty information will be sent separately.
+
+If you're happy with our work, we'd appreciate a review on Google or Yelp.
+
+Mahalo for choosing LAVA Roofing!
+The LAVA Roofing Team`
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', initSettings);
+            if (Auth.isAuthenticated()) {
+                initSettings();
+            }
+        });
+
+        async function initSettings() {
+            loadNotificationLog();
+        }
+
+        async function loadNotificationLog() {
+            const container = document.getElementById('notificationLog');
+            const logs = await Notifications.getHistory(20);
+
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📬</div>
+                        <div style="color: #666;">No notifications sent yet</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Recipient</th>
+                            <th>Template</th>
+                            <th>Status</th>
+                            <th>Sent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${logs.map(log => `
+                            <tr>
+                                <td>
+                                    <span class="badge ${log.type}">${log.type.toUpperCase()}</span>
+                                </td>
+                                <td>${escapeHtml(log.recipient)}</td>
+                                <td>${escapeHtml(log.template || '-')}</td>
+                                <td>
+                                    <span class="status-badge ${log.status}">${log.status}</span>
+                                </td>
+                                <td>${formatDate(log.sent_at || log.created_at)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function editTemplate(templateId) {
+            const template = defaultTemplates[templateId] || { subject: '', body: '' };
+
+            document.getElementById('templateId').value = templateId;
+            document.getElementById('templateSubject').value = template.subject;
+            document.getElementById('templateBody').value = template.body;
+            document.getElementById('templateDialog').style.display = 'flex';
+        }
+
+        function closeTemplateDialog() {
+            document.getElementById('templateDialog').style.display = 'none';
+        }
+
+        document.getElementById('templateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const templateId = document.getElementById('templateId').value;
+            const subject = document.getElementById('templateSubject').value;
+            const body = document.getElementById('templateBody').value;
+
+            // Save to localStorage (or Supabase in production)
+            const templates = JSON.parse(localStorage.getItem('lavaNotificationTemplates') || '{}');
+            templates[templateId] = { subject, body };
+            localStorage.setItem('lavaNotificationTemplates', JSON.stringify(templates));
+
+            closeTemplateDialog();
+            showToast('Template saved successfully');
+        });
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+    </script>
+
+    <style>
+        .back-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .settings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .settings-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .settings-section-desc {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+        .template-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .template-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .template-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .template-icon {
+            font-size: 1.5rem;
+        }
+        .template-info {
+            flex: 1;
+        }
+        .template-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .template-desc {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        .settings-form {
+            max-width: 500px;
+        }
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+        .toggle-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        .toggle-text {
+            font-weight: 500;
+        }
+        .form-hint {
+            color: #888;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .data-table th {
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #666;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge.email {
+            background: #e8f0fe;
+            color: #1e40af;
+        }
+        .badge.sms {
+            background: #e8fefa;
+            color: #047857;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .status-badge.sent {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</body>
+</html>

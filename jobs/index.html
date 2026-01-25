@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/jobs.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+    <link rel="stylesheet" href="../css/quick-capture.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="index.html" class="portal-nav-btn active">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+                <a href="../reports/index.html" class="portal-nav-btn">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Jobs</h1>
+                <p class="page-subtitle">Manage roofing projects</p>
+            </div>
+            <div class="page-actions">
+                <a href="../calendar/index.html" class="btn btn-secondary">View Calendar</a>
+                <a href="new.html" class="btn btn-primary">+ New Job</a>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="job-stats-grid" id="jobStats">
+            <div class="job-stat">
+                <div class="job-stat-value" id="statPending">-</div>
+                <div class="job-stat-label">Pending</div>
+            </div>
+            <div class="job-stat">
+                <div class="job-stat-value" id="statScheduled">-</div>
+                <div class="job-stat-label">Scheduled</div>
+            </div>
+            <div class="job-stat">
+                <div class="job-stat-value" id="statInProgress">-</div>
+                <div class="job-stat-label">In Progress</div>
+            </div>
+            <div class="job-stat">
+                <div class="job-stat-value" id="statCompleted">-</div>
+                <div class="job-stat-label">Completed</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="search-filters">
+                <button class="filter-chip active" data-status="all">All Jobs</button>
+                <button class="filter-chip" data-status="pending">Pending</button>
+                <button class="filter-chip" data-status="scheduled">Scheduled</button>
+                <button class="filter-chip" data-status="in_progress">In Progress</button>
+                <button class="filter-chip" data-status="completed">Completed</button>
+            </div>
+        </div>
+
+        <!-- Jobs List -->
+        <div class="jobs-list" id="jobsList">
+            <div class="loading">Loading jobs...</div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/config.local.js"></script>
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/crew.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/transcribe.js"></script>
+    <script src="../js/modules/quick-capture.js"></script>
+
+    <script>
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', loadPage);
+            if (Auth.isAuthenticated()) {
+                loadPage();
+            }
+
+            // Filter buttons
+            document.querySelectorAll('[data-status]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-status]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.status;
+                    loadJobs();
+                });
+            });
+        });
+
+        async function loadPage() {
+            loadStats();
+            loadJobs();
+        }
+
+        async function loadStats() {
+            const stats = await Jobs.getStats();
+            document.getElementById('statPending').textContent = stats.pending;
+            document.getElementById('statScheduled').textContent = stats.scheduled;
+            document.getElementById('statInProgress').textContent = stats.inProgress;
+            document.getElementById('statCompleted').textContent = stats.completed;
+        }
+
+        async function loadJobs() {
+            const container = document.getElementById('jobsList');
+
+            const filters = {};
+            if (currentFilter !== 'all') {
+                filters.status = currentFilter;
+            }
+
+            const jobs = await Jobs.list(filters);
+
+            if (jobs.length === 0) {
+                container.innerHTML = `
+                    <div class="jobs-empty">
+                        <div class="jobs-empty-icon">📋</div>
+                        <div class="jobs-empty-title">No jobs found</div>
+                        <div class="jobs-empty-text">Create a job from a packet or add one manually</div>
+                        <a href="new.html" class="btn btn-primary">Create Job</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = jobs.map(job => {
+                const formatted = Jobs.formatJob(job);
+                return `
+                    <a href="view.html?id=${job.id}" class="job-list-item">
+                        <div class="job-status-indicator" style="background: ${formatted.statusColor}"></div>
+                        <div class="job-info">
+                            <div class="job-title">${escapeHtml(formatted.clientName)}</div>
+                            <div class="job-meta">
+                                <span>${formatted.statusIcon} ${formatted.statusLabel}</span>
+                                <span>📅 ${formatted.formattedDate}</span>
+                                <span>📍 ${escapeHtml(job.address || 'No address')}</span>
+                            </div>
+                        </div>
+                        <span class="status-badge status-${job.status}">${formatted.statusLabel}</span>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+    </script>
+</body>
+</html>

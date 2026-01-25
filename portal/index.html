@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/client-portal.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <div class="portal-container">
+        <!-- Portal Nav -->
+        <nav class="portal-nav">
+            <div class="portal-brand">
+                <img src="../assets/images/logo.png" alt="LAVA Roofing">
+                <span class="portal-brand-text">Customer Portal</span>
+            </div>
+            <div class="portal-user" id="portalUser"></div>
+        </nav>
+
+        <!-- Portal Content -->
+        <div class="portal-content" id="portalContent">
+            <div class="loading" style="text-align: center; padding: 4rem;">
+                <div class="loading-spinner" style="width: 48px; height: 48px; border: 4px solid #f0f0f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 1rem; color: #888;">Loading your portal...</p>
+            </div>
+        </div>
+
+        <!-- Portal Footer -->
+        <footer class="portal-footer">
+            <p>&copy; 2024 LAVA Roofing Hawaii. <a href="https://lavaroofing.com">lavaroofing.com</a></p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/signature.js"></script>
+
+    <script>
+        let clientData = null;
+        let accessToken = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+
+            // Get token from URL
+            const params = new URLSearchParams(window.location.search);
+            accessToken = params.get('token');
+            const packetId = params.get('packet');
+
+            if (!accessToken) {
+                showAccessDenied('No access token provided');
+                return;
+            }
+
+            // Validate token
+            const isValid = await validateToken(accessToken);
+            if (!isValid) {
+                showAccessDenied('Invalid or expired access link');
+                return;
+            }
+
+            // Load portal content
+            if (packetId) {
+                loadPacketView(packetId);
+            } else {
+                loadPortalHome();
+            }
+        });
+
+        async function validateToken(token) {
+            if (!SupabaseClient.isAvailable()) {
+                // Demo mode
+                clientData = { name: 'Demo Customer', id: 'demo' };
+                return true;
+            }
+
+            try {
+                const { data, error } = await SupabaseClient.getClient()
+                    .from('client_tokens')
+                    .select('*, clients(*)')
+                    .eq('token', token)
+                    .gte('expires_at', new Date().toISOString())
+                    .single();
+
+                if (error || !data) return false;
+
+                clientData = data.clients;
+
+                // Update last used
+                await SupabaseClient.getClient()
+                    .from('client_tokens')
+                    .update({ last_used_at: new Date().toISOString() })
+                    .eq('id', data.id);
+
+                return true;
+            } catch (e) {
+                console.error('Token validation failed:', e);
+                return false;
+            }
+        }
+
+        function showAccessDenied(message) {
+            document.getElementById('portalContent').innerHTML = `
+                <div class="portal-access-denied">
+                    <div class="portal-access-denied-icon">🔒</div>
+                    <h1>Access Denied</h1>
+                    <p>${message}</p>
+                    <p>Please contact LAVA Roofing to request a new access link.</p>
+                    <a href="tel:808-555-5282" class="btn btn-primary">Call (808) 555-LAVA</a>
+                </div>
+            `;
+        }
+
+        async function loadPortalHome() {
+            document.getElementById('portalUser').textContent = `Welcome, ${clientData.name}`;
+
+            // Get client's packets and inspections
+            let packets = [];
+            let inspections = [];
+
+            if (SupabaseClient.isAvailable()) {
+                const history = await SupabaseClient.getClientHistory(clientData.id);
+                packets = history.packets || [];
+                inspections = history.inspections || [];
+            }
+
+            document.getElementById('portalContent').innerHTML = `
+                <div class="portal-welcome">
+                    <h1>Welcome, ${escapeHtml(clientData.name)}!</h1>
+                    <p>View your roofing proposals, inspections, and project updates</p>
+                </div>
+
+                <div class="portal-cards">
+                    ${packets.map(packet => `
+                        <div class="portal-card">
+                            <div class="portal-card-header">
+                                <div class="portal-card-icon">📦</div>
+                                <h3 class="portal-card-title">Roofing Proposal</h3>
+                            </div>
+                            <div class="portal-card-content">
+                                <div class="portal-card-meta">
+                                    <span>${packet.product_type || 'Roofing'}</span>
+                                    <span>${new Date(packet.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p>${escapeHtml(packet.customer_address || 'Your property')}</p>
+                                <a href="?token=${accessToken}&packet=${packet.id}" class="portal-card-action">
+                                    View Proposal
+                                </a>
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    ${inspections.map(inspection => `
+                        <div class="portal-card">
+                            <div class="portal-card-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                <div class="portal-card-icon">🔍</div>
+                                <h3 class="portal-card-title">Inspection Report</h3>
+                            </div>
+                            <div class="portal-card-content">
+                                <div class="portal-card-meta">
+                                    <span>${inspection.status || 'Completed'}</span>
+                                    <span>${new Date(inspection.inspection_date || inspection.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p>${escapeHtml(inspection.customer_address || 'Your property')}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    ${packets.length === 0 && inspections.length === 0 ? `
+                        <div class="portal-card" style="grid-column: 1/-1;">
+                            <div class="portal-card-content" style="text-align: center; padding: 3rem;">
+                                <p>No documents available yet.</p>
+                                <p style="color: #888;">Check back later or contact us for updates.</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <h3>Need Help?</h3>
+                    <p style="color: #666;">Our team is here to answer your questions</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                        <a href="tel:808-555-5282" class="btn btn-primary">📞 Call Us</a>
+                        <a href="mailto:info@lavaroofing.com" class="btn btn-secondary">✉️ Email Us</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadPacketView(packetId) {
+            document.getElementById('portalUser').textContent = `Welcome, ${clientData.name}`;
+
+            const packet = await SupabaseClient.getPacket(packetId);
+            if (!packet) {
+                document.getElementById('portalContent').innerHTML = `
+                    <div class="portal-access-denied">
+                        <div class="portal-access-denied-icon">📄</div>
+                        <h1>Document Not Found</h1>
+                        <p>This proposal may have been updated or removed.</p>
+                        <a href="?token=${accessToken}" class="btn btn-primary">Back to Portal</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Check if already signed
+            const signature = await Signature.getForPacket(packetId);
+
+            document.getElementById('portalContent').innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <a href="?token=${accessToken}" class="back-link">&larr; Back to Portal</a>
+                </div>
+
+                <div class="packet-viewer">
+                    <div class="packet-viewer-header">
+                        <h2 class="packet-viewer-title">${escapeHtml(packet.product_type || 'Roofing')} Proposal</h2>
+                        <div class="packet-viewer-actions">
+                            <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+                        </div>
+                    </div>
+                    <div class="packet-viewer-content">
+                        <p style="color: #666; margin-bottom: 1.5rem;">
+                            Prepared for ${escapeHtml(packet.customer_name)} at ${escapeHtml(packet.customer_address)}
+                        </p>
+                        <p>View your complete roofing proposal below. If you have any questions, please contact us.</p>
+                    </div>
+                </div>
+
+                <div class="signature-section">
+                    <h2>Digital Signature</h2>
+                    ${signature ?
+                        Signature.renderSignatureVerification(signature) :
+                        `
+                        <p style="color: #666; margin-bottom: 1.5rem;">
+                            Please review the proposal above, then sign below to approve.
+                        </p>
+                        <div id="signaturePadContainer"></div>
+                        <form id="signatureForm" style="margin-top: 1rem;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="signerName" class="form-input"
+                                        value="${escapeHtml(clientData.name || '')}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="signerEmail" class="form-input"
+                                        value="${escapeHtml(clientData.email || '')}" placeholder="your@email.com">
+                                </div>
+                            </div>
+                            <div class="signature-agreement">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" required>
+                                    I agree to the terms and conditions of this roofing proposal
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                ✍️ Sign & Submit Proposal
+                            </button>
+                        </form>
+                        `
+                    }
+                </div>
+            `;
+
+            // Setup signature pad if not signed
+            if (!signature) {
+                const padContainer = document.getElementById('signaturePadContainer');
+                const signaturePad = Signature.createSignaturePad({ id: 'portalSignatureCanvas' });
+                padContainer.appendChild(signaturePad);
+
+                document.getElementById('signatureForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    if (Signature.isEmpty()) {
+                        alert('Please provide your signature');
+                        return;
+                    }
+
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    btn.disabled = true;
+                    btn.textContent = 'Saving...';
+
+                    try {
+                        await Signature.save({
+                            packetId,
+                            clientId: clientData.id,
+                            signerName: document.getElementById('signerName').value,
+                            signerEmail: document.getElementById('signerEmail').value
+                        });
+
+                        // Reload to show confirmation
+                        loadPacketView(packetId);
+                    } catch (error) {
+                        alert('Failed to save signature. Please try again.');
+                        btn.disabled = false;
+                        btn.textContent = 'Sign & Submit Proposal';
+                    }
+                });
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+    </script>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .back-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</body>
+</html>

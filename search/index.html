@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/search.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="index.html" class="portal-nav-btn active">Search</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="search-container">
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput"
+                        placeholder="Search for clients, packets, jobs, photos..."
+                        autocomplete="off">
+                    <button class="search-clear" id="clearBtn">&times;</button>
+                </div>
+
+                <div class="search-suggestions" id="suggestions">
+                    <div class="suggestions-label">Try searching for</div>
+                    <div class="suggestion-list" id="suggestionList"></div>
+                </div>
+            </div>
+
+            <!-- Quick Filters -->
+            <div class="search-filters" id="quickFilters">
+                <button class="filter-chip active" data-type="all">All</button>
+                <button class="filter-chip" data-type="clients">Clients</button>
+                <button class="filter-chip" data-type="packets">Packets</button>
+                <button class="filter-chip" data-type="jobs">Jobs</button>
+                <button class="filter-chip" data-type="media">Photos</button>
+            </div>
+
+            <!-- Results -->
+            <div id="searchResults"></div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/ai-search.js"></script>
+
+    <script>
+        let searchTimeout = null;
+        let activeFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', initSearch);
+            if (Auth.isAuthenticated()) {
+                initSearch();
+            }
+        });
+
+        function initSearch() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearBtn');
+            const suggestionList = document.getElementById('suggestionList');
+
+            // Load suggestions
+            const suggestions = AISearch.getSuggestions();
+            suggestionList.innerHTML = suggestions.map(s => `
+                <button class="suggestion-chip" data-query="${s}">${s}</button>
+            `).join('');
+
+            // Suggestion click
+            suggestionList.addEventListener('click', (e) => {
+                if (e.target.matches('.suggestion-chip')) {
+                    input.value = e.target.dataset.query;
+                    performSearch(input.value);
+                }
+            });
+
+            // Search input
+            input.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+
+                if (query.length === 0) {
+                    showSuggestions();
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    performSearch(query);
+                }, 300);
+            });
+
+            // Enter key
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(searchTimeout);
+                    performSearch(input.value.trim());
+                }
+            });
+
+            // Clear button
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                showSuggestions();
+                input.focus();
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeFilter = btn.dataset.type;
+
+                    if (input.value.trim()) {
+                        performSearch(input.value.trim());
+                    }
+                });
+            });
+
+            // Check for query param
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q');
+            if (query) {
+                input.value = query;
+                performSearch(query);
+            }
+
+            input.focus();
+        }
+
+        function showSuggestions() {
+            document.getElementById('suggestions').style.display = 'block';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        async function performSearch(query) {
+            if (!query) {
+                showSuggestions();
+                return;
+            }
+
+            document.getElementById('suggestions').style.display = 'none';
+            const resultsContainer = document.getElementById('searchResults');
+
+            // Show loading
+            resultsContainer.innerHTML = `
+                <div class="search-loading">
+                    <div class="search-loading-spinner"></div>
+                    <div>Searching...</div>
+                </div>
+            `;
+
+            // Modify query based on filter
+            let searchQuery = query;
+            if (activeFilter !== 'all') {
+                searchQuery = `${activeFilter} ${query}`;
+            }
+
+            const result = await AISearch.search(searchQuery);
+
+            // Filter results if specific type selected
+            if (activeFilter !== 'all') {
+                result.results = result.results.filter(group => group.type === activeFilter);
+            }
+
+            resultsContainer.innerHTML = AISearch.renderResults(result);
+
+            // Update URL
+            const url = new URL(window.location);
+            url.searchParams.set('q', query);
+            window.history.replaceState({}, '', url);
+        }
+    </script>
+</body>
+</html>

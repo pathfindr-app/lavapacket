@@ -19,3 +19,4 @@ WhatsApp Chat*/
 node_modules/
 .vercel
 .env*.local
+js/config.local.js

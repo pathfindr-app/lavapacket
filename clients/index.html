@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients - LAVA Roofing Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase config -->
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/clients.css">
+    <link rel="stylesheet" href="../css/quick-capture.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="index.html" class="portal-nav-btn active">Clients</a>
+                <a href="../reports/index.html" class="portal-nav-btn">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <h1 class="page-title">Clients</h1>
+        <p class="page-subtitle">Manage customer profiles and view their history</p>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by name or address...">
+            </div>
+            <select class="sort-select" id="sortSelect">
+                <option value="activity">Recent Activity</option>
+                <option value="name">Name A-Z</option>
+                <option value="packets">Most Packets</option>
+                <option value="created">Newest</option>
+            </select>
+            <button class="btn btn-primary" id="newClientBtn">+ New Client</button>
+        </div>
+
+        <!-- Client List -->
+        <div class="item-list" id="clientList">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                Loading clients...
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/config.local.js"></script>
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/clients.js"></script>
+    <script src="../js/modules/transcribe.js"></script>
+    <script src="../js/modules/quick-capture.js"></script>
+
+    <script>
+        let allClients = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize Supabase
+            SupabaseClient.init();
+
+            // Initialize auth
+            Auth.init();
+
+            // Load data after auth
+            document.addEventListener('auth:unlocked', loadClients);
+
+            // If already authenticated, load immediately
+            if (Auth.isAuthenticated()) {
+                loadClients();
+            }
+
+            // Search handler
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+            // Sort handler
+            document.getElementById('sortSelect').addEventListener('change', handleSort);
+
+            // New client button
+            document.getElementById('newClientBtn').addEventListener('click', showNewClientDialog);
+        });
+
+        async function loadClients() {
+            const container = document.getElementById('clientList');
+
+            try {
+                allClients = await Clients.list();
+                renderClients(allClients);
+            } catch (e) {
+                console.error('Failed to load clients:', e);
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error loading clients</div></div>';
+            }
+        }
+
+        function renderClients(clients) {
+            const container = document.getElementById('clientList');
+
+            if (clients.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👤</div>
+                        <div class="empty-title">No clients yet</div>
+                        <div class="empty-text">Add your first client to get started</div>
+                        <button class="btn btn-primary" onclick="showNewClientDialog()">Add Client</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = clients.map(client => `
+                <div class="client-card" onclick="openClient('${client.id}')">
+                    <div class="client-card-info">
+                        <div class="client-card-name">${escapeHtml(client.name)}</div>
+                        ${client.address ? `<div class="client-card-address">${escapeHtml(client.address)}</div>` : ''}
+                        <div class="client-card-stats">
+                            ${client.total_packets ? `<span class="client-card-stat">📦 ${client.total_packets} packets</span>` : ''}
+                            ${client.total_inspections ? `<span class="client-card-stat">🔍 ${client.total_inspections} inspections</span>` : ''}
+                            ${client.total_media ? `<span class="client-card-stat">📷 ${client.total_media} files</span>` : ''}
+                            <span class="client-card-stat">🕐 ${formatDate(client.last_activity_at || client.updated_at)}</span>
+                        </div>
+                        ${client.tags && client.tags.length > 0 ? `
+                            <div class="client-card-tags">
+                                ${client.tags.map(tag => `<span class="client-tag">${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon" onclick="event.stopPropagation(); editClient('${client.id}')" title="Edit">✏️</button>
+                        <button class="btn-icon" onclick="event.stopPropagation(); deleteClient('${client.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = allClients.filter(c =>
+                c.name.toLowerCase().includes(query) ||
+                (c.address || '').toLowerCase().includes(query) ||
+                (c.tags || []).some(t => t.toLowerCase().includes(query))
+            );
+            renderClients(filtered);
+        }
+
+        function handleSort() {
+            const sortBy = document.getElementById('sortSelect').value;
+            let sorted = [...allClients];
+
+            switch (sortBy) {
+                case 'name':
+                    sorted.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'packets':
+                    sorted.sort((a, b) => (b.total_packets || 0) - (a.total_packets || 0));
+                    break;
+                case 'created':
+                    sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    break;
+                case 'activity':
+                default:
+                    sorted.sort((a, b) => new Date(b.last_activity_at || b.updated_at) - new Date(a.last_activity_at || a.updated_at));
+                    break;
+            }
+
+            renderClients(sorted);
+        }
+
+        function openClient(id) {
+            window.location.href = `view.html?id=${id}`;
+        }
+
+        function showNewClientDialog() {
+            Clients.showSelectDialog({
+                allowCreate: true,
+                onSelect: (client) => {
+                    if (client) {
+                        showToast('Client created', 'success');
+                        loadClients();
+                    }
+                }
+            });
+        }
+
+        async function editClient(id) {
+            window.location.href = `view.html?id=${id}&edit=true`;
+        }
+
+        async function deleteClient(id) {
+            const client = allClients.find(c => c.id === id);
+            if (!client) return;
+
+            if (!confirm(`Are you sure you want to delete "${client.name}"? This cannot be undone.`)) {
+                return;
+            }
+
+            const success = await Clients.delete(id);
+            if (success) {
+                showToast('Client deleted', 'success');
+                loadClients();
+            } else {
+                showToast('Failed to delete client', 'error');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Never';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} hr ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} days ago`;
+
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+
+    <style>
+        .sort-select {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--lava-blue);
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,304 @@
+/**
+ * LAVA Roofing - Voice Memos Styles
+ */
+
+/* Voice Recorder Button */
+.voice-recorder {
+    display: inline-flex;
+    align-items: center;
+}
+
+.voice-record-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    border-radius: 24px;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.voice-record-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.voice-record-btn.hidden {
+    display: none;
+}
+
+.record-icon {
+    font-size: 1.25rem;
+}
+
+/* Recording UI */
+.voice-recording-ui {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.voice-recording-ui.hidden {
+    display: none;
+}
+
+.recording-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 20px;
+}
+
+.pulse {
+    width: 12px;
+    height: 12px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+.recording-time {
+    font-family: 'SF Mono', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ef4444;
+}
+
+.voice-stop-btn {
+    padding: 0.5rem 1rem;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.voice-stop-btn:hover {
+    background: #333;
+}
+
+.voice-cancel-btn {
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.voice-cancel-btn:hover {
+    background: #f5f5f5;
+    color: #ef4444;
+}
+
+/* Memo List */
+.memo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.memo-item {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.memo-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.memo-play-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3b82f6;
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+}
+
+.memo-play-btn:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+}
+
+.memo-play-btn.playing {
+    background: #ef4444;
+}
+
+.memo-duration {
+    font-family: 'SF Mono', monospace;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.memo-date {
+    flex: 1;
+    font-size: 0.75rem;
+    color: #888;
+    text-align: right;
+}
+
+.memo-delete-btn {
+    padding: 0.375rem 0.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.memo-delete-btn:hover {
+    opacity: 1;
+}
+
+.memo-transcript {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: #333;
+    line-height: 1.6;
+}
+
+.memo-transcript em {
+    color: #888;
+}
+
+/* Audio Player */
+.audio-player {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fafafa;
+    border-radius: 8px;
+}
+
+.audio-waveform {
+    flex: 1;
+    height: 40px;
+    background: #e5e5e5;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.audio-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    transition: width 0.1s;
+}
+
+.audio-time {
+    font-family: 'SF Mono', monospace;
+    font-size: 0.875rem;
+    color: #666;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Floating Record Button */
+.floating-record-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    transition: all 0.2s;
+    z-index: 100;
+}
+
+.floating-record-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+}
+
+.floating-record-btn.recording {
+    animation: recordPulse 1.5s infinite;
+}
+
+@keyframes recordPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { box-shadow: 0 0 0 20px rgba(239,68,68,0); }
+}
+
+/* Empty State */
+.empty-memos {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+    background: #fafafa;
+    border-radius: 8px;
+}
+
+/* Transcript Editor */
+.transcript-editor {
+    padding: 1rem;
+}
+
+.transcript-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.75rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.transcript-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.transcript-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .floating-record-btn {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+}

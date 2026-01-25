@@ -318,20 +318,23 @@
 .page-preview {
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     width: 8.5in !important;
-    min-height: 11in;
+    height: 10in;
     background: white;
+    overflow: hidden;
 }
 
-/* Force page dimensions in builder */
+/* Force page dimensions in builder - match print exactly */
 .builder-mode .page {
     width: 8.5in !important;
-    min-height: 11in;
+    height: 10in;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .builder-mode .cover {
     width: 8.5in !important;
-    min-height: 11in;
+    height: 10in;
+    overflow: hidden;
 }
 
 /* ========================================

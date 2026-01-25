@@ -1,0 +1,635 @@
+/**
+ * LAVA Roofing Portal - Clients Module Styles
+ */
+
+/* ========================================
+   CLIENT SELECTION DIALOG
+======================================== */
+
+.client-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.client-dialog {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.client-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.client-dialog-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.client-dialog-header .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.client-dialog-header .btn-close:hover {
+    color: var(--text-primary);
+}
+
+.client-dialog-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem;
+}
+
+.client-search-box {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.client-search-box .search-icon {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.client-search-box input {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.5rem;
+    font-size: 0.95rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.client-search-box input:focus {
+    outline: none;
+    border-color: var(--lava-blue);
+}
+
+.client-list {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.client-list .loading,
+.client-list .empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.client-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+}
+
+.client-list-item:hover {
+    background: var(--lava-light);
+    border-color: var(--border-color);
+}
+
+.client-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.client-item-name {
+    font-weight: 600;
+    margin-bottom: 0.125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-item-address {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-item-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.client-create-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.divider span {
+    padding: 0 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.client-create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.client-create-form .form-row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.client-create-form input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.client-create-form input:focus {
+    outline: none;
+    border-color: var(--lava-blue);
+}
+
+.client-create-form .btn-primary {
+    margin-top: 0.5rem;
+}
+
+.client-dialog-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: #fafafa;
+    border-radius: 0 0 16px 16px;
+}
+
+/* ========================================
+   CLIENT BADGE (inline component)
+======================================== */
+
+.client-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #e8f0fe;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+.client-badge-icon {
+    font-size: 1rem;
+}
+
+.client-badge-name {
+    font-weight: 500;
+    color: var(--lava-blue);
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-badge-change,
+.client-badge-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.client-badge-change:hover,
+.client-badge-clear:hover {
+    color: var(--text-primary);
+}
+
+.client-select-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.client-select-btn:hover {
+    background: var(--lava-light);
+    border-color: var(--lava-blue);
+}
+
+.btn-small {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+/* ========================================
+   CLIENTS LIST PAGE
+======================================== */
+
+.client-card {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.client-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-1px);
+}
+
+.client-card-info {
+    min-width: 0;
+}
+
+.client-card-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-card-address {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.client-card-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.client-card-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.client-card-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.client-tag {
+    padding: 0.125rem 0.5rem;
+    background: var(--lava-light);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   CLIENT DETAIL PAGE
+======================================== */
+
+.client-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 1.5rem;
+}
+
+.client-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.client-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.client-address {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.client-header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.client-contact-info {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.client-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.client-contact-icon {
+    color: var(--text-muted);
+}
+
+.client-stats-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.client-stat-item {
+    text-align: center;
+}
+
+.client-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--lava-blue);
+}
+
+.client-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Tabs */
+.client-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.client-tab {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.client-tab:hover {
+    color: var(--text-primary);
+    background: var(--lava-light);
+}
+
+.client-tab.active {
+    color: var(--lava-blue);
+    background: white;
+}
+
+.client-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--lava-blue);
+}
+
+.client-tab-count {
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    background: var(--lava-light);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.client-tab.active .client-tab-count {
+    background: #e8f0fe;
+    color: var(--lava-blue);
+}
+
+/* Tab Content */
+.client-tab-content {
+    display: none;
+}
+
+.client-tab-content.active {
+    display: block;
+}
+
+/* Client Notes */
+.client-notes {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    margin-top: 1.5rem;
+}
+
+.client-notes-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.client-notes-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.client-notes-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Edit Form */
+.client-edit-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--lava-blue);
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 600px) {
+    .client-dialog {
+        max-width: none;
+        margin: 0.5rem;
+        max-height: calc(100vh - 1rem);
+    }
+
+    .client-create-form .form-row {
+        flex-direction: column;
+    }
+
+    .client-header-main {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .client-header-actions {
+        width: 100%;
+    }
+
+    .client-header-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .client-contact-info {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .client-stats-row {
+        justify-content: space-around;
+    }
+
+    .client-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

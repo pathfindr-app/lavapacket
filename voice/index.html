@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Memos - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/voice.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="../clients/index.html" class="portal-nav-btn">Clients</a>
+                <a href="index.html" class="portal-nav-btn active">Voice Memos</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Voice Memos</h1>
+                <p class="page-subtitle">Quick audio notes for jobs and clients</p>
+            </div>
+            <div class="page-actions" id="recorderContainer"></div>
+        </div>
+
+        <!-- Browser Support Warning -->
+        <div id="browserWarning" class="job-detail-card" style="display: none; background: #fef3c7; border-color: #fde68a;">
+            <p style="color: #92400e; margin: 0;">
+                Your browser doesn't support audio recording. Please use Chrome, Firefox, or Safari.
+            </p>
+        </div>
+
+        <!-- Memos List -->
+        <div id="memosList">
+            <div class="loading">Loading voice memos...</div>
+        </div>
+    </main>
+
+    <!-- Floating Record Button -->
+    <button class="floating-record-btn" id="floatingRecord" title="Record voice memo">
+        🎤
+    </button>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/voice.js"></script>
+
+    <script>
+        let currentAudio = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', initPage);
+            if (Auth.isAuthenticated()) {
+                initPage();
+            }
+        });
+
+        function initPage() {
+            // Check browser support
+            if (!Voice.isSupported()) {
+                document.getElementById('browserWarning').style.display = 'block';
+                document.getElementById('floatingRecord').style.display = 'none';
+                return;
+            }
+
+            // Add recorder to header
+            const recorder = Voice.createRecordButton({
+                onSave: () => {
+                    loadMemos();
+                    showToast('Voice memo saved!');
+                }
+            });
+            document.getElementById('recorderContainer').appendChild(recorder);
+
+            // Floating record button
+            const floatingBtn = document.getElementById('floatingRecord');
+            let isRecording = false;
+
+            floatingBtn.addEventListener('click', async () => {
+                if (!isRecording) {
+                    try {
+                        await Voice.startRecording();
+                        floatingBtn.classList.add('recording');
+                        floatingBtn.innerHTML = '⏹️';
+                        isRecording = true;
+                    } catch (e) {
+                        showToast('Failed to start recording: ' + e.message, 'error');
+                    }
+                } else {
+                    try {
+                        const { blob, duration } = await Voice.stopRecording();
+                        floatingBtn.classList.remove('recording');
+                        floatingBtn.innerHTML = '🎤';
+                        isRecording = false;
+
+                        // Show saving indicator
+                        floatingBtn.innerHTML = '💾';
+                        floatingBtn.disabled = true;
+
+                        // Transcribe and save
+                        const transcript = await Voice.transcribe(blob);
+                        await Voice.save(blob, { transcript, duration });
+
+                        floatingBtn.innerHTML = '🎤';
+                        floatingBtn.disabled = false;
+
+                        loadMemos();
+                        showToast('Voice memo saved!');
+                    } catch (e) {
+                        floatingBtn.classList.remove('recording');
+                        floatingBtn.innerHTML = '🎤';
+                        isRecording = false;
+                        showToast('Failed to save: ' + e.message, 'error');
+                    }
+                }
+            });
+
+            loadMemos();
+        }
+
+        async function loadMemos() {
+            const memos = await Voice.list();
+            const container = document.getElementById('memosList');
+
+            if (memos.length === 0) {
+                container.innerHTML = `
+                    <div class="jobs-empty" style="text-align: center; padding: 4rem;">
+                        <div class="jobs-empty-icon">🎤</div>
+                        <div class="jobs-empty-title">No voice memos yet</div>
+                        <div class="jobs-empty-text">
+                            Tap the microphone button to record your first memo
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="memo-list">
+                    ${memos.map(memo => `
+                        <div class="memo-item" data-memo-id="${memo.id}">
+                            <div class="memo-header">
+                                <button class="memo-play-btn" onclick="playMemo('${memo.audio_url}', this)" title="Play">
+                                    ▶
+                                </button>
+                                <span class="memo-duration">${Voice.formatDuration(memo.duration_seconds || 0)}</span>
+                                <span class="memo-date">${new Date(memo.created_at).toLocaleDateString('en-US', {
+                                    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                                })}</span>
+                                <button class="memo-delete-btn" onclick="deleteMemo('${memo.id}')" title="Delete">
+                                    🗑️
+                                </button>
+                            </div>
+                            <div class="memo-transcript" id="transcript-${memo.id}">
+                                ${memo.transcript ?
+                                    `<div>${escapeHtml(memo.transcript)}</div>` :
+                                    `<em>No transcript available</em>`
+                                }
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function playMemo(url, button) {
+            // Stop any currently playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                document.querySelectorAll('.memo-play-btn').forEach(btn => {
+                    btn.innerHTML = '▶';
+                    btn.classList.remove('playing');
+                });
+            }
+
+            if (button.classList.contains('playing')) {
+                return;
+            }
+
+            // Play new audio
+            currentAudio = new Audio(url);
+            button.innerHTML = '⏸';
+            button.classList.add('playing');
+
+            currentAudio.play();
+
+            currentAudio.onended = () => {
+                button.innerHTML = '▶';
+                button.classList.remove('playing');
+                currentAudio = null;
+            };
+        }
+
+        async function deleteMemo(id) {
+            if (!confirm('Delete this voice memo?')) return;
+
+            await Voice.delete(id);
+            loadMemos();
+            showToast('Memo deleted');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+    </script>
+</body>
+</html>

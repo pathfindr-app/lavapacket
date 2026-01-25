@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Details - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/jobs.css">
+    <link rel="stylesheet" href="../css/expenses.css">
+    <link rel="stylesheet" href="../css/voice.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="index.html" class="portal-nav-btn active">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+                <a href="../reports/index.html" class="portal-nav-btn">Reports</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <a href="index.html" class="back-link">&larr; Back to Jobs</a>
+                <h1 class="page-title" id="jobTitle">Loading...</h1>
+            </div>
+            <div class="page-actions" id="pageActions"></div>
+        </div>
+
+        <!-- Status Workflow -->
+        <div class="status-workflow" id="statusWorkflow"></div>
+
+        <!-- Job Tabs -->
+        <div class="job-tabs">
+            <button class="job-tab active" data-tab="details">Details</button>
+            <button class="job-tab" data-tab="expenses">Expenses</button>
+            <button class="job-tab" data-tab="costing">Costing</button>
+            <button class="job-tab" data-tab="notes">Notes & Memos</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tabContent">
+            <div class="loading">Loading...</div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/crew.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/expenses.js"></script>
+    <script src="../js/modules/costing.js"></script>
+    <script src="../js/modules/voice.js"></script>
+
+    <script>
+        let jobId = null;
+        let currentJob = null;
+        let currentTab = 'details';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            jobId = new URLSearchParams(window.location.search).get('id');
+            if (!jobId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.addEventListener('auth:unlocked', loadJob);
+            if (Auth.isAuthenticated()) {
+                loadJob();
+            }
+
+            // Tab switching
+            document.querySelectorAll('.job-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.job-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentTab = tab.dataset.tab;
+                    renderTab();
+                });
+            });
+        });
+
+        async function loadJob() {
+            currentJob = await Jobs.get(jobId);
+            if (!currentJob) {
+                document.getElementById('jobTitle').textContent = 'Job not found';
+                return;
+            }
+
+            document.getElementById('jobTitle').textContent = currentJob.title || 'Job Details';
+            renderStatusWorkflow();
+            renderTab();
+        }
+
+        function renderStatusWorkflow() {
+            const statuses = Jobs.statuses.filter(s => s !== 'cancelled');
+            const current = currentJob.status;
+            const currentIndex = statuses.indexOf(current);
+
+            document.getElementById('statusWorkflow').innerHTML = statuses.map((status, i) => {
+                const info = Jobs.getStatusInfo(status);
+                const isActive = status === current;
+                const isCompleted = i < currentIndex;
+                const isNext = i === currentIndex + 1;
+
+                return `
+                    ${i > 0 ? '<span class="status-arrow">→</span>' : ''}
+                    <button class="status-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${!isNext && !isActive && !isCompleted ? 'disabled' : ''}"
+                        data-status="${status}"
+                        ${!isNext && !isActive ? 'disabled' : ''}>
+                        ${info.icon} ${info.label}
+                    </button>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.status-step').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (btn.disabled) return;
+                    await Jobs.updateStatus(jobId, btn.dataset.status);
+                    loadJob();
+                    showToast('Status updated');
+                });
+            });
+        }
+
+        function renderTab() {
+            const container = document.getElementById('tabContent');
+
+            switch (currentTab) {
+                case 'details':
+                    renderDetailsTab(container);
+                    break;
+                case 'expenses':
+                    renderExpensesTab(container);
+                    break;
+                case 'costing':
+                    renderCostingTab(container);
+                    break;
+                case 'notes':
+                    renderNotesTab(container);
+                    break;
+            }
+        }
+
+        function renderDetailsTab(container) {
+            const status = Jobs.getStatusInfo(currentJob.status);
+
+            container.innerHTML = `
+                <div class="job-detail-card">
+                    <div class="job-detail-section">
+                        <h4>Job Information</h4>
+                        <div class="job-detail-row">
+                            <div class="job-detail-item">
+                                <div class="job-detail-label">Client</div>
+                                <div class="job-detail-value">${escapeHtml(currentJob.client_name || 'Unknown')}</div>
+                            </div>
+                            <div class="job-detail-item">
+                                <div class="job-detail-label">Address</div>
+                                <div class="job-detail-value">${escapeHtml(currentJob.address || 'No address')}</div>
+                            </div>
+                        </div>
+                        <div class="job-detail-row">
+                            <div class="job-detail-item">
+                                <div class="job-detail-label">Estimated Amount</div>
+                                <div class="job-detail-value">${formatCurrency(currentJob.estimated_amount)}</div>
+                            </div>
+                            <div class="job-detail-item">
+                                <div class="job-detail-label">Scheduled Date</div>
+                                <div class="job-detail-value">${currentJob.scheduled_date ?
+                                    new Date(currentJob.scheduled_date).toLocaleDateString('en-US', {
+                                        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+                                    }) : 'Not scheduled'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="job-detail-section">
+                        <h4>Assigned Crew</h4>
+                        <div class="assigned-crew" id="assignedCrew">Loading...</div>
+                        <button class="btn btn-secondary btn-sm" style="margin-top: 1rem" onclick="showCrewDialog()">
+                            Assign Crew
+                        </button>
+                    </div>
+
+                    <div class="job-detail-section">
+                        <h4>Schedule</h4>
+                        <div class="schedule-picker">
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="scheduleDate" class="form-input"
+                                    value="${currentJob.scheduled_date || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Time</label>
+                                <input type="time" id="scheduleTime" class="form-input"
+                                    value="${currentJob.scheduled_time || '07:00'}">
+                            </div>
+                            <div class="form-group">
+                                <label>Est. Days</label>
+                                <input type="number" id="estimatedDays" class="form-input"
+                                    value="${currentJob.estimated_days || 1}" min="1">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="updateSchedule()">Update Schedule</button>
+                    </div>
+                </div>
+            `;
+
+            loadAssignedCrew();
+        }
+
+        async function loadAssignedCrew() {
+            const crewIds = currentJob.assigned_crew || [];
+            const allCrew = await Crew.list();
+
+            const assigned = allCrew.filter(c => crewIds.includes(c.id));
+            const container = document.getElementById('assignedCrew');
+
+            if (assigned.length === 0) {
+                container.innerHTML = '<span style="color: #888">No crew assigned</span>';
+                return;
+            }
+
+            container.innerHTML = assigned.map(c => `
+                <span class="assigned-member">
+                    <span class="crew-dot" style="background: ${c.color}"></span>
+                    ${escapeHtml(c.name)}
+                </span>
+            `).join('');
+        }
+
+        function showCrewDialog() {
+            Crew.showSelectDialog(currentJob.assigned_crew || [], async (selected) => {
+                await Jobs.assignCrew(jobId, selected);
+                loadJob();
+                showToast('Crew assigned');
+            });
+        }
+
+        async function updateSchedule() {
+            const date = document.getElementById('scheduleDate').value;
+            const time = document.getElementById('scheduleTime').value;
+            const days = parseInt(document.getElementById('estimatedDays').value) || 1;
+
+            await Jobs.update(jobId, {
+                scheduled_date: date || null,
+                scheduled_time: time || null,
+                estimated_days: days,
+                status: date ? 'scheduled' : currentJob.status
+            });
+
+            loadJob();
+            showToast('Schedule updated');
+        }
+
+        async function renderExpensesTab(container) {
+            const expenses = await Expenses.listForJob(jobId);
+            const totals = await Expenses.getTotalsForJob(jobId);
+
+            container.innerHTML = `
+                <div class="expense-categories">
+                    ${Expenses.categories.map(cat => `
+                        <div class="expense-category">
+                            <div class="expense-category-icon">${cat.icon}</div>
+                            <div class="expense-category-label">${cat.label}</div>
+                            <div class="expense-category-total">${formatCurrency(totals.byCategory[cat.value])}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="job-detail-card">
+                    <div class="job-detail-header">
+                        <h3>Expenses</h3>
+                        <button class="btn btn-primary btn-sm" onclick="addExpense()">+ Add Expense</button>
+                    </div>
+
+                    <div class="expense-list" id="expenseList">
+                        ${expenses.length === 0 ?
+                            '<div class="jobs-empty">No expenses recorded</div>' :
+                            expenses.map(exp => renderExpenseItem(exp)).join('')
+                        }
+                    </div>
+
+                    <div class="expense-totals" style="margin-top: 1rem">
+                        <div class="expense-total-row total">
+                            <span>Total Expenses</span>
+                            <span>${formatCurrency(totals.total)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderExpenseItem(exp) {
+            const cat = Expenses.getCategoryInfo(exp.category);
+            return `
+                <div class="expense-item">
+                    <div class="expense-category-icon">${cat.icon}</div>
+                    <div class="expense-info">
+                        <div class="expense-description">${escapeHtml(exp.description)}</div>
+                        <div class="expense-meta">
+                            <span>${exp.quantity} ${exp.unit}</span>
+                            <span>${exp.vendor || ''}</span>
+                            <span>${new Date(exp.date).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="expense-amount">
+                        ${formatCurrency(exp.amount)}
+                    </div>
+                    <div class="expense-actions">
+                        <button onclick="deleteExpense('${exp.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addExpense() {
+            Expenses.showQuickAddDialog(jobId, () => {
+                renderTab();
+                showToast('Expense added');
+            });
+        }
+
+        async function deleteExpense(id) {
+            if (confirm('Delete this expense?')) {
+                await Expenses.delete(id);
+                renderTab();
+                showToast('Expense deleted');
+            }
+        }
+
+        async function renderCostingTab(container) {
+            const analysis = await Costing.getJobAnalysis(jobId);
+
+            if (!analysis) {
+                container.innerHTML = '<div class="jobs-empty">No costing data available</div>';
+                return;
+            }
+
+            container.innerHTML = Costing.renderCostingCard(analysis);
+        }
+
+        async function renderNotesTab(container) {
+            const memos = await Voice.list({ jobId });
+
+            container.innerHTML = `
+                <div class="job-detail-card">
+                    <div class="job-detail-header">
+                        <h3>Notes</h3>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="jobNotes" class="form-input" rows="4"
+                            placeholder="Add notes about this job...">${escapeHtml(currentJob.notes || '')}</textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveNotes()">Save Notes</button>
+                </div>
+
+                <div class="job-detail-card" style="margin-top: 1.5rem">
+                    <div class="job-detail-header">
+                        <h3>Voice Memos</h3>
+                        <div id="voiceRecorder"></div>
+                    </div>
+                    <div id="memoList">
+                        ${Voice.renderMemoList(memos)}
+                    </div>
+                </div>
+            `;
+
+            // Add voice recorder
+            if (Voice.isSupported()) {
+                const recorder = Voice.createRecordButton({
+                    jobId,
+                    onSave: () => {
+                        renderTab();
+                        showToast('Voice memo saved');
+                    }
+                });
+                document.getElementById('voiceRecorder').appendChild(recorder);
+            }
+        }
+
+        async function saveNotes() {
+            const notes = document.getElementById('jobNotes').value;
+            await Jobs.update(jobId, { notes });
+            showToast('Notes saved');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+    </script>
+</body>
+</html>

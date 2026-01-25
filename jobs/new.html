@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Job - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/jobs.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../packets/index.html" class="portal-nav-btn">Packets</a>
+                <a href="index.html" class="portal-nav-btn active">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <a href="index.html" class="back-link">&larr; Back to Jobs</a>
+                <h1 class="page-title">Create New Job</h1>
+            </div>
+        </div>
+
+        <div class="job-detail-card">
+            <form id="jobForm">
+                <div class="job-detail-section">
+                    <h4>Job Information</h4>
+                    <div class="form-group">
+                        <label>Job Title</label>
+                        <input type="text" id="jobTitle" class="form-input" required
+                            placeholder="e.g., Standing Seam Roof - Hosken Residence">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Client</label>
+                            <select id="clientId" class="form-input">
+                                <option value="">Select a client...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>From Packet</label>
+                            <select id="packetId" class="form-input">
+                                <option value="">No packet (manual entry)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="jobAddress" class="form-input"
+                            placeholder="Job site address">
+                    </div>
+                </div>
+
+                <div class="job-detail-section">
+                    <h4>Schedule</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Scheduled Date</label>
+                            <input type="date" id="scheduledDate" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Start Time</label>
+                            <input type="time" id="scheduledTime" class="form-input" value="07:00">
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Days</label>
+                            <input type="number" id="estimatedDays" class="form-input" value="1" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="job-detail-section">
+                    <h4>Financials</h4>
+                    <div class="form-group">
+                        <label>Estimated Amount ($)</label>
+                        <input type="number" id="estimatedAmount" class="form-input"
+                            placeholder="0.00" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <div class="job-detail-section">
+                    <h4>Assign Crew</h4>
+                    <div class="crew-grid" id="crewGrid">
+                        Loading crew...
+                    </div>
+                </div>
+
+                <div class="job-detail-section">
+                    <h4>Notes</h4>
+                    <div class="form-group">
+                        <textarea id="jobNotes" class="form-input" rows="4"
+                            placeholder="Any additional notes about this job..."></textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <a href="index.html" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Job</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/crew.js"></script>
+    <script src="../js/modules/jobs.js"></script>
+    <script src="../js/modules/clients.js"></script>
+
+    <script>
+        let selectedCrew = [];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', initForm);
+            if (Auth.isAuthenticated()) {
+                initForm();
+            }
+
+            // Check for date from URL (from calendar click)
+            const params = new URLSearchParams(window.location.search);
+            const date = params.get('date');
+            if (date) {
+                document.getElementById('scheduledDate').value = date;
+            }
+
+            // Form submit
+            document.getElementById('jobForm').addEventListener('submit', createJob);
+        });
+
+        async function initForm() {
+            await Promise.all([
+                loadClients(),
+                loadPackets(),
+                loadCrew()
+            ]);
+
+            // Packet selection auto-fills data
+            document.getElementById('packetId').addEventListener('change', loadPacketData);
+        }
+
+        async function loadClients() {
+            const clients = await Clients.list();
+            const select = document.getElementById('clientId');
+
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = `${client.name} - ${client.address || 'No address'}`;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadPackets() {
+            const packets = await SupabaseClient.listPackets();
+            const select = document.getElementById('packetId');
+
+            packets.forEach(packet => {
+                const option = document.createElement('option');
+                option.value = packet.id;
+                option.textContent = `${packet.customer_name} - ${packet.product_type || 'Unknown'}`;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadPacketData() {
+            const packetId = document.getElementById('packetId').value;
+            if (!packetId) return;
+
+            const packet = await SupabaseClient.getPacket(packetId);
+            if (!packet) return;
+
+            // Auto-fill from packet
+            document.getElementById('jobTitle').value =
+                `${packet.product_type || 'Roofing'} - ${packet.customer_name}`;
+            document.getElementById('jobAddress').value = packet.customer_address || '';
+
+            // Select client if exists
+            if (packet.client_id) {
+                document.getElementById('clientId').value = packet.client_id;
+            }
+
+            // Extract estimate amount if available
+            if (packet.config?.estimate?.amount) {
+                document.getElementById('estimatedAmount').value = packet.config.estimate.amount;
+            }
+        }
+
+        async function loadCrew() {
+            const crew = await Crew.list();
+            const container = document.getElementById('crewGrid');
+
+            if (crew.length === 0) {
+                container.innerHTML = `
+                    <p style="color: #888;">No crew members found.
+                    <a href="../crew/index.html">Add crew members</a></p>
+                `;
+                return;
+            }
+
+            container.innerHTML = crew.map(member => `
+                <label class="crew-card" style="cursor: pointer;">
+                    <input type="checkbox" value="${member.id}"
+                        style="margin-right: 0.75rem;"
+                        onchange="toggleCrew('${member.id}')">
+                    <div class="crew-avatar" style="background: ${member.color}; width: 40px; height: 40px; font-size: 1rem;">
+                        ${member.name.charAt(0)}
+                    </div>
+                    <div class="crew-info">
+                        <div class="crew-name">${escapeHtml(member.name)}</div>
+                        <div class="crew-role">${Crew.getRoleDisplay(member.role)}</div>
+                    </div>
+                </label>
+            `).join('');
+        }
+
+        function toggleCrew(memberId) {
+            const index = selectedCrew.indexOf(memberId);
+            if (index === -1) {
+                selectedCrew.push(memberId);
+            } else {
+                selectedCrew.splice(index, 1);
+            }
+        }
+
+        async function createJob(e) {
+            e.preventDefault();
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            try {
+                const scheduledDate = document.getElementById('scheduledDate').value;
+
+                const jobData = {
+                    title: document.getElementById('jobTitle').value,
+                    client_id: document.getElementById('clientId').value || null,
+                    packet_id: document.getElementById('packetId').value || null,
+                    address: document.getElementById('jobAddress').value,
+                    scheduled_date: scheduledDate || null,
+                    scheduled_time: document.getElementById('scheduledTime').value || null,
+                    estimated_days: parseInt(document.getElementById('estimatedDays').value) || 1,
+                    estimated_amount: parseFloat(document.getElementById('estimatedAmount').value) || null,
+                    assigned_crew: selectedCrew,
+                    notes: document.getElementById('jobNotes').value,
+                    status: scheduledDate ? 'scheduled' : 'pending'
+                };
+
+                const job = await Jobs.create(jobData);
+
+                if (job) {
+                    window.location.href = `view.html?id=${job.id}`;
+                } else {
+                    throw new Error('Failed to create job');
+                }
+            } catch (error) {
+                alert('Error creating job: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = 'Create Job';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+    </script>
+
+    <style>
+        .back-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .crew-card {
+            display: flex !important;
+            align-items: center;
+        }
+    </style>
+</body>
+</html>

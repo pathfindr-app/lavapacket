@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crew - LAVA Roofing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="supabase-url" content="https://bdfmlnujqattlrbydbzr.supabase.co">
+    <meta name="supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkZm1sbnVqcWF0dGxyYnlkYnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3Njk3MDQsImV4cCI6MjA4NDM0NTcwNH0.zTT30k9R_Fd_koscvAGsu5GvF_puUSH7W9xOpaSLBNc">
+    <link rel="stylesheet" href="../css/portal.css">
+    <link rel="stylesheet" href="../css/jobs.css">
+    <link rel="stylesheet" href="../css/dialogs.css">
+</head>
+<body>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <img src="../assets/images/logo.png" alt="LAVA" class="password-logo">
+            <div class="password-title">Employee Portal</div>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password</div>
+            <button class="password-btn" id="unlockBtn">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Portal Header -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <img src="../assets/images/logo.png" alt="LAVA" class="portal-logo">
+            <nav class="portal-nav">
+                <a href="../index.html" class="portal-nav-btn">Dashboard</a>
+                <a href="../jobs/index.html" class="portal-nav-btn">Jobs</a>
+                <a href="../calendar/index.html" class="portal-nav-btn">Calendar</a>
+                <a href="index.html" class="portal-nav-btn active">Crew</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Crew</h1>
+                <p class="page-subtitle">Manage your roofing team</p>
+            </div>
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="showAddCrewDialog()">+ Add Team Member</button>
+            </div>
+        </div>
+
+        <!-- Crew Grid -->
+        <div class="crew-grid" id="crewGrid">
+            <div class="loading">Loading crew...</div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Crew Dialog -->
+    <div class="crew-dialog" id="crewDialog" style="display: none;">
+        <div class="dialog-backdrop" onclick="closeCrewDialog()"></div>
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="dialogTitle">Add Team Member</h3>
+                <button class="dialog-close" onclick="closeCrewDialog()">&times;</button>
+            </div>
+            <form id="crewForm">
+                <div class="dialog-body">
+                    <input type="hidden" id="crewId">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="crewName" class="form-input" required placeholder="Full name">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="crewPhone" class="form-input" placeholder="(808) 555-0000">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="crewEmail" class="form-input" placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="crewRole" class="form-input">
+                                <option value="crew">Crew Member</option>
+                                <option value="admin">Administrator</option>
+                                <option value="sales">Sales Rep</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Color</label>
+                            <select id="crewColor" class="form-input"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Hourly Rate</label>
+                        <input type="number" id="crewRate" class="form-input" placeholder="0.00" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCrewDialog()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/lib/supabase.js"></script>
+    <script src="../js/modules/auth.js"></script>
+    <script src="../js/modules/crew.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            SupabaseClient.init();
+            Auth.init();
+
+            document.addEventListener('auth:unlocked', loadCrew);
+            if (Auth.isAuthenticated()) {
+                loadCrew();
+            }
+
+            // Populate color options
+            const colorSelect = document.getElementById('crewColor');
+            Crew.getColorOptions().forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.label;
+                option.style.background = opt.value;
+                colorSelect.appendChild(option);
+            });
+
+            // Form submit
+            document.getElementById('crewForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveCrew();
+            });
+        });
+
+        async function loadCrew() {
+            const crew = await Crew.list(true); // Include inactive
+            const container = document.getElementById('crewGrid');
+
+            if (crew.length === 0) {
+                container.innerHTML = `
+                    <div class="jobs-empty" style="grid-column: 1/-1">
+                        <div class="jobs-empty-icon">👷</div>
+                        <div class="jobs-empty-title">No team members</div>
+                        <div class="jobs-empty-text">Add your first team member to get started</div>
+                        <button class="btn btn-primary" onclick="showAddCrewDialog()">Add Team Member</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = crew.map(member => `
+                <div class="crew-card ${!member.active ? 'inactive' : ''}">
+                    <div class="crew-avatar" style="background: ${member.color}">
+                        ${member.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="crew-info">
+                        <div class="crew-name">${escapeHtml(member.name)}</div>
+                        <div class="crew-role">${Crew.getRoleDisplay(member.role)}</div>
+                        ${member.phone ? `<div class="crew-contact">${escapeHtml(member.phone)}</div>` : ''}
+                        ${!member.active ? '<span class="status-badge status-cancelled">Inactive</span>' : ''}
+                    </div>
+                    <div class="crew-actions" style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-sm btn-secondary" onclick="editCrew('${member.id}')">Edit</button>
+                        ${member.active ?
+                            `<button class="btn btn-sm btn-danger" onclick="deactivateCrew('${member.id}')">Deactivate</button>` :
+                            `<button class="btn btn-sm btn-success" onclick="activateCrew('${member.id}')">Activate</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAddCrewDialog() {
+            document.getElementById('dialogTitle').textContent = 'Add Team Member';
+            document.getElementById('crewId').value = '';
+            document.getElementById('crewForm').reset();
+            document.getElementById('crewDialog').style.display = 'flex';
+        }
+
+        async function editCrew(id) {
+            const member = await Crew.get(id);
+            if (!member) return;
+
+            document.getElementById('dialogTitle').textContent = 'Edit Team Member';
+            document.getElementById('crewId').value = member.id;
+            document.getElementById('crewName').value = member.name;
+            document.getElementById('crewPhone').value = member.phone || '';
+            document.getElementById('crewEmail').value = member.email || '';
+            document.getElementById('crewRole').value = member.role;
+            document.getElementById('crewColor').value = member.color;
+            document.getElementById('crewRate').value = member.hourly_rate || '';
+
+            document.getElementById('crewDialog').style.display = 'flex';
+        }
+
+        function closeCrewDialog() {
+            document.getElementById('crewDialog').style.display = 'none';
+        }
+
+        async function saveCrew() {
+            const id = document.getElementById('crewId').value;
+            const data = {
+                name: document.getElementById('crewName').value,
+                phone: document.getElementById('crewPhone').value || null,
+                email: document.getElementById('crewEmail').value || null,
+                role: document.getElementById('crewRole').value,
+                color: document.getElementById('crewColor').value,
+                hourly_rate: parseFloat(document.getElementById('crewRate').value) || 0
+            };
+
+            if (id) {
+                await Crew.update(id, data);
+                showToast('Team member updated');
+            } else {
+                await Crew.create(data);
+                showToast('Team member added');
+            }
+
+            closeCrewDialog();
+            loadCrew();
+        }
+
+        async function deactivateCrew(id) {
+            if (confirm('Deactivate this team member?')) {
+                await Crew.delete(id);
+                loadCrew();
+                showToast('Team member deactivated');
+            }
+        }
+
+        async function activateCrew(id) {
+            await Crew.update(id, { active: true });
+            loadCrew();
+            showToast('Team member activated');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+    </script>
+
+    <style>
+        .crew-dialog {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .crew-card.inactive {
+            opacity: 0.6;
+        }
+        .crew-card {
+            flex-wrap: wrap;
+        }
+        .crew-actions {
+            width: 100%;
+            margin-top: 1rem;
+            justify-content: flex-end;
+        }
+    </style>
+</body>
+</html>

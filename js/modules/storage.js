@@ -6,6 +6,7 @@
 const Storage = {
     packetKey: 'lavaPacketBuilder',
     currentPacketId: null,
+    currentClientId: null,
     useSupabase: false,
 
     init(packetId = null) {
@@ -40,8 +41,13 @@ const Storage = {
     },
 
     collectData() {
+        // Get client_id from window function if available
+        const clientId = typeof window.getSelectedClientId === 'function' ?
+            window.getSelectedClientId() : this.currentClientId;
+
         return {
             id: this.currentPacketId !== 'default' ? this.currentPacketId : null,
+            client_id: clientId,
             customer_name: document.getElementById('customerNameInput')?.value || '',
             customer_address: document.getElementById('customerAddressInput')?.value || '',
             product_type: document.querySelector('input[name="product"]:checked')?.value || 'standing-seam',
@@ -61,6 +67,7 @@ const Storage = {
             // Prepare packet data for Supabase (JSONB fields)
             const packetData = {
                 id: data.id,
+                client_id: data.client_id || null,
                 customer_name: data.customer_name,
                 customer_address: data.customer_address,
                 product_type: data.product_type,

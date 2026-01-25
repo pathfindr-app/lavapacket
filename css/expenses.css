@@ -1,0 +1,420 @@
+/**
+ * LAVA Roofing - Expenses & Costing Styles
+ */
+
+/* Expense List */
+.expense-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.expense-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    transition: all 0.15s;
+}
+
+.expense-item:hover {
+    border-color: #3b82f6;
+}
+
+.expense-category-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-radius: 8px;
+    font-size: 1.25rem;
+}
+
+.expense-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.expense-description {
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 0.125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.expense-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.expense-amount {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1a1a1a;
+    text-align: right;
+}
+
+.expense-unit {
+    font-size: 0.75rem;
+    color: #888;
+    display: block;
+}
+
+.expense-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.expense-actions button {
+    padding: 0.375rem 0.5rem;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: background 0.15s;
+}
+
+.expense-actions button:hover {
+    background: #e5e5e5;
+}
+
+/* Expense Categories */
+.expense-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.expense-category {
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.expense-category:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.expense-category.selected {
+    border-color: #3b82f6;
+    background: #f0f7ff;
+}
+
+.expense-category-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.expense-category-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.expense-category-total {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+}
+
+/* Expense Totals */
+.expense-totals {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.expense-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+}
+
+.expense-total-row:not(:last-child) {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.expense-total-row.total {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1a1a1a;
+}
+
+/* Expense Dialog */
+.expense-dialog .dialog-content {
+    max-width: 500px;
+}
+
+.expense-form .form-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: #f0f0f0;
+    padding: 0.25rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.expense-form .form-tab {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.expense-form .form-tab.active {
+    background: #fff;
+    color: #1a1a1a;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.expense-form .form-tab-content {
+    margin-bottom: 1rem;
+}
+
+.expense-form .form-tab-content.hidden {
+    display: none;
+}
+
+.preset-total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #22c55e;
+    padding: 0.5rem;
+    background: #f0fdf4;
+    border-radius: 6px;
+    text-align: center;
+}
+
+/* Costing Card */
+.costing-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.costing-card.empty {
+    text-align: center;
+    color: #888;
+    padding: 3rem;
+}
+
+.costing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.costing-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1a1a1a;
+}
+
+.profitability-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Costing Summary */
+.costing-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.costing-metric {
+    text-align: center;
+    padding: 1rem;
+    background: #fafafa;
+    border-radius: 8px;
+}
+
+.costing-metric .metric-label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.costing-metric .metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.costing-metric .metric-value.expense {
+    color: #ef4444;
+}
+
+.costing-metric.positive .metric-value {
+    color: #22c55e;
+}
+
+.costing-metric.negative .metric-value {
+    color: #ef4444;
+}
+
+/* Costing Breakdown */
+.costing-breakdown h4 {
+    font-size: 0.875rem;
+    color: #888;
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr auto 100px;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.breakdown-label {
+    font-size: 0.875rem;
+    color: #333;
+}
+
+.breakdown-value {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #1a1a1a;
+}
+
+.breakdown-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.breakdown-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Profit Indicator */
+.profit-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.profit-indicator.profit {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+
+.profit-indicator.loss {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.profit-indicator .indicator-icon {
+    font-size: 1.5rem;
+}
+
+.profit-indicator .indicator-content {
+    flex: 1;
+}
+
+.profit-indicator .indicator-label {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.profit-indicator .indicator-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.profit-indicator.profit .indicator-value {
+    color: #22c55e;
+}
+
+.profit-indicator.loss .indicator-value {
+    color: #ef4444;
+}
+
+/* Receipt Preview */
+.receipt-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #fafafa;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.receipt-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.receipt-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .costing-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .expense-categories {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .breakdown-row {
+        grid-template-columns: 1fr auto;
+    }
+
+    .breakdown-bar {
+        display: none;
+    }
+}

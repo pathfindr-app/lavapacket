@@ -1,0 +1,456 @@
+/**
+ * Quick Capture - Slick, Simple Media Capture
+ */
+
+/* Floating Action Button */
+.quick-capture-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e07d3b 0%, #c46a2a 100%);
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 300;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(224, 125, 59, 0.4);
+    z-index: 900;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.quick-capture-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 28px rgba(224, 125, 59, 0.5);
+}
+
+.quick-capture-fab:active {
+    transform: scale(0.95);
+}
+
+/* Modal Overlay */
+.quick-capture-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.quick-capture-modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal Content */
+.quick-capture-content {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.quick-capture-modal.open .quick-capture-content {
+    transform: scale(1) translateY(0);
+}
+
+/* Close Button */
+.quick-capture-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.quick-capture-close:hover {
+    background: #e0e0e0;
+}
+
+/* Step Container */
+.capture-step {
+    padding: 24px;
+}
+
+/* Title */
+.capture-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 24px;
+    color: #1a1a1a;
+}
+
+/* Capture Options Grid */
+.capture-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.capture-option {
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.capture-option:hover {
+    border-color: #e07d3b;
+    background: #fff5ef;
+}
+
+.capture-option:active {
+    transform: scale(0.97);
+}
+
+.capture-option-icon {
+    font-size: 2.5rem;
+}
+
+.capture-option-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Preview Container */
+#capturePreviewContainer {
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#capturePreviewContainer video,
+#capturePreviewContainer img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+#capturePreviewContainer audio {
+    width: 100%;
+    padding: 20px;
+}
+
+/* Recording Controls */
+#recordingControls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 0;
+}
+
+.recording-timer {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #e53e3e;
+    font-family: 'Courier New', monospace;
+}
+
+.recording-stop-btn {
+    background: #e53e3e;
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.recording-stop-btn:hover {
+    background: #c53030;
+}
+
+/* Preview Controls */
+#previewControls {
+    display: flex;
+    gap: 12px;
+}
+
+/* Buttons */
+.capture-btn-primary {
+    flex: 1;
+    background: linear-gradient(135deg, #e07d3b 0%, #c46a2a 100%);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.capture-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(224, 125, 59, 0.3);
+}
+
+.capture-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.capture-btn-secondary {
+    flex: 1;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.capture-btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+/* Client Search */
+.capture-search-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.capture-search-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.capture-search-input:focus {
+    border-color: #e07d3b;
+}
+
+.capture-search-input::placeholder {
+    color: #999;
+}
+
+/* Search Results Dropdown */
+.capture-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: #f8f9fa;
+}
+
+.search-result-item.create-new {
+    background: #f0f9ff;
+    color: #0369a1;
+}
+
+.search-result-item.create-new:hover {
+    background: #e0f2fe;
+}
+
+.search-result-icon {
+    font-size: 1.25rem;
+}
+
+.search-result-text {
+    flex: 1;
+    line-height: 1.3;
+}
+
+.search-result-text strong {
+    display: block;
+}
+
+.search-result-text small {
+    color: #666;
+}
+
+/* Selected Client */
+.selected-client {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #e8f5e9;
+    border: 2px solid #4caf50;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.selected-client span:first-child {
+    line-height: 1.3;
+}
+
+.selected-client button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0 4px;
+}
+
+/* Note Input */
+.capture-note-input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+}
+
+.capture-note-input:focus {
+    border-color: #e07d3b;
+}
+
+/* Save Button */
+.capture-save-btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.2rem;
+}
+
+/* Success State */
+.capture-success {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.capture-success-icon {
+    width: 80px;
+    height: 80px;
+    background: #4caf50;
+    color: white;
+    border-radius: 50%;
+    font-size: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    animation: successPop 0.4s ease;
+}
+
+@keyframes successPop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.capture-success-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+    .quick-capture-fab {
+        bottom: 16px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        font-size: 2rem;
+    }
+
+    .quick-capture-content {
+        width: 95%;
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+
+    .capture-step {
+        padding: 20px;
+    }
+
+    .capture-title {
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+    }
+
+    .capture-option {
+        padding: 16px;
+    }
+
+    .capture-option-icon {
+        font-size: 2rem;
+    }
+}
+
+/* Hide FAB on certain pages if needed */
+.hide-quick-capture .quick-capture-fab {
+    display: none;
+}

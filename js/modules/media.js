@@ -31,6 +31,7 @@ const Media = {
      * @param {File} file - The file to upload
      * @param {Object} options - Upload options
      * @param {string} options.address - REQUIRED: Job site address for organization
+     * @param {string} options.clientId - Client UUID for linking to client
      * @param {string} options.linkedType - 'packet', 'inspection', 'repair', 'general'
      * @param {string} options.linkedId - UUID of linked record (optional for 'general')
      * @param {string} options.slot - Slot identifier like 'aerial', 'ssImg1', etc.
@@ -39,7 +40,7 @@ const Media = {
      * @returns {Promise<Object>} - The created media record
      */
     async upload(file, options = {}) {
-        const { address, linkedType = 'general', linkedId = null, slot = null, caption = '', tags = [] } = options;
+        const { address, clientId = null, linkedType = 'general', linkedId = null, slot = null, caption = '', tags = [] } = options;
 
         // Address is required for organization
         if (!address || !address.trim()) {
@@ -100,6 +101,7 @@ const Media = {
             size_bytes: uploadBlob.size || file.size,
             linked_type: linkedType,
             linked_id: linkedId,
+            client_id: clientId,
             slot: slot,
             caption: caption,
             tags: tags,
@@ -205,6 +207,20 @@ const Media = {
             .from('media')
             .select('*')
             .ilike('address', `%${address}%`)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    /**
+     * Get all media for a specific client
+     */
+    async getByClient(clientId) {
+        const { data, error } = await SupabaseClient.client
+            .from('media')
+            .select('*')
+            .eq('client_id', clientId)
             .order('created_at', { ascending: false });
 
         if (error) throw error;

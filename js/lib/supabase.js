@@ -508,6 +508,230 @@ const SupabaseClient = {
         }
     },
 
+    // ==================== CLIENTS ====================
+
+    /**
+     * List all clients
+     */
+    async listClients() {
+        if (!this.isAvailable()) return [];
+
+        try {
+            const { data, error } = await this.client
+                .from('clients')
+                .select('id, name, address, phone, email, tags, total_packets, total_inspections, total_media, created_at, updated_at, last_activity_at')
+                .order('last_activity_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error('Failed to list clients:', e);
+            return [];
+        }
+    },
+
+    /**
+     * Search clients by name or address
+     */
+    async searchClients(query) {
+        if (!this.isAvailable()) return [];
+
+        try {
+            const { data, error } = await this.client
+                .from('clients')
+                .select('id, name, address, phone, email, tags, total_packets, total_inspections, total_media, last_activity_at')
+                .or(`name.ilike.%${query}%,address.ilike.%${query}%`)
+                .order('last_activity_at', { ascending: false })
+                .limit(20);
+
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error('Failed to search clients:', e);
+            return [];
+        }
+    },
+
+    /**
+     * Get a single client by ID
+     */
+    async getClient(id) {
+        if (!this.isAvailable()) return null;
+
+        try {
+            const { data, error } = await this.client
+                .from('clients')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error('Failed to get client:', e);
+            return null;
+        }
+    },
+
+    /**
+     * Save a client (create or update)
+     */
+    async saveClient(clientData) {
+        if (!this.isAvailable()) return null;
+
+        try {
+            const { id, ...data } = clientData;
+            const now = new Date().toISOString();
+
+            let result;
+            if (id) {
+                // Update existing
+                const { data: updated, error } = await this.client
+                    .from('clients')
+                    .update({ ...data, updated_at: now })
+                    .eq('id', id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                result = updated;
+            } else {
+                // Create new
+                const { data: created, error } = await this.client
+                    .from('clients')
+                    .insert({ ...data, created_at: now, updated_at: now, last_activity_at: now })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                result = created;
+            }
+
+            return result;
+        } catch (e) {
+            console.error('Failed to save client:', e);
+            return null;
+        }
+    },
+
+    /**
+     * Delete a client
+     */
+    async deleteClient(id) {
+        if (!this.isAvailable()) return false;
+
+        try {
+            const { error } = await this.client
+                .from('clients')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error('Failed to delete client:', e);
+            return false;
+        }
+    },
+
+    /**
+     * Find client by name and address, or create new
+     */
+    async findOrCreateClient(name, address = '') {
+        if (!this.isAvailable()) return null;
+
+        try {
+            // Try to find existing
+            let query = this.client
+                .from('clients')
+                .select('*')
+                .ilike('name', name);
+
+            if (address) {
+                query = query.ilike('address', address);
+            }
+
+            const { data: existing, error: findError } = await query.limit(1);
+
+            if (findError) throw findError;
+
+            if (existing && existing.length > 0) {
+                return existing[0];
+            }
+
+            // Create new
+            const { data: created, error: createError } = await this.client
+                .from('clients')
+                .insert({ name, address })
+                .select()
+                .single();
+
+            if (createError) throw createError;
+            return created;
+        } catch (e) {
+            console.error('Failed to find or create client:', e);
+            return null;
+        }
+    },
+
+    /**
+     * Get client history (packets, inspections, media)
+     */
+    async getClientHistory(clientId) {
+        if (!this.isAvailable()) return { packets: [], inspections: [], media: [] };
+
+        try {
+            const [packetsRes, inspectionsRes, mediaRes] = await Promise.all([
+                this.client
+                    .from('packets')
+                    .select('id, customer_name, customer_address, product_type, created_at, updated_at')
+                    .eq('client_id', clientId)
+                    .order('updated_at', { ascending: false }),
+                this.client
+                    .from('inspections')
+                    .select('id, customer_name, customer_address, inspection_date, status, created_at, updated_at')
+                    .eq('client_id', clientId)
+                    .order('updated_at', { ascending: false }),
+                this.client
+                    .from('media')
+                    .select('id, filename, file_type, public_url, caption, tags, created_at')
+                    .eq('client_id', clientId)
+                    .order('created_at', { ascending: false })
+            ]);
+
+            return {
+                packets: packetsRes.data || [],
+                inspections: inspectionsRes.data || [],
+                media: mediaRes.data || []
+            };
+        } catch (e) {
+            console.error('Failed to get client history:', e);
+            return { packets: [], inspections: [], media: [] };
+        }
+    },
+
+    /**
+     * Update client activity and counts
+     */
+    async updateClientActivity(clientId) {
+        if (!this.isAvailable() || !clientId) return;
+
+        try {
+            // Use the database function if available, otherwise update directly
+            const { error } = await this.client.rpc('update_client_counts', { p_client_id: clientId });
+
+            if (error) {
+                // Fallback: just update last_activity_at
+                await this.client
+                    .from('clients')
+                    .update({ last_activity_at: new Date().toISOString() })
+                    .eq('id', clientId);
+            }
+        } catch (e) {
+            console.error('Failed to update client activity:', e);
+        }
+    },
+
     // ==================== UTILITIES ====================
 
     /**
@@ -548,16 +772,17 @@ const SupabaseClient = {
      */
     async getDashboardStats() {
         if (!this.isAvailable()) {
-            return { totalPackets: 0, totalInspections: 0, thisWeek: 0 };
+            return { totalPackets: 0, totalInspections: 0, totalClients: 0, thisWeek: 0 };
         }
 
         try {
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
 
-            const [packetsCount, inspectionsCount, weekPackets, weekInspections] = await Promise.all([
+            const [packetsCount, inspectionsCount, clientsCount, weekPackets, weekInspections] = await Promise.all([
                 this.client.from('packets').select('id', { count: 'exact', head: true }),
                 this.client.from('inspections').select('id', { count: 'exact', head: true }),
+                this.client.from('clients').select('id', { count: 'exact', head: true }),
                 this.client.from('packets').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
                 this.client.from('inspections').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString())
             ]);
@@ -565,11 +790,12 @@ const SupabaseClient = {
             return {
                 totalPackets: packetsCount.count || 0,
                 totalInspections: inspectionsCount.count || 0,
+                totalClients: clientsCount.count || 0,
                 thisWeek: (weekPackets.count || 0) + (weekInspections.count || 0)
             };
         } catch (e) {
             console.error('Failed to get dashboard stats:', e);
-            return { totalPackets: 0, totalInspections: 0, thisWeek: 0 };
+            return { totalPackets: 0, totalInspections: 0, totalClients: 0, thisWeek: 0 };
         }
     }
 };

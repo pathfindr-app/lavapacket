@@ -228,6 +228,18 @@ body {
     margin-top: 0.25rem;
 }
 
+.stat-card.stat-primary {
+    background: linear-gradient(135deg, var(--lava-blue) 0%, #2a4a73 100%);
+}
+
+.stat-card.stat-primary .stat-value {
+    color: white;
+}
+
+.stat-card.stat-primary .stat-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 /* Quick Actions */
 .quick-actions {
     display: grid;
@@ -270,6 +282,10 @@ body {
 .action-icon.orange { background: #fef3e8; }
 .action-icon.green { background: #e8f5e9; }
 .action-icon.red { background: #fee8e8; }
+.action-icon.purple { background: #f3e8fe; }
+.action-icon.teal { background: #e8fefa; }
+.action-icon.navy { background: #e8eefe; }
+.action-icon.gold { background: #fef9e8; }
 
 .action-title {
     font-size: 1rem;
