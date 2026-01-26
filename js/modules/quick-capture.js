@@ -1082,15 +1082,8 @@ const QuickCapture = {
                     }
                 }
 
-                // Also save locally as backup
-                if (!mediaEntry.url && item.blob instanceof Blob) {
-                    try {
-                        mediaEntry.blob = await this.blobToBase64(item.blob);
-                    } catch (blobErr) {
-                        console.warn('[QuickCapture] Could not convert blob to base64:', blobErr);
-                        // Skip blob storage if conversion fails
-                    }
-                }
+                // Note: We no longer store blob data locally to avoid quota issues
+                // If Supabase upload failed, we just store the metadata
 
                 savedEntries.push(mediaEntry);
 
@@ -1100,11 +1093,37 @@ const QuickCapture = {
                 }
             }
 
-            // Save all to localStorage
+            // Save metadata to localStorage (without blob data if we have a URL)
             const localMedia = JSON.parse(localStorage.getItem('lavaQuickMedia') || '[]');
-            localMedia.unshift(...savedEntries);
-            // Keep only last 100 entries locally
-            localStorage.setItem('lavaQuickMedia', JSON.stringify(localMedia.slice(0, 100)));
+            const entriesToSave = savedEntries.map(entry => {
+                // Don't store blob data if we have a Supabase URL
+                if (entry.url) {
+                    const { blob, ...metadataOnly } = entry;
+                    return metadataOnly;
+                }
+                return entry;
+            });
+            localMedia.unshift(...entriesToSave);
+
+            // Try to save, handle quota exceeded
+            try {
+                // Keep only last 50 entries to save space
+                localStorage.setItem('lavaQuickMedia', JSON.stringify(localMedia.slice(0, 50)));
+            } catch (storageErr) {
+                console.warn('[QuickCapture] localStorage quota exceeded, clearing old entries');
+                // Try with fewer entries
+                try {
+                    localStorage.setItem('lavaQuickMedia', JSON.stringify(localMedia.slice(0, 10)));
+                } catch (e) {
+                    // Last resort - just save the new entries without blobs
+                    const minimalEntries = entriesToSave.map(({ blob, ...rest }) => rest);
+                    try {
+                        localStorage.setItem('lavaQuickMedia', JSON.stringify(minimalEntries));
+                    } catch (e2) {
+                        console.error('[QuickCapture] Could not save to localStorage at all');
+                    }
+                }
+            }
 
             // Show success
             this.showStep(4);
