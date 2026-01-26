@@ -1090,14 +1090,33 @@ const QuickCapture = {
                             }
                         } else {
                             console.error('[QuickCapture] Storage upload failed:', error);
-                            // Show user-visible error
-                            saveBtn.textContent = 'Upload failed - retrying...';
+                            // Store thumbnail locally as fallback
+                            if (item.type === 'photo' && item.blob) {
+                                try {
+                                    mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
+                                    console.log('[QuickCapture] Created local thumbnail as fallback');
+                                } catch (e) {
+                                    console.warn('[QuickCapture] Could not create thumbnail:', e);
+                                }
+                            }
                         }
                     } catch (uploadErr) {
                         console.error('[QuickCapture] Storage upload error:', uploadErr);
+                        // Store thumbnail locally as fallback
+                        if (item.type === 'photo' && item.blob) {
+                            try {
+                                mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
+                            } catch (e) {}
+                        }
                     }
                 } else {
                     console.warn('[QuickCapture] Supabase not available, saving locally only');
+                    // Store thumbnail locally
+                    if (item.type === 'photo' && item.blob) {
+                        try {
+                            mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
+                        } catch (e) {}
+                    }
                 }
 
                 // Note: We no longer store blob data locally to avoid quota issues
@@ -1172,6 +1191,54 @@ const QuickCapture = {
             reader.onloadend = () => resolve(reader.result);
             reader.onerror = reject;
             reader.readAsDataURL(blob);
+        });
+    },
+
+    /**
+     * Create a small thumbnail (for local fallback when Supabase fails)
+     * Returns a small ~50KB base64 image
+     */
+    createSmallThumbnail(blob) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    // Small thumbnail size - 200px max
+                    const maxSize = 200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height = height * maxSize / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width = width * maxSize / height;
+                            height = maxSize;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Low quality JPEG for small size
+                    const thumbnail = canvas.toDataURL('image/jpeg', 0.5);
+                    URL.revokeObjectURL(img.src);
+                    resolve(thumbnail);
+                } catch (e) {
+                    reject(e);
+                }
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(img.src);
+                reject(new Error('Failed to load image'));
+            };
+            img.src = URL.createObjectURL(blob);
         });
     },
 

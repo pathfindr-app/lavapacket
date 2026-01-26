@@ -219,11 +219,12 @@ const Clients = {
                 id: m.id,
                 filename: m.id + (m.type === 'photo' ? '.jpg' : m.type === 'video' ? '.mp4' : '.webm'),
                 file_type: m.type === 'voice' ? 'audio' : m.type,
-                public_url: m.url || m.blob, // Use blob (base64) if no URL
+                public_url: m.url || m.thumbnail || m.blob, // Use URL, thumbnail, or blob as fallback
                 caption: m.note || m.transcript || '',
                 tags: [m.client_name, m.type].filter(Boolean),
                 created_at: m.created_at,
-                is_local: !m.url // Flag to indicate this is local/base64 data
+                is_local: !m.url, // Flag to indicate this is local/base64 data
+                has_thumbnail_only: !m.url && m.thumbnail // Flag to indicate thumbnail only (no full image)
             }));
         } catch (e) {
             console.error('[Clients] Failed to get local quick media:', e);
