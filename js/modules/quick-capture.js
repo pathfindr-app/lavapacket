@@ -169,7 +169,7 @@ const QuickCapture = {
             </div>
 
             <!-- Hidden file inputs -->
-            <input type="file" id="galleryInput" accept="image/*,video/*" style="display: none;" onchange="QuickCapture.handleGallerySelect(event)">
+            <input type="file" id="galleryInput" accept="image/*,video/*" multiple style="display: none;" onchange="QuickCapture.handleGallerySelect(event)">
             <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" style="display: none;" onchange="QuickCapture.handleCameraCapture(event)">
         `;
 
@@ -296,37 +296,21 @@ const QuickCapture = {
         if (!file) return;
 
         this.currentBlob = file;
+        this.currentType = this.detectFileType(file);
 
-        // Detect type from MIME type or file extension
-        const isImage = file.type.startsWith('image/') ||
-            /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
-        const isVideo = file.type.startsWith('video/') ||
-            /\.(mp4|mov|avi|webm|m4v)$/i.test(file.name);
-
-        if (isImage) {
-            this.currentType = 'photo';
+        if (this.currentType === 'photo') {
             const img = document.getElementById('photoPreview');
             img.src = URL.createObjectURL(file);
             img.style.display = 'block';
             img.onload = () => URL.revokeObjectURL(img.src);
             document.getElementById('videoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Photo Preview';
-        } else if (isVideo) {
-            this.currentType = 'video';
+        } else if (this.currentType === 'video') {
             const video = document.getElementById('videoPreview');
             video.src = URL.createObjectURL(file);
             video.style.display = 'block';
             document.getElementById('photoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Video Preview';
-        } else {
-            // Default to photo for camera captures if type unknown
-            console.log('[QuickCapture] Unknown file type, defaulting to photo:', file.type, file.name);
-            this.currentType = 'photo';
-            const img = document.getElementById('photoPreview');
-            img.src = URL.createObjectURL(file);
-            img.style.display = 'block';
-            document.getElementById('videoPreview').style.display = 'none';
-            document.getElementById('captureStep2Title').textContent = 'Photo Preview';
         }
 
         document.getElementById('capturePreviewContainer').style.display = 'block';
@@ -545,43 +529,53 @@ const QuickCapture = {
     },
 
     /**
-     * Handle gallery selection
+     * Handle gallery selection (supports multiple files)
      */
-    handleGallerySelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    async handleGallerySelect(event) {
+        const files = Array.from(event.target.files);
+        if (!files.length) return;
 
+        // If multiple files selected, add them all to batch and go to tagging
+        if (files.length > 1) {
+            for (const file of files) {
+                const type = this.detectFileType(file);
+                const thumbnail = type === 'photo' ? await this.createThumbnail(file) : (type === 'video' ? '🎥' : '📄');
+
+                this.batchItems.push({
+                    id: 'batch_' + Date.now() + '_' + this.batchItems.length,
+                    blob: file,
+                    type: type,
+                    thumbnail: thumbnail,
+                    transcript: null
+                });
+            }
+
+            console.log('[QuickCapture] Added', files.length, 'files to batch, total:', this.batchItems.length);
+            this.updateBatchPreview();
+
+            // Reset input and go to tagging
+            event.target.value = '';
+            this.goToTagging();
+            return;
+        }
+
+        // Single file - show preview as before
+        const file = files[0];
         this.currentBlob = file;
+        this.currentType = this.detectFileType(file);
 
-        // Detect type from MIME type or file extension
-        const isImage = file.type.startsWith('image/') ||
-            /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
-        const isVideo = file.type.startsWith('video/') ||
-            /\.(mp4|mov|avi|webm|m4v)$/i.test(file.name);
-
-        if (isImage) {
-            this.currentType = 'photo';
+        if (this.currentType === 'photo') {
             const img = document.getElementById('photoPreview');
             img.src = URL.createObjectURL(file);
             img.style.display = 'block';
             document.getElementById('videoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Photo Preview';
-        } else if (isVideo) {
-            this.currentType = 'video';
+        } else if (this.currentType === 'video') {
             const video = document.getElementById('videoPreview');
             video.src = URL.createObjectURL(file);
             video.style.display = 'block';
             document.getElementById('photoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Video Preview';
-        } else {
-            // Default to photo for gallery selections if type unknown
-            console.log('[QuickCapture] Unknown gallery file type, defaulting to photo:', file.type, file.name);
-            this.currentType = 'photo';
-            const img = document.getElementById('photoPreview');
-            img.src = URL.createObjectURL(file);
-            img.style.display = 'block';
-            document.getElementById('videoPreview').style.display = 'none';
-            document.getElementById('captureStep2Title').textContent = 'Photo Preview';
         }
 
         document.getElementById('capturePreviewContainer').style.display = 'block';
@@ -590,6 +584,22 @@ const QuickCapture = {
 
         // Reset input
         event.target.value = '';
+    },
+
+    /**
+     * Detect file type from MIME type or extension
+     */
+    detectFileType(file) {
+        const isImage = file.type.startsWith('image/') ||
+            /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+        const isVideo = file.type.startsWith('video/') ||
+            /\.(mp4|mov|avi|webm|m4v)$/i.test(file.name);
+
+        if (isImage) return 'photo';
+        if (isVideo) return 'video';
+
+        console.log('[QuickCapture] Unknown file type, defaulting to photo:', file.type, file.name);
+        return 'photo';
     },
 
     /**
