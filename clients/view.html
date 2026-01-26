@@ -318,11 +318,25 @@
                     const isVideo = fileType === 'video';
                     const isAudio = fileType === 'audio' || fileType === 'voice';
 
+                    // Check if URL is a base64 thumbnail (not a real video/media URL)
+                    const isBase64 = url.startsWith('data:');
+                    const isRealVideoUrl = isVideo && !isBase64 && url.includes('supabase');
+
                     let content;
                     if (isImage) {
-                        content = `<img src="${url}" alt="${escapeHtml(m.filename)}" loading="lazy">`;
+                        content = `<img src="${url}" alt="${escapeHtml(m.filename)}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3EPhoto%3C/text%3E%3C/svg%3E'">`;
                     } else if (isVideo) {
-                        content = `<video src="${url}" muted></video>`;
+                        // For videos: use video element only if we have a real video URL
+                        // Otherwise show thumbnail image or placeholder
+                        if (isRealVideoUrl) {
+                            content = `<video src="${url}" muted></video>`;
+                        } else if (url && isBase64) {
+                            // Has thumbnail image - show it
+                            content = `<img src="${url}" alt="Video thumbnail" loading="lazy">`;
+                        } else {
+                            // No thumbnail - show placeholder
+                            content = `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">🎥</div><div class="media-doc-placeholder-name">${escapeHtml(m.caption || 'Video')}</div></div>`;
+                        }
                     } else if (isAudio) {
                         content = `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">🎤</div><div class="media-doc-placeholder-name">${escapeHtml(m.caption || 'Voice Memo')}</div></div>`;
                     } else {
@@ -332,7 +346,7 @@
                     return `
                         <div class="media-item" onclick="openMedia('${url}', '${fileType}')">
                             ${content}
-                            <span class="media-item-badge ${fileType}">${fileType}</span>
+                            <span class="media-item-badge ${fileType}">${fileType.toUpperCase()}</span>
                             <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
                         </div>
                     `;
