@@ -1018,6 +1018,25 @@ const QuickCapture = {
                     ? SupabaseClient.getClient()
                     : null;
 
+                console.log('[QuickCapture] Supabase available:', !!supabaseClient, 'storage:', !!supabaseClient?.storage);
+                console.log('[QuickCapture] Selected client ID:', this.selectedClientId, 'type:', typeof this.selectedClientId);
+
+                // Always try to create thumbnail first as backup (in case upload fails)
+                if (item.type === 'photo' && item.blob) {
+                    try {
+                        mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
+                        console.log('[QuickCapture] Created backup thumbnail');
+                    } catch (thumbErr) {
+                        console.warn('[QuickCapture] Could not create backup thumbnail:', thumbErr);
+                        // Use a placeholder for broken images
+                        mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23999"%3EPhoto%3C/text%3E%3C/svg%3E';
+                    }
+                } else if (item.type === 'video') {
+                    mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23333" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23fff"%3E🎥%3C/text%3E%3C/svg%3E';
+                } else if (item.type === 'voice') {
+                    mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e0f0ff" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23333"%3E🎤%3C/text%3E%3C/svg%3E';
+                }
+
                 if (supabaseClient && supabaseClient.storage) {
                     try {
                         // If we have a local-only client, try to create them in Supabase first
@@ -1031,6 +1050,8 @@ const QuickCapture = {
                                 this.selectedClientId = newClient.id;
                                 mediaEntry.client_id = newClient.id;
                                 console.log('[QuickCapture] Created client with ID:', newClient.id);
+                            } else {
+                                console.error('[QuickCapture] Failed to create client in Supabase');
                             }
                         }
 
@@ -1045,7 +1066,13 @@ const QuickCapture = {
                             if (item.blob.type.includes('png')) ext = 'png';
                             else if (item.blob.type.includes('gif')) ext = 'gif';
                             else if (item.blob.type.includes('webp')) ext = 'webp';
-                            else if (item.blob.type.includes('heic')) ext = 'heic';
+                            else if (item.blob.type.includes('heic')) ext = 'jpg'; // Convert HEIC to jpg path
+                        }
+
+                        // Validate blob before upload
+                        if (!item.blob || item.blob.size === 0) {
+                            console.error('[QuickCapture] Invalid blob - empty or missing');
+                            continue;
                         }
 
                         const path = `media/${this.selectedClientId || 'untagged'}/${mediaEntry.id}.${ext}`;
@@ -1068,7 +1095,7 @@ const QuickCapture = {
 
                             // Save to media table
                             if (this.selectedClientId && !this.selectedClientId.toString().startsWith('local_')) {
-                                const { error: dbError } = await supabaseClient
+                                const { data: dbData, error: dbError } = await supabaseClient
                                     .from('media')
                                     .insert({
                                         client_id: this.selectedClientId,
@@ -1078,45 +1105,25 @@ const QuickCapture = {
                                         public_url: mediaEntry.url,
                                         caption: transcript || note,
                                         tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
-                                    });
+                                    })
+                                    .select();
 
                                 if (dbError) {
-                                    console.error('[QuickCapture] Database insert failed:', dbError);
+                                    console.error('[QuickCapture] Database insert failed:', dbError.message, dbError.code);
                                 } else {
-                                    console.log('[QuickCapture] Database insert success for client:', this.selectedClientId);
+                                    console.log('[QuickCapture] Database insert success, id:', dbData?.[0]?.id);
                                 }
                             } else {
                                 console.warn('[QuickCapture] No valid client_id, media saved to storage but not linked to client');
                             }
                         } else {
-                            console.error('[QuickCapture] Storage upload failed:', error);
-                            // Store thumbnail locally as fallback
-                            if (item.type === 'photo' && item.blob) {
-                                try {
-                                    mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
-                                    console.log('[QuickCapture] Created local thumbnail as fallback');
-                                } catch (e) {
-                                    console.warn('[QuickCapture] Could not create thumbnail:', e);
-                                }
-                            }
+                            console.error('[QuickCapture] Storage upload failed:', error.message, error.statusCode);
                         }
                     } catch (uploadErr) {
-                        console.error('[QuickCapture] Storage upload error:', uploadErr);
-                        // Store thumbnail locally as fallback
-                        if (item.type === 'photo' && item.blob) {
-                            try {
-                                mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
-                            } catch (e) {}
-                        }
+                        console.error('[QuickCapture] Storage upload error:', uploadErr.message || uploadErr);
                     }
                 } else {
                     console.warn('[QuickCapture] Supabase not available, saving locally only');
-                    // Store thumbnail locally
-                    if (item.type === 'photo' && item.blob) {
-                        try {
-                            mediaEntry.thumbnail = await this.createSmallThumbnail(item.blob);
-                        } catch (e) {}
-                    }
                 }
 
                 // Note: We no longer store blob data locally to avoid quota issues
@@ -1200,14 +1207,26 @@ const QuickCapture = {
      */
     createSmallThumbnail(blob) {
         return new Promise((resolve, reject) => {
+            // Timeout after 5 seconds
+            const timeout = setTimeout(() => {
+                reject(new Error('Thumbnail creation timed out'));
+            }, 5000);
+
             const img = new Image();
             img.onload = () => {
+                clearTimeout(timeout);
                 try {
                     const canvas = document.createElement('canvas');
                     // Small thumbnail size - 200px max
                     const maxSize = 200;
-                    let width = img.width;
-                    let height = img.height;
+                    let width = img.width || 200;
+                    let height = img.height || 200;
+
+                    // Handle zero dimensions
+                    if (width === 0 || height === 0) {
+                        width = 200;
+                        height = 200;
+                    }
 
                     if (width > height) {
                         if (width > maxSize) {
@@ -1221,24 +1240,39 @@ const QuickCapture = {
                         }
                     }
 
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.width = Math.max(1, Math.round(width));
+                    canvas.height = Math.max(1, Math.round(height));
                     const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    ctx.fillStyle = '#f0f0f0';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                     // Low quality JPEG for small size
                     const thumbnail = canvas.toDataURL('image/jpeg', 0.5);
                     URL.revokeObjectURL(img.src);
                     resolve(thumbnail);
                 } catch (e) {
+                    URL.revokeObjectURL(img.src);
+                    console.error('[QuickCapture] Canvas error:', e);
                     reject(e);
                 }
             };
-            img.onerror = () => {
+            img.onerror = (e) => {
+                clearTimeout(timeout);
                 URL.revokeObjectURL(img.src);
-                reject(new Error('Failed to load image'));
+                console.error('[QuickCapture] Image load error for thumbnail');
+                reject(new Error('Failed to load image for thumbnail'));
             };
-            img.src = URL.createObjectURL(blob);
+
+            // Create object URL from blob
+            try {
+                const objectUrl = URL.createObjectURL(blob);
+                img.src = objectUrl;
+            } catch (e) {
+                clearTimeout(timeout);
+                console.error('[QuickCapture] Could not create object URL:', e);
+                reject(e);
+            }
         });
     },
 
