@@ -297,7 +297,13 @@ const QuickCapture = {
 
         this.currentBlob = file;
 
-        if (file.type.startsWith('image/')) {
+        // Detect type from MIME type or file extension
+        const isImage = file.type.startsWith('image/') ||
+            /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+        const isVideo = file.type.startsWith('video/') ||
+            /\.(mp4|mov|avi|webm|m4v)$/i.test(file.name);
+
+        if (isImage) {
             this.currentType = 'photo';
             const img = document.getElementById('photoPreview');
             img.src = URL.createObjectURL(file);
@@ -305,13 +311,22 @@ const QuickCapture = {
             img.onload = () => URL.revokeObjectURL(img.src);
             document.getElementById('videoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Photo Preview';
-        } else if (file.type.startsWith('video/')) {
+        } else if (isVideo) {
             this.currentType = 'video';
             const video = document.getElementById('videoPreview');
             video.src = URL.createObjectURL(file);
             video.style.display = 'block';
             document.getElementById('photoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Video Preview';
+        } else {
+            // Default to photo for camera captures if type unknown
+            console.log('[QuickCapture] Unknown file type, defaulting to photo:', file.type, file.name);
+            this.currentType = 'photo';
+            const img = document.getElementById('photoPreview');
+            img.src = URL.createObjectURL(file);
+            img.style.display = 'block';
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('captureStep2Title').textContent = 'Photo Preview';
         }
 
         document.getElementById('capturePreviewContainer').style.display = 'block';
@@ -538,18 +553,35 @@ const QuickCapture = {
 
         this.currentBlob = file;
 
-        if (file.type.startsWith('image/')) {
+        // Detect type from MIME type or file extension
+        const isImage = file.type.startsWith('image/') ||
+            /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+        const isVideo = file.type.startsWith('video/') ||
+            /\.(mp4|mov|avi|webm|m4v)$/i.test(file.name);
+
+        if (isImage) {
             this.currentType = 'photo';
             const img = document.getElementById('photoPreview');
             img.src = URL.createObjectURL(file);
             img.style.display = 'block';
+            document.getElementById('videoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Photo Preview';
-        } else if (file.type.startsWith('video/')) {
+        } else if (isVideo) {
             this.currentType = 'video';
             const video = document.getElementById('videoPreview');
             video.src = URL.createObjectURL(file);
             video.style.display = 'block';
+            document.getElementById('photoPreview').style.display = 'none';
             document.getElementById('captureStep2Title').textContent = 'Video Preview';
+        } else {
+            // Default to photo for gallery selections if type unknown
+            console.log('[QuickCapture] Unknown gallery file type, defaulting to photo:', file.type, file.name);
+            this.currentType = 'photo';
+            const img = document.getElementById('photoPreview');
+            img.src = URL.createObjectURL(file);
+            img.style.display = 'block';
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('captureStep2Title').textContent = 'Photo Preview';
         }
 
         document.getElementById('capturePreviewContainer').style.display = 'block';
@@ -978,13 +1010,27 @@ const QuickCapture = {
 
                 if (supabaseClient && supabaseClient.storage) {
                     try {
-                        const ext = item.type === 'photo' ? 'jpg' : item.type === 'video' ? 'mp4' : 'webm';
+                        // Determine extension from blob MIME type or item type
+                        let ext = 'jpg'; // default for photos
+                        if (item.type === 'video') {
+                            ext = 'mp4';
+                        } else if (item.type === 'voice') {
+                            ext = 'webm';
+                        } else if (item.blob && item.blob.type) {
+                            // Use actual MIME type if available
+                            if (item.blob.type.includes('png')) ext = 'png';
+                            else if (item.blob.type.includes('gif')) ext = 'gif';
+                            else if (item.blob.type.includes('webp')) ext = 'webp';
+                            else if (item.blob.type.includes('heic')) ext = 'heic';
+                        }
+
                         const path = `media/${this.selectedClientId || 'local'}/${mediaEntry.id}.${ext}`;
+                        console.log('[QuickCapture] Uploading to storage:', path, 'type:', item.type, 'blob type:', item.blob?.type);
 
                         const { data, error } = await supabaseClient.storage
                             .from('photos')
                             .upload(path, item.blob, {
-                                contentType: item.blob.type,
+                                contentType: item.blob.type || (item.type === 'photo' ? 'image/jpeg' : item.type === 'video' ? 'video/mp4' : 'audio/webm'),
                                 upsert: true
                             });
 
@@ -994,24 +1040,35 @@ const QuickCapture = {
                                 .getPublicUrl(path);
                             mediaEntry.url = urlData.publicUrl;
                             mediaEntry.storage_path = path;
+                            console.log('[QuickCapture] Storage upload success:', mediaEntry.url);
 
-                            // Save to media table
-                            await supabaseClient
-                                .from('media')
-                                .insert({
-                                    client_id: this.selectedClientId,
-                                    filename: `${mediaEntry.id}.${ext}`,
-                                    file_type: item.type,
-                                    storage_path: path,
-                                    public_url: mediaEntry.url,
-                                    caption: transcript || note,
-                                    tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
-                                });
+                            // Save to media table (only if we have a valid client_id)
+                            if (this.selectedClientId) {
+                                const { error: dbError } = await supabaseClient
+                                    .from('media')
+                                    .insert({
+                                        client_id: this.selectedClientId,
+                                        filename: `${mediaEntry.id}.${ext}`,
+                                        file_type: item.type,
+                                        storage_path: path,
+                                        public_url: mediaEntry.url,
+                                        caption: transcript || note,
+                                        tags: [this.selectedClientData.name, this.selectedClientData.address].filter(Boolean)
+                                    });
+
+                                if (dbError) {
+                                    console.error('[QuickCapture] Database insert failed:', dbError);
+                                } else {
+                                    console.log('[QuickCapture] Database insert success');
+                                }
+                            } else {
+                                console.log('[QuickCapture] No client_id, skipping database insert (local-only client)');
+                            }
                         } else {
-                            console.warn('[QuickCapture] Storage upload failed:', error);
+                            console.error('[QuickCapture] Storage upload failed:', error);
                         }
                     } catch (uploadErr) {
-                        console.warn('[QuickCapture] Storage upload error:', uploadErr);
+                        console.error('[QuickCapture] Storage upload error:', uploadErr);
                     }
                 }
 
