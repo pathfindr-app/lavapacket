@@ -53,7 +53,7 @@ const Clients = {
         }
 
         try {
-            return await SupabaseClient.getClient(id);
+            return await SupabaseClient.getClientById(id);
         } catch (e) {
             console.error('[Clients] Failed to get:', e);
             return null;

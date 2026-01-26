@@ -555,7 +555,7 @@ const SupabaseClient = {
     /**
      * Get a single client by ID
      */
-    async getClient(id) {
+    async getClientById(id) {
         if (!this.isAvailable()) return null;
 
         try {

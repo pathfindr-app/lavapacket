@@ -343,8 +343,10 @@
                         content = `<div class="media-doc-placeholder"><div class="media-doc-placeholder-icon">📄</div><div class="media-doc-placeholder-name">${escapeHtml(m.filename)}</div></div>`;
                     }
 
+                    // Encode URL for data attribute to handle special characters
+                    const encodedUrl = btoa(encodeURIComponent(url));
                     return `
-                        <div class="media-item" onclick="openMedia('${url}', '${fileType}')">
+                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" onclick="handleMediaClick(this)">
                             ${content}
                             <span class="media-item-badge ${fileType}">${fileType.toUpperCase()}</span>
                             <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
@@ -422,6 +424,19 @@
                 window.location.href = 'index.html';
             } else {
                 showToast('Failed to delete client', 'error');
+            }
+        }
+
+        function handleMediaClick(el) {
+            // Decode URL from data attribute (handles special characters safely)
+            const encodedUrl = el.dataset.url;
+            const type = el.dataset.type;
+            try {
+                const url = decodeURIComponent(atob(encodedUrl));
+                openMedia(url, type);
+            } catch (e) {
+                console.error('Failed to decode media URL:', e);
+                showToast('Unable to open media', 'error');
             }
         }
 

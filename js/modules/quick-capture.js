@@ -1029,12 +1029,12 @@ const QuickCapture = {
                     } catch (thumbErr) {
                         console.warn('[QuickCapture] Could not create backup thumbnail:', thumbErr);
                         // Use a placeholder for broken images
-                        mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23999"%3EPhoto%3C/text%3E%3C/svg%3E';
+                        mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3EPhoto%3C/text%3E%3C/svg%3E';
                     }
                 } else if (item.type === 'video') {
-                    mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23333" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23fff"%3E🎥%3C/text%3E%3C/svg%3E';
+                    mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22%3E🎥%3C/text%3E%3C/svg%3E';
                 } else if (item.type === 'voice') {
-                    mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e0f0ff" width="100" height="100"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%23333"%3E🎤%3C/text%3E%3C/svg%3E';
+                    mediaEntry.thumbnail = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23e0f0ff%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23333%22%3E🎤%3C/text%3E%3C/svg%3E';
                 }
 
                 if (supabaseClient && supabaseClient.storage) {

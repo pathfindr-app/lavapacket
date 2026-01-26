@@ -825,7 +825,7 @@
                 if (typeof Storage !== 'undefined' && Storage.currentPacketId) {
                     const packet = await SupabaseClient.getPacket(Storage.currentPacketId);
                     if (packet && packet.client_id) {
-                        selectedClient = await SupabaseClient.getClient(packet.client_id);
+                        selectedClient = await SupabaseClient.getClientById(packet.client_id);
                     }
                 }
                 renderClientBadge();
