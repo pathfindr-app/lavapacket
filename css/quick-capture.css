@@ -605,3 +605,81 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }
 }
+
+/* Media Source Selection */
+.capture-options-2col {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.capture-option-large {
+    padding: 24px 16px;
+}
+
+.capture-option-large .capture-option-icon {
+    font-size: 2.5rem;
+}
+
+.capture-option-large .capture-option-label {
+    font-size: 0.875rem;
+}
+
+.media-source-options {
+    text-align: center;
+    padding: 8px 0;
+}
+
+.media-source-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary, #4b5563);
+    margin-bottom: 12px;
+}
+
+.media-source-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.media-source-btn {
+    flex: 1;
+    background: var(--background, #f8fafc);
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-sm, 6px);
+    padding: 16px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary, #4b5563);
+}
+
+.media-source-btn span {
+    font-size: 1.5rem;
+}
+
+.media-source-btn:hover {
+    border-color: var(--lava-blue, #1e3a5f);
+    background: var(--surface, #fff);
+}
+
+.media-source-btn:active {
+    transform: scale(0.98);
+}
+
+.media-source-cancel {
+    background: none;
+    border: none;
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    padding: 8px 16px;
+}
+
+.media-source-cancel:hover {
+    color: var(--text-secondary, #4b5563);
+}

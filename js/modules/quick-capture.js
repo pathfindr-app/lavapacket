@@ -72,23 +72,29 @@ const QuickCapture = {
                         </button>
                     </div>
 
-                    <div class="capture-options">
-                        <button class="capture-option" onclick="QuickCapture.capturePhoto()">
+                    <div class="capture-options capture-options-2col">
+                        <button class="capture-option capture-option-large" onclick="QuickCapture.showMediaOptions()">
                             <span class="capture-option-icon">📷</span>
-                            <span class="capture-option-label">Photo</span>
+                            <span class="capture-option-label">Photo / Video</span>
                         </button>
-                        <button class="capture-option" onclick="QuickCapture.captureVideo()">
-                            <span class="capture-option-icon">🎥</span>
-                            <span class="capture-option-label">Video</span>
-                        </button>
-                        <button class="capture-option" onclick="QuickCapture.captureVoice()">
+                        <button class="capture-option capture-option-large" onclick="QuickCapture.captureVoice()">
                             <span class="capture-option-icon">🎤</span>
-                            <span class="capture-option-label">Voice</span>
+                            <span class="capture-option-label">Voice Memo</span>
                         </button>
-                        <button class="capture-option" onclick="QuickCapture.selectFromGallery()">
-                            <span class="capture-option-icon">🖼️</span>
-                            <span class="capture-option-label">Gallery</span>
-                        </button>
+                    </div>
+
+                    <!-- Media source selection (hidden by default) -->
+                    <div class="media-source-options" id="mediaSourceOptions" style="display: none;">
+                        <div class="media-source-title">Choose source</div>
+                        <div class="media-source-buttons">
+                            <button class="media-source-btn" onclick="QuickCapture.captureFromCamera()">
+                                <span>📸</span> Camera
+                            </button>
+                            <button class="media-source-btn" onclick="QuickCapture.selectFromGallery()">
+                                <span>🖼️</span> Gallery
+                            </button>
+                        </div>
+                        <button class="media-source-cancel" onclick="QuickCapture.hideMediaOptions()">Cancel</button>
                     </div>
                 </div>
 
@@ -162,10 +168,9 @@ const QuickCapture = {
                 </div>
             </div>
 
-            <!-- Hidden file input -->
+            <!-- Hidden file inputs -->
             <input type="file" id="galleryInput" accept="image/*,video/*" style="display: none;" onchange="QuickCapture.handleGallerySelect(event)">
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="QuickCapture.handleCameraCapture(event)">
-            <input type="file" id="videoInput" accept="video/*" capture="environment" style="display: none;" onchange="QuickCapture.handleVideoCapture(event)">
+            <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" style="display: none;" onchange="QuickCapture.handleCameraCapture(event)">
         `;
 
         document.body.appendChild(modal);
@@ -256,65 +261,61 @@ const QuickCapture = {
     // ==================== CAPTURE METHODS ====================
 
     /**
-     * Capture photo using device camera
+     * Show media source options (camera or gallery)
      */
-    capturePhoto() {
-        this.currentType = 'photo';
-        // Use file input with capture for mobile
+    showMediaOptions() {
+        const mediaSourceOptions = document.getElementById('mediaSourceOptions');
+        const captureOptions = document.querySelector('.capture-options');
+        if (mediaSourceOptions) mediaSourceOptions.style.display = 'block';
+        if (captureOptions) captureOptions.style.display = 'none';
+    },
+
+    /**
+     * Hide media source options
+     */
+    hideMediaOptions() {
+        const mediaSourceOptions = document.getElementById('mediaSourceOptions');
+        const captureOptions = document.querySelector('.capture-options');
+        if (mediaSourceOptions) mediaSourceOptions.style.display = 'none';
+        if (captureOptions) captureOptions.style.display = 'grid';
+    },
+
+    /**
+     * Capture from camera (photo or video - device will prompt)
+     */
+    captureFromCamera() {
+        this.hideMediaOptions();
         document.getElementById('cameraInput').click();
     },
 
     /**
-     * Handle camera capture result
+     * Handle camera capture result (photo or video)
      */
     handleCameraCapture(event) {
         const file = event.target.files[0];
         if (!file) return;
 
         this.currentBlob = file;
-        this.currentType = 'photo';
 
-        // Show preview
-        const img = document.getElementById('photoPreview');
-        img.src = URL.createObjectURL(file);
-        img.style.display = 'block';
-        img.onload = () => URL.revokeObjectURL(img.src);
-
-        document.getElementById('capturePreviewContainer').style.display = 'block';
-        document.getElementById('previewControls').style.display = 'flex';
-        document.getElementById('captureStep2Title').textContent = 'Photo Preview';
-        this.showStep(2);
-
-        // Reset input
-        event.target.value = '';
-    },
-
-    /**
-     * Capture video using device camera
-     */
-    captureVideo() {
-        this.currentType = 'video';
-        document.getElementById('videoInput').click();
-    },
-
-    /**
-     * Handle video capture result
-     */
-    handleVideoCapture(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        this.currentBlob = file;
-        this.currentType = 'video';
-
-        // Show preview
-        const video = document.getElementById('videoPreview');
-        video.src = URL.createObjectURL(file);
-        video.style.display = 'block';
+        if (file.type.startsWith('image/')) {
+            this.currentType = 'photo';
+            const img = document.getElementById('photoPreview');
+            img.src = URL.createObjectURL(file);
+            img.style.display = 'block';
+            img.onload = () => URL.revokeObjectURL(img.src);
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('captureStep2Title').textContent = 'Photo Preview';
+        } else if (file.type.startsWith('video/')) {
+            this.currentType = 'video';
+            const video = document.getElementById('videoPreview');
+            video.src = URL.createObjectURL(file);
+            video.style.display = 'block';
+            document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('captureStep2Title').textContent = 'Video Preview';
+        }
 
         document.getElementById('capturePreviewContainer').style.display = 'block';
         document.getElementById('previewControls').style.display = 'flex';
-        document.getElementById('captureStep2Title').textContent = 'Video Preview';
         this.showStep(2);
 
         // Reset input
@@ -524,6 +525,7 @@ const QuickCapture = {
      * Select from gallery
      */
     selectFromGallery() {
+        this.hideMediaOptions();
         document.getElementById('galleryInput').click();
     },
 
@@ -586,9 +588,15 @@ const QuickCapture = {
      */
     retake() {
         this.currentBlob = null;
+        this.currentType = null;
         document.getElementById('photoPreview').style.display = 'none';
         document.getElementById('videoPreview').style.display = 'none';
         document.getElementById('audioPreview').style.display = 'none';
+        // Reset media source options display
+        const mediaSourceOptions = document.getElementById('mediaSourceOptions');
+        if (mediaSourceOptions) mediaSourceOptions.style.display = 'none';
+        const captureOptions = document.querySelector('.capture-options');
+        if (captureOptions) captureOptions.style.display = 'grid';
         this.showStep(1);
     },
 
@@ -1008,8 +1016,13 @@ const QuickCapture = {
                 }
 
                 // Also save locally as backup
-                if (!mediaEntry.url) {
-                    mediaEntry.blob = await this.blobToBase64(item.blob);
+                if (!mediaEntry.url && item.blob instanceof Blob) {
+                    try {
+                        mediaEntry.blob = await this.blobToBase64(item.blob);
+                    } catch (blobErr) {
+                        console.warn('[QuickCapture] Could not convert blob to base64:', blobErr);
+                        // Skip blob storage if conversion fails
+                    }
                 }
 
                 savedEntries.push(mediaEntry);
