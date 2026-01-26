@@ -1020,6 +1020,20 @@ const QuickCapture = {
 
                 if (supabaseClient && supabaseClient.storage) {
                     try {
+                        // If we have a local-only client, try to create them in Supabase first
+                        if (!this.selectedClientId || this.selectedClientId.toString().startsWith('local_')) {
+                            console.log('[QuickCapture] Creating client in Supabase:', this.selectedClientData.name);
+                            const newClient = await SupabaseClient.saveClient({
+                                name: this.selectedClientData.name,
+                                address: this.selectedClientData.address || ''
+                            });
+                            if (newClient && newClient.id) {
+                                this.selectedClientId = newClient.id;
+                                mediaEntry.client_id = newClient.id;
+                                console.log('[QuickCapture] Created client with ID:', newClient.id);
+                            }
+                        }
+
                         // Determine extension from blob MIME type or item type
                         let ext = 'jpg'; // default for photos
                         if (item.type === 'video') {
@@ -1034,8 +1048,8 @@ const QuickCapture = {
                             else if (item.blob.type.includes('heic')) ext = 'heic';
                         }
 
-                        const path = `media/${this.selectedClientId || 'local'}/${mediaEntry.id}.${ext}`;
-                        console.log('[QuickCapture] Uploading to storage:', path, 'type:', item.type, 'blob type:', item.blob?.type);
+                        const path = `media/${this.selectedClientId || 'untagged'}/${mediaEntry.id}.${ext}`;
+                        console.log('[QuickCapture] Uploading to storage:', path, 'type:', item.type, 'blob type:', item.blob?.type, 'blob size:', item.blob?.size);
 
                         const { data, error } = await supabaseClient.storage
                             .from('photos')
@@ -1052,8 +1066,8 @@ const QuickCapture = {
                             mediaEntry.storage_path = path;
                             console.log('[QuickCapture] Storage upload success:', mediaEntry.url);
 
-                            // Save to media table (only if we have a valid client_id)
-                            if (this.selectedClientId) {
+                            // Save to media table
+                            if (this.selectedClientId && !this.selectedClientId.toString().startsWith('local_')) {
                                 const { error: dbError } = await supabaseClient
                                     .from('media')
                                     .insert({
@@ -1069,17 +1083,21 @@ const QuickCapture = {
                                 if (dbError) {
                                     console.error('[QuickCapture] Database insert failed:', dbError);
                                 } else {
-                                    console.log('[QuickCapture] Database insert success');
+                                    console.log('[QuickCapture] Database insert success for client:', this.selectedClientId);
                                 }
                             } else {
-                                console.log('[QuickCapture] No client_id, skipping database insert (local-only client)');
+                                console.warn('[QuickCapture] No valid client_id, media saved to storage but not linked to client');
                             }
                         } else {
                             console.error('[QuickCapture] Storage upload failed:', error);
+                            // Show user-visible error
+                            saveBtn.textContent = 'Upload failed - retrying...';
                         }
                     } catch (uploadErr) {
                         console.error('[QuickCapture] Storage upload error:', uploadErr);
                     }
+                } else {
+                    console.warn('[QuickCapture] Supabase not available, saving locally only');
                 }
 
                 // Note: We no longer store blob data locally to avoid quota issues
