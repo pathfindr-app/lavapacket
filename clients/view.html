@@ -349,7 +349,7 @@
                     const isLocal = m.is_local || false;
                     const storagePath = m.storage_path || '';
                     return `
-                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" data-id="${mediaId}" data-local="${isLocal}" data-path="${storagePath}">
+                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" data-id="${mediaId}" data-local="${isLocal}" data-path="${storagePath}" onclick="handleMediaClick(this)">
                             ${content}
                             <span class="media-item-badge ${fileType}">${fileType.toUpperCase()}</span>
                             <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
