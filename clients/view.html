@@ -345,11 +345,15 @@
 
                     // Encode URL for data attribute to handle special characters
                     const encodedUrl = btoa(encodeURIComponent(url));
+                    const mediaId = m.id || '';
+                    const isLocal = m.is_local || false;
+                    const storagePath = m.storage_path || '';
                     return `
-                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" onclick="handleMediaClick(this)">
+                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" data-id="${mediaId}" data-local="${isLocal}" data-path="${storagePath}">
                             ${content}
                             <span class="media-item-badge ${fileType}">${fileType.toUpperCase()}</span>
                             <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
+                            <button class="media-delete-btn" onclick="event.stopPropagation(); deleteMedia(this.parentElement)" title="Delete">×</button>
                         </div>
                     `;
                 }).join('');
@@ -424,6 +428,58 @@
                 window.location.href = 'index.html';
             } else {
                 showToast('Failed to delete client', 'error');
+            }
+        }
+
+        async function deleteMedia(el) {
+            if (!confirm('Delete this media? This cannot be undone.')) return;
+
+            const mediaId = el.dataset.id;
+            const isLocal = el.dataset.local === 'true';
+            const storagePath = el.dataset.path;
+
+            try {
+                // Delete from Supabase if it's a database record
+                if (mediaId && !isLocal && SupabaseClient.isAvailable()) {
+                    const client = SupabaseClient.getClient();
+
+                    // Delete from storage if we have a path
+                    if (storagePath) {
+                        const { error: storageError } = await client.storage
+                            .from('photos')
+                            .remove([storagePath]);
+                        if (storageError) console.warn('Storage delete failed:', storageError);
+                    }
+
+                    // Delete from media table
+                    const { error: dbError } = await client
+                        .from('media')
+                        .delete()
+                        .eq('id', mediaId);
+
+                    if (dbError) {
+                        console.error('Database delete failed:', dbError);
+                        showToast('Failed to delete from database', 'error');
+                        return;
+                    }
+                }
+
+                // Delete from localStorage if it's a local item
+                if (isLocal || mediaId.startsWith('media_')) {
+                    const localMedia = JSON.parse(localStorage.getItem('lavaQuickMedia') || '[]');
+                    const filtered = localMedia.filter(m => m.id !== mediaId);
+                    localStorage.setItem('lavaQuickMedia', JSON.stringify(filtered));
+                }
+
+                // Remove from DOM and update count
+                el.remove();
+                const mediaCount = document.querySelectorAll('.media-item').length;
+                document.getElementById('mediaCount').textContent = mediaCount;
+                showToast('Media deleted', 'success');
+
+            } catch (e) {
+                console.error('Delete failed:', e);
+                showToast('Failed to delete media', 'error');
             }
         }
 
@@ -540,6 +596,40 @@
 
         .client-contact-info a:hover {
             text-decoration: underline;
+        }
+
+        .media-item {
+            position: relative;
+        }
+
+        .media-delete-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .media-item:hover .media-delete-btn {
+            opacity: 1;
+        }
+
+        .media-delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
         }
     </style>
 </body>
