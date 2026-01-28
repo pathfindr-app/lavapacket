@@ -2674,8 +2674,26 @@
 
             // Load photos from IndexedDB or Supabase Storage
             photos = [];
+            const loadedStoragePaths = new Set(); // Track loaded paths to avoid duplicates
+            const loadedCategories = new Set(); // Track loaded categories to avoid duplicates
+
             if (inspection.photos && inspection.photos.length > 0) {
                 for (const photo of inspection.photos) {
+                    // Skip duplicates by storage_path
+                    const storagePath = photo.storage_path || photo.storagePath;
+                    if (storagePath && loadedStoragePaths.has(storagePath)) {
+                        console.log('[Inspection] Skipping duplicate photo:', storagePath);
+                        continue;
+                    }
+                    if (storagePath) loadedStoragePaths.add(storagePath);
+
+                    // Skip if category already loaded (prevent same slot from loading twice)
+                    if (loadedCategories.has(photo.category)) {
+                        console.log('[Inspection] Skipping duplicate category:', photo.category);
+                        continue;
+                    }
+                    loadedCategories.add(photo.category);
+
                     const photoBox = document.querySelector(`.photo-upload[data-category="${photo.category}"]`);
                     if (photoBox) {
                         try {
@@ -2683,7 +2701,6 @@
                             let dataUrl = null;
 
                             // Check for cloud storage path from inspection_photos table
-                            const storagePath = photo.storage_path || photo.storagePath;
                             if (storagePath && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
                                 const supabaseClient = SupabaseClient.client;
                                 if (supabaseClient && supabaseClient.storage) {
