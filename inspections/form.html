@@ -1920,13 +1920,42 @@
             img.src = dataUrl;
         }
 
-        function removePhoto(photoBox) {
+        async function removePhoto(photoBox) {
             const index = photos.findIndex(p => p.element === photoBox);
             if (index >= 0) {
-                // Delete from IndexedDB
-                if (photos[index].photoKey) {
-                    PhotoDB.delete(photos[index].photoKey).catch(() => {});
+                const photo = photos[index];
+
+                // Delete from IndexedDB if local
+                if (photo.photoKey) {
+                    PhotoDB.delete(photo.photoKey).catch(() => {});
                 }
+
+                // Delete from Supabase if it's a cloud photo
+                if ((photo.storage_path || photo.cloudUrl) && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                    const supabaseClient = SupabaseClient.client;
+                    if (supabaseClient) {
+                        try {
+                            // Delete from storage
+                            if (photo.storage_path) {
+                                await supabaseClient.storage
+                                    .from('photos')
+                                    .remove([photo.storage_path]);
+                            }
+
+                            // Delete from inspection_photos table if it has a DB id (UUID format)
+                            if (photo.id && photo.id.includes('-') && photo.id.length === 36) {
+                                await supabaseClient
+                                    .from('inspection_photos')
+                                    .delete()
+                                    .eq('id', photo.id);
+                            }
+                            console.log('[Inspection] Deleted photo from cloud:', photo.id);
+                        } catch (err) {
+                            console.error('[Inspection] Failed to delete from cloud:', err);
+                        }
+                    }
+                }
+
                 photos.splice(index, 1);
             }
 

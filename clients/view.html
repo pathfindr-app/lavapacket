@@ -348,8 +348,9 @@
                     const mediaId = m.id || '';
                     const isLocal = m.is_local || false;
                     const storagePath = m.storage_path || '';
+                    const source = m.source || 'media'; // 'media' or 'inspection'
                     return `
-                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" data-id="${mediaId}" data-local="${isLocal}" data-path="${storagePath}" onclick="handleMediaClick(this)">
+                        <div class="media-item" data-url="${encodedUrl}" data-type="${fileType}" data-id="${mediaId}" data-local="${isLocal}" data-path="${storagePath}" data-source="${source}" onclick="handleMediaClick(this)">
                             ${content}
                             <span class="media-item-badge ${fileType}">${fileType.toUpperCase()}</span>
                             <div class="media-item-overlay">${escapeHtml(m.caption || m.filename)}</div>
@@ -437,6 +438,7 @@
             const mediaId = el.dataset.id;
             const isLocal = el.dataset.local === 'true';
             const storagePath = el.dataset.path;
+            const source = el.dataset.source || 'media';
 
             try {
                 // Delete from Supabase if it's a database record
@@ -451,16 +453,31 @@
                         if (storageError) console.warn('Storage delete failed:', storageError);
                     }
 
-                    // Delete from media table
-                    const { error: dbError } = await client
-                        .from('media')
-                        .delete()
-                        .eq('id', mediaId);
+                    // Delete from appropriate table based on source
+                    if (source === 'inspection') {
+                        // Delete from inspection_photos table
+                        const { error: dbError } = await client
+                            .from('inspection_photos')
+                            .delete()
+                            .eq('id', mediaId);
 
-                    if (dbError) {
-                        console.error('Database delete failed:', dbError);
-                        showToast('Failed to delete from database', 'error');
-                        return;
+                        if (dbError) {
+                            console.error('Database delete failed:', dbError);
+                            showToast('Failed to delete from database', 'error');
+                            return;
+                        }
+                    } else {
+                        // Delete from media table
+                        const { error: dbError } = await client
+                            .from('media')
+                            .delete()
+                            .eq('id', mediaId);
+
+                        if (dbError) {
+                            console.error('Database delete failed:', dbError);
+                            showToast('Failed to delete from database', 'error');
+                            return;
+                        }
                     }
                 }
 
