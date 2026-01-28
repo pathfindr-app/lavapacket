@@ -681,7 +681,7 @@ const SupabaseClient = {
         if (!this.isAvailable()) return { packets: [], inspections: [], media: [] };
 
         try {
-            const [packetsRes, inspectionsRes, mediaRes] = await Promise.all([
+            const [packetsRes, inspectionsRes, mediaRes, inspectionPhotosRes] = await Promise.all([
                 this.client
                     .from('packets')
                     .select('id, customer_name, customer_address, product_type, created_at, updated_at')
@@ -696,13 +696,48 @@ const SupabaseClient = {
                     .from('media')
                     .select('id, filename, file_type, public_url, caption, tags, created_at')
                     .eq('client_id', clientId)
+                    .order('created_at', { ascending: false }),
+                // Also get inspection photos for this client
+                this.client
+                    .from('inspection_photos')
+                    .select('id, storage_path, category, caption, created_at, inspection_id, inspections!inner(client_id)')
+                    .eq('inspections.client_id', clientId)
                     .order('created_at', { ascending: false })
             ]);
+
+            // Convert inspection photos to media format
+            const inspectionPhotos = (inspectionPhotosRes.data || []).map(photo => {
+                const { data: urlData } = this.client.storage.from('photos').getPublicUrl(photo.storage_path);
+                return {
+                    id: photo.id,
+                    filename: photo.storage_path.split('/').pop(),
+                    file_type: 'photo',
+                    public_url: urlData?.publicUrl || '',
+                    caption: photo.caption || `Inspection photo (${photo.category})`,
+                    tags: ['inspection'],
+                    created_at: photo.created_at,
+                    storage_path: photo.storage_path,
+                    source: 'inspection'
+                };
+            });
+
+            // Combine media and inspection photos, removing duplicates by URL
+            const allMedia = [...(mediaRes.data || [])];
+            const existingUrls = new Set(allMedia.map(m => m.public_url));
+            for (const photo of inspectionPhotos) {
+                if (!existingUrls.has(photo.public_url)) {
+                    allMedia.push(photo);
+                    existingUrls.add(photo.public_url);
+                }
+            }
+
+            // Sort by created_at descending
+            allMedia.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             return {
                 packets: packetsRes.data || [],
                 inspections: inspectionsRes.data || [],
-                media: mediaRes.data || []
+                media: allMedia
             };
         } catch (e) {
             console.error('Failed to get client history:', e);
