@@ -2154,8 +2154,6 @@
 
             console.log(`[Inspection] Uploading ${photosList.length} photos to cloud...`);
 
-            const uploadedPhotos = [];
-
             for (const photo of photosList) {
                 if (!photo.photoKey) continue;
 
@@ -2164,8 +2162,6 @@
                     const dataUrl = await PhotoDB.get(photo.photoKey);
                     if (!dataUrl) {
                         console.warn('[Inspection] Photo not found in IndexedDB:', photo.photoKey);
-                        // Still include photo in list but without cloud URL
-                        uploadedPhotos.push({ ...photo });
                         continue;
                     }
 
@@ -2175,7 +2171,6 @@
 
                     if (blob.size === 0) {
                         console.warn('[Inspection] Empty blob for photo:', photo.photoKey);
-                        uploadedPhotos.push({ ...photo });
                         continue;
                     }
 
@@ -2190,7 +2185,6 @@
 
                     if (error) {
                         console.error('[Inspection] Photo upload failed:', photo.id, error);
-                        uploadedPhotos.push({ ...photo });
                         continue;
                     }
 
@@ -2201,33 +2195,15 @@
 
                     console.log('[Inspection] Photo uploaded:', photo.id, urlData.publicUrl);
 
-                    // Add cloud URL to photo data
-                    uploadedPhotos.push({
-                        ...photo,
-                        cloudUrl: urlData.publicUrl,
-                        storagePath: path
-                    });
+                    // Save photo metadata to inspection_photos table
+                    await SupabaseClient.saveInspectionPhoto(
+                        inspectionId,
+                        photo.category,
+                        path,
+                        photo.caption || ''
+                    );
                 } catch (err) {
                     console.error('[Inspection] Photo upload error:', photo.id, err);
-                    uploadedPhotos.push({ ...photo });
-                }
-            }
-
-            // Update inspection record with cloud URLs
-            if (uploadedPhotos.length > 0) {
-                try {
-                    const { error: updateError } = await supabaseClient
-                        .from('inspections')
-                        .update({ photos: uploadedPhotos })
-                        .eq('id', inspectionId);
-
-                    if (updateError) {
-                        console.error('[Inspection] Failed to update photos in DB:', updateError);
-                    } else {
-                        console.log('[Inspection] Updated inspection with cloud URLs');
-                    }
-                } catch (err) {
-                    console.error('[Inspection] Error updating inspection photos:', err);
                 }
             }
 
@@ -2483,27 +2459,32 @@
                     const photoBox = document.querySelector(`.photo-upload[data-category="${photo.category}"]`);
                     if (photoBox) {
                         try {
-                            // Priority: cloudUrl > dataUrl > IndexedDB > construct URL
-                            let dataUrl = photo.cloudUrl || photo.dataUrl || null;
+                            // Priority: storage_path (from DB) > cloudUrl > dataUrl > IndexedDB
+                            let dataUrl = null;
+
+                            // Check for cloud storage path from inspection_photos table
+                            const storagePath = photo.storage_path || photo.storagePath;
+                            if (storagePath && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                                const supabaseClient = SupabaseClient.client;
+                                if (supabaseClient && supabaseClient.storage) {
+                                    const { data: urlData } = supabaseClient.storage
+                                        .from('photos')
+                                        .getPublicUrl(storagePath);
+                                    if (urlData && urlData.publicUrl) {
+                                        dataUrl = urlData.publicUrl;
+                                        console.log('[Inspection] Loaded photo from cloud:', photo.id, storagePath);
+                                    }
+                                }
+                            }
+
+                            // Fallback to cloudUrl or dataUrl
+                            if (!dataUrl) {
+                                dataUrl = photo.cloudUrl || photo.dataUrl || null;
+                            }
 
                             // Try IndexedDB if no cloud URL
                             if (!dataUrl && photo.photoKey) {
                                 dataUrl = await PhotoDB.get(photo.photoKey);
-                            }
-
-                            // If still no data and loading from supabase, construct cloud URL
-                            if (!dataUrl && source === 'supabase' && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
-                                const supabaseClient = SupabaseClient.client;
-                                if (supabaseClient && supabaseClient.storage) {
-                                    const path = photo.storagePath || `inspections/${id}/${photo.id}.jpg`;
-                                    const { data: urlData } = supabaseClient.storage
-                                        .from('photos')
-                                        .getPublicUrl(path);
-                                    if (urlData && urlData.publicUrl) {
-                                        dataUrl = urlData.publicUrl;
-                                        console.log('[Inspection] Loaded photo from cloud:', photo.id);
-                                    }
-                                }
                             }
 
                             if (dataUrl) {
