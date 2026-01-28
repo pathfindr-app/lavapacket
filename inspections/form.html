@@ -1371,7 +1371,10 @@
 
                         <div id="additionalPhotos"></div>
 
-                        <button type="button" class="add-photo-btn" onclick="addPhotoSlot()">+ Add Another Photo</button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="button" class="add-photo-btn" onclick="addPhotoSlot()">+ Add Another Photo</button>
+                            <button type="button" class="add-photo-btn" onclick="openMediaPicker()" style="background: #f0f0f0; border: 1px solid #ddd;">📷 Select from Media</button>
+                        </div>
                     </div>
                 </div>
 
@@ -1491,6 +1494,19 @@
     <div class="modal" id="photoModal" onclick="closeModal()">
         <button class="close-btn" onclick="closeModal()">&times;</button>
         <img id="modalImage" src="" alt="Full size photo">
+    </div>
+
+    <!-- Media Picker Modal -->
+    <div class="modal" id="mediaPickerModal" style="display: none;">
+        <div class="modal-content" onclick="event.stopPropagation()" style="background: white; max-width: 600px; max-height: 80vh; margin: 10vh auto; border-radius: 12px; overflow: hidden;">
+            <div style="padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.1rem;">Select from Client Media</h3>
+                <button onclick="closeMediaPicker()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="mediaPickerContent" style="padding: 1rem; overflow-y: auto; max-height: calc(80vh - 60px);">
+                <div class="media-picker-loading">Loading media...</div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast -->
@@ -1968,6 +1984,170 @@
             document.getElementById('photoModal').classList.remove('open');
         }
 
+        // Media Picker
+        async function openMediaPicker() {
+            const modal = document.getElementById('mediaPickerModal');
+            const content = document.getElementById('mediaPickerContent');
+            modal.style.display = 'flex';
+            content.innerHTML = '<div style="text-align: center; padding: 2rem; color: #666;">Loading media...</div>';
+
+            // Get client ID - either from selected client or try to find by name
+            let clientIdForMedia = selectedClient?.id;
+
+            if (!clientIdForMedia) {
+                const customerName = document.querySelector('input[name="customerName"]').value;
+                if (customerName && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                    // Try to find client by name
+                    const client = await SupabaseClient.findOrCreateClient(customerName, '');
+                    if (client) {
+                        clientIdForMedia = client.id;
+                    }
+                }
+            }
+
+            if (!clientIdForMedia) {
+                content.innerHTML = '<div style="text-align: center; padding: 2rem; color: #666;">No client selected. Please enter customer name first.</div>';
+                return;
+            }
+
+            try {
+                // Fetch client's media
+                const history = await SupabaseClient.getClientHistory(clientIdForMedia);
+                const media = history.media || [];
+
+                // Also get inspection photos for this client
+                const supabaseClient = SupabaseClient.client;
+                let inspectionPhotos = [];
+                if (supabaseClient) {
+                    const { data: photos } = await supabaseClient
+                        .from('inspection_photos')
+                        .select('*, inspections!inner(client_id)')
+                        .eq('inspections.client_id', clientIdForMedia);
+                    inspectionPhotos = photos || [];
+                }
+
+                if (media.length === 0 && inspectionPhotos.length === 0) {
+                    content.innerHTML = '<div style="text-align: center; padding: 2rem; color: #666;">No media found for this client.<br><br>Upload photos using Quick Capture or the Media page.</div>';
+                    return;
+                }
+
+                // Render media grid
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem;">';
+
+                // Add client media
+                for (const item of media) {
+                    if (item.file_type === 'photo' && item.public_url) {
+                        html += `
+                            <div class="media-picker-item" onclick="selectMediaForInspection('${item.public_url}')"
+                                 style="cursor: pointer; border-radius: 8px; overflow: hidden; aspect-ratio: 1; border: 2px solid transparent;">
+                                <img src="${item.public_url}" style="width: 100%; height: 100%; object-fit: cover;"
+                                     onerror="this.parentElement.style.display='none'">
+                            </div>
+                        `;
+                    }
+                }
+
+                // Add inspection photos
+                for (const item of inspectionPhotos) {
+                    if (item.storage_path) {
+                        const { data: urlData } = supabaseClient.storage.from('photos').getPublicUrl(item.storage_path);
+                        if (urlData?.publicUrl) {
+                            html += `
+                                <div class="media-picker-item" onclick="selectMediaForInspection('${urlData.publicUrl}')"
+                                     style="cursor: pointer; border-radius: 8px; overflow: hidden; aspect-ratio: 1; border: 2px solid transparent;">
+                                    <img src="${urlData.publicUrl}" style="width: 100%; height: 100%; object-fit: cover;"
+                                         onerror="this.parentElement.style.display='none'">
+                                </div>
+                            `;
+                        }
+                    }
+                }
+
+                html += '</div>';
+                content.innerHTML = html;
+
+                // Add hover effect
+                content.querySelectorAll('.media-picker-item').forEach(item => {
+                    item.addEventListener('mouseenter', () => item.style.borderColor = '#e85a2c');
+                    item.addEventListener('mouseleave', () => item.style.borderColor = 'transparent');
+                });
+
+            } catch (err) {
+                console.error('[MediaPicker] Error loading media:', err);
+                content.innerHTML = '<div style="text-align: center; padding: 2rem; color: #c00;">Error loading media</div>';
+            }
+        }
+
+        function closeMediaPicker() {
+            document.getElementById('mediaPickerModal').style.display = 'none';
+        }
+
+        function selectMediaForInspection(url) {
+            // Find first empty photo slot
+            const photoBoxes = document.querySelectorAll('.photo-upload');
+            let targetBox = null;
+
+            for (const box of photoBoxes) {
+                if (!box.classList.contains('has-photo')) {
+                    targetBox = box;
+                    break;
+                }
+            }
+
+            // If no empty slot, add a new one
+            if (!targetBox) {
+                addPhotoSlot();
+                targetBox = document.querySelector('#additionalPhotos .photo-upload:last-child');
+            }
+
+            if (targetBox) {
+                const category = targetBox.dataset.category;
+                const photoId = Date.now().toString();
+
+                // Add to photos array
+                photos.push({
+                    id: photoId,
+                    category: category,
+                    cloudUrl: url,
+                    caption: '',
+                    element: targetBox
+                });
+
+                // Update UI
+                targetBox.classList.add('has-photo');
+                const placeholder = targetBox.querySelector('.placeholder');
+                if (placeholder) placeholder.style.display = 'none';
+
+                let img = targetBox.querySelector('img');
+                if (!img) {
+                    img = document.createElement('img');
+                    img.onclick = function(e) {
+                        e.stopPropagation();
+                        openModal(url);
+                    };
+                    targetBox.insertBefore(img, targetBox.firstChild);
+                }
+                img.src = url;
+
+                // Add remove button
+                if (!targetBox.querySelector('.remove-btn')) {
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        removePhoto(targetBox);
+                    };
+                    targetBox.appendChild(removeBtn);
+                }
+
+                updatePhotoCount();
+                closeMediaPicker();
+                showToast('Photo added from media library');
+                autoSave();
+            }
+        }
+
         // Form data collection
         function getFormData() {
             const form = document.getElementById('inspectionForm');
@@ -2104,6 +2284,13 @@
                         }
                         currentInspection = data;
 
+                        // Update client counts if we have a client
+                        if (clientId) {
+                            SupabaseClient.updateClientActivity(clientId).catch(err => {
+                                console.error('[Inspection] Failed to update client activity:', err);
+                            });
+                        }
+
                         // Upload photos to Supabase Storage in background
                         uploadPhotosToCloud(result.id, data.photos).catch(err => {
                             console.error('[Inspection] Photo upload failed:', err);
@@ -2155,7 +2342,11 @@
             console.log(`[Inspection] Uploading ${photosList.length} photos to cloud...`);
 
             for (const photo of photosList) {
-                if (!photo.photoKey) continue;
+                // Skip if no local photo key (already cloud-only) or already has cloud URL
+                if (!photo.photoKey || photo.cloudUrl || photo.storage_path) {
+                    console.log('[Inspection] Skipping photo (already uploaded or no local data):', photo.id);
+                    continue;
+                }
 
                 try {
                     // Get photo data from IndexedDB
