@@ -2325,6 +2325,11 @@
                             console.error('[Inspection] Photo upload failed:', err);
                         });
 
+                        // Upload mini photos to Supabase Storage in background
+                        uploadMiniPhotosToCloud(result.id, data.miniPhotos).catch(err => {
+                            console.error('[Inspection] Mini photo upload failed:', err);
+                        });
+
                         showToast('Inspection saved!');
                         return;
                     }
@@ -2428,6 +2433,82 @@
             }
 
             console.log('[Inspection] Photo upload complete');
+        }
+
+        // Upload mini photos from IndexedDB to Supabase Storage
+        async function uploadMiniPhotosToCloud(inspectionId, miniPhotosObj) {
+            if (!inspectionId || !miniPhotosObj || Object.keys(miniPhotosObj).length === 0) return;
+            if (typeof SupabaseClient === 'undefined' || !SupabaseClient.isAvailable()) return;
+
+            const supabaseClient = SupabaseClient.client;
+            if (!supabaseClient || !supabaseClient.storage) {
+                console.warn('[Inspection] Supabase storage not available for mini photos');
+                return;
+            }
+
+            console.log(`[Inspection] Uploading ${Object.keys(miniPhotosObj).length} mini photos to cloud...`);
+
+            for (const [fieldName, photoKey] of Object.entries(miniPhotosObj)) {
+                // Skip if already a cloud URL
+                if (!photoKey || photoKey.startsWith('http') || photoKey.startsWith('inspections/')) {
+                    console.log('[Inspection] Skipping mini photo (already uploaded):', fieldName);
+                    continue;
+                }
+
+                try {
+                    // Get photo data from IndexedDB
+                    const dataUrl = await PhotoDB.get(photoKey);
+                    if (!dataUrl) {
+                        console.warn('[Inspection] Mini photo not found in IndexedDB:', fieldName, photoKey);
+                        continue;
+                    }
+
+                    // Convert dataUrl to blob
+                    const response = await fetch(dataUrl);
+                    const blob = await response.blob();
+
+                    if (blob.size === 0) {
+                        console.warn('[Inspection] Empty blob for mini photo:', fieldName);
+                        continue;
+                    }
+
+                    // Upload to Supabase Storage
+                    const path = `inspections/${inspectionId}/mini_${fieldName}.jpg`;
+                    const { data, error } = await supabaseClient.storage
+                        .from('photos')
+                        .upload(path, blob, {
+                            contentType: 'image/jpeg',
+                            upsert: true
+                        });
+
+                    if (error) {
+                        console.error('[Inspection] Mini photo upload failed:', fieldName, error);
+                        continue;
+                    }
+
+                    // Get public URL
+                    const { data: urlData } = supabaseClient.storage
+                        .from('photos')
+                        .getPublicUrl(path);
+
+                    console.log('[Inspection] Mini photo uploaded:', fieldName, urlData.publicUrl);
+
+                    // Save to inspection_photos table with 'mini_' prefix category
+                    await SupabaseClient.saveInspectionPhoto(
+                        inspectionId,
+                        `mini_${fieldName}`,
+                        path,
+                        fieldName
+                    );
+
+                    // Update local miniPhotos object with storage path for future saves
+                    miniPhotos[fieldName] = path;
+                } catch (err) {
+                    console.error('[Inspection] Mini photo upload error:', fieldName, err);
+                }
+            }
+
+            console.log('[Inspection] Mini photo upload complete');
         }
 
         function autoSave() {
@@ -2622,15 +2703,38 @@
             form.accessNotes.value = inspection.roof?.accessNotes || '';
             setSelectedOption('overallCondition', inspection.roof?.condition);
 
-            // Load mini photos from IndexedDB
+            // Load mini photos from IndexedDB or cloud storage
             miniPhotos = inspection.miniPhotos || {};
             Object.keys(miniPhotos).forEach(async fieldName => {
                 const photoKey = miniPhotos[fieldName];
                 const photoBox = document.querySelector(`.mini-photo[data-field="${fieldName}"]`);
                 if (photoBox && photoKey) {
                     try {
-                        // Check if it's a key (new format) or dataUrl (old format)
-                        const dataUrl = photoKey.startsWith('data:') ? photoKey : await PhotoDB.get(photoKey);
+                        let dataUrl = null;
+
+                        // Check if it's a cloud storage path
+                        if (photoKey.startsWith('inspections/')) {
+                            // Load from Supabase Storage
+                            if (typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                                const supabaseClient = SupabaseClient.client;
+                                if (supabaseClient && supabaseClient.storage) {
+                                    const { data: urlData } = supabaseClient.storage
+                                        .from('photos')
+                                        .getPublicUrl(photoKey);
+                                    if (urlData && urlData.publicUrl) {
+                                        dataUrl = urlData.publicUrl;
+                                        console.log('[Inspection] Loaded mini photo from cloud:', fieldName);
+                                    }
+                                }
+                            }
+                        } else if (photoKey.startsWith('data:')) {
+                            // Old format - direct dataUrl
+                            dataUrl = photoKey;
+                        } else {
+                            // IndexedDB key
+                            dataUrl = await PhotoDB.get(photoKey);
+                        }
+
                         if (dataUrl) {
                             photoBox.classList.add('has-photo');
                             let img = photoBox.querySelector('img');
