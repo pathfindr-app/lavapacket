@@ -2057,10 +2057,26 @@
                     // Check if ID is a valid UUID (contains hyphens like 939647a9-b45a-436f-9ec0-4b31facd7d67)
                     const isUUID = data.id && data.id.includes('-') && data.id.length === 36;
 
+                    // Auto-create client if customer name provided but no client selected
+                    let clientId = selectedClient ? selectedClient.id : null;
+                    if (!clientId && data.customer.name) {
+                        console.log('[Inspection] Auto-creating client:', data.customer.name);
+                        const newClient = await SupabaseClient.findOrCreateClient(
+                            data.customer.name,
+                            data.customer.address || ''
+                        );
+                        if (newClient && newClient.id) {
+                            clientId = newClient.id;
+                            // Update selectedClient so future saves use this ID
+                            selectedClient = newClient;
+                            console.log('[Inspection] Created/found client with ID:', clientId);
+                        }
+                    }
+
                     // Convert form data to Supabase schema
                     const supabaseData = {
                         id: isUUID ? data.id : null, // Only use if it's a valid UUID
-                        client_id: selectedClient ? selectedClient.id : null,
+                        client_id: clientId,
                         customer_name: data.customer.name,
                         customer_address: data.customer.address,
                         customer_phone: data.customer.phone,
@@ -2087,6 +2103,12 @@
                             window.history.replaceState({}, '', newUrl);
                         }
                         currentInspection = data;
+
+                        // Upload photos to Supabase Storage in background
+                        uploadPhotosToCloud(result.id, data.photos).catch(err => {
+                            console.error('[Inspection] Photo upload failed:', err);
+                        });
+
                         showToast('Inspection saved!');
                         return;
                     }
@@ -2117,6 +2139,67 @@
                 showToast(`Storage full (${storageMB}MB) - Print to PDF to save!`, true);
                 console.error('localStorage quota exceeded:', e);
             }
+        }
+
+        // Upload photos from IndexedDB to Supabase Storage
+        async function uploadPhotosToCloud(inspectionId, photosList) {
+            if (!inspectionId || !photosList || photosList.length === 0) return;
+            if (typeof SupabaseClient === 'undefined' || !SupabaseClient.isAvailable()) return;
+
+            const supabaseClient = SupabaseClient.client;
+            if (!supabaseClient || !supabaseClient.storage) {
+                console.warn('[Inspection] Supabase storage not available');
+                return;
+            }
+
+            console.log(`[Inspection] Uploading ${photosList.length} photos to cloud...`);
+
+            for (const photo of photosList) {
+                if (!photo.photoKey) continue;
+
+                try {
+                    // Get photo data from IndexedDB
+                    const dataUrl = await PhotoDB.get(photo.photoKey);
+                    if (!dataUrl) {
+                        console.warn('[Inspection] Photo not found in IndexedDB:', photo.photoKey);
+                        continue;
+                    }
+
+                    // Convert dataUrl to blob
+                    const response = await fetch(dataUrl);
+                    const blob = await response.blob();
+
+                    if (blob.size === 0) {
+                        console.warn('[Inspection] Empty blob for photo:', photo.photoKey);
+                        continue;
+                    }
+
+                    // Upload to Supabase Storage
+                    const path = `inspections/${inspectionId}/${photo.id}.jpg`;
+                    const { data, error } = await supabaseClient.storage
+                        .from('photos')
+                        .upload(path, blob, {
+                            contentType: 'image/jpeg',
+                            upsert: true
+                        });
+
+                    if (error) {
+                        console.error('[Inspection] Photo upload failed:', photo.id, error);
+                        continue;
+                    }
+
+                    // Get public URL
+                    const { data: urlData } = supabaseClient.storage
+                        .from('photos')
+                        .getPublicUrl(path);
+
+                    console.log('[Inspection] Photo uploaded:', photo.id, urlData.publicUrl);
+                } catch (err) {
+                    console.error('[Inspection] Photo upload error:', photo.id, err);
+                }
+            }
+
+            console.log('[Inspection] Photo upload complete');
         }
 
         function autoSave() {
@@ -2361,7 +2444,7 @@
             });
             updateWrapupStatus();
 
-            // Load photos from IndexedDB
+            // Load photos from IndexedDB or Supabase Storage
             photos = [];
             if (inspection.photos && inspection.photos.length > 0) {
                 for (const photo of inspection.photos) {
@@ -2369,8 +2452,23 @@
                     if (photoBox) {
                         try {
                             // Check if it's a key (new format) or dataUrl (old format)
-                            const dataUrl = photo.dataUrl ? photo.dataUrl :
+                            let dataUrl = photo.dataUrl ? photo.dataUrl :
                                 (photo.photoKey ? await PhotoDB.get(photo.photoKey) : null);
+
+                            // If not in IndexedDB, try loading from Supabase Storage
+                            if (!dataUrl && source === 'supabase' && typeof SupabaseClient !== 'undefined' && SupabaseClient.isAvailable()) {
+                                const supabaseClient = SupabaseClient.client;
+                                if (supabaseClient && supabaseClient.storage) {
+                                    const path = `inspections/${id}/${photo.id}.jpg`;
+                                    const { data: urlData } = supabaseClient.storage
+                                        .from('photos')
+                                        .getPublicUrl(path);
+                                    if (urlData && urlData.publicUrl) {
+                                        dataUrl = urlData.publicUrl;
+                                        console.log('[Inspection] Loaded photo from cloud:', photo.id);
+                                    }
+                                }
+                            }
 
                             if (dataUrl) {
                                 photoBox.classList.add('has-photo');

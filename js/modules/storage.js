@@ -64,10 +64,25 @@ const Storage = {
 
     async saveToSupabase(data) {
         try {
+            // Auto-create client if customer name provided but no client selected
+            let clientId = data.client_id || null;
+            if (!clientId && data.customer_name) {
+                console.log('[Storage] Auto-creating client:', data.customer_name);
+                const newClient = await SupabaseClient.findOrCreateClient(
+                    data.customer_name,
+                    data.customer_address || ''
+                );
+                if (newClient && newClient.id) {
+                    clientId = newClient.id;
+                    this.currentClientId = clientId;
+                    console.log('[Storage] Created/found client with ID:', clientId);
+                }
+            }
+
             // Prepare packet data for Supabase (JSONB fields)
             const packetData = {
                 id: data.id,
-                client_id: data.client_id || null,
+                client_id: clientId,
                 customer_name: data.customer_name,
                 customer_address: data.customer_address,
                 product_type: data.product_type,
