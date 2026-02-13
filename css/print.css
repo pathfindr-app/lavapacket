@@ -21,7 +21,11 @@
     .toast,
     .ev-placeholder,
     .estimate-dropzone:empty,
-    .zoom-controls {
+    .zoom-controls,
+    .floating-record-btn,
+    .ai-assistant-btn,
+    .ai-assistant-modal,
+    .quick-capture-fab {
         display: none !important;
     }
 

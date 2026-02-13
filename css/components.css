@@ -548,9 +548,9 @@
 .brava-hero {
     background: white;
     color: var(--lava-dark);
-    padding: 1.5rem;
+    padding: 1.75rem 1.5rem;
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     position: relative;
     border: 2px solid #091F2C;
 }
@@ -620,14 +620,14 @@
 .brava-visuals {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
 }
 
-.brava-visual-item { overflow: hidden; }
+.brava-visual-item { overflow: hidden; position: relative; }
 .brava-visual-img {
     width: 100%;
-    height: 100px;
+    height: 180px;
     object-fit: cover;
     border: 1px solid var(--warm-gray);
 }
@@ -645,13 +645,13 @@
 .brava-features {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .brava-feature {
     background: var(--cream);
-    padding: 0.6rem 0.75rem;
+    padding: 0.9rem 0.85rem;
     border-left: 3px solid var(--lava-teal);
 }
 
@@ -679,7 +679,7 @@
 .brava-callout {
     background: #fff5f2;
     color: var(--lava-dark);
-    padding: 1rem;
+    padding: 1.25rem 1.5rem;
     border-left: 4px solid var(--lava-orange);
 }
 

@@ -940,7 +940,7 @@
         /* Print Styles */
         @media print {
             @page {
-                margin: 0.4in 0.5in;
+                margin: 0.35in 0.45in;
                 size: letter;
             }
 
@@ -974,6 +974,43 @@
             /* Keep design, just remove shadow */
             .recap-container {
                 box-shadow: none;
+                border-radius: 0;
+            }
+
+            /* Tighten print layout without changing screen layout */
+            .recap-header {
+                padding: 1.5rem 1.25rem;
+            }
+
+            .recap-body {
+                padding: 1.5rem 1.25rem;
+            }
+
+            .recap-section {
+                margin-bottom: 1.25rem;
+                padding-bottom: 1.1rem;
+                break-inside: auto;
+                page-break-inside: auto;
+            }
+
+            .recap-footer {
+                padding: 1.25rem;
+                break-inside: auto;
+                page-break-inside: auto;
+            }
+
+            .recap-section h2 {
+                break-after: avoid-page;
+                page-break-after: avoid;
+            }
+
+            /* Keep compact blocks together */
+            .recap-callout,
+            .recap-diagnosis,
+            .recap-cta,
+            .recap-photo {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
 
             /* Photos */
@@ -981,21 +1018,8 @@
                 gap: 0.5rem;
             }
 
-            .recap-photo {
-                break-inside: avoid;
-            }
-
             .recap-photo img {
                 max-height: 2.5in;
-            }
-
-            /* Prevent awkward breaks */
-            .recap-section {
-                break-inside: avoid;
-            }
-
-            .recap-footer {
-                break-inside: avoid;
             }
 
             /* Clean up links for print */
@@ -3165,4 +3189,3 @@ www.lavaroofing.com`);
 </body>
 </html>
 <!-- deployed Fri, Jan  9, 2026  6:24:50 PM -->
-
